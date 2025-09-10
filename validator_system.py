@@ -342,6 +342,10 @@ if plus_code_input:
                 st.caption("Coordenadas (copiar)")
                 st.code(coords_str, language="text")
                 maps_url = f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
+                with st.spinner("Buscando endereço..."):
+                    endereco = reverse_geocode(lat, lon)
+                    endereco_simples = ", ".join(endereco.split(",")[:3])
+                st.info(f"🏠 **Endereço aproximado:** {endereco_simples}")
                 st.markdown(
                     f'''
                     <a href="{maps_url}" target="_blank" 
@@ -420,10 +424,7 @@ if plus_code_input:
                 else:
                     st.warning("Nenhuma CTO encontrada próxima.")
 
-                with st.spinner("Buscando endereço..."):
-                    endereco = reverse_geocode(lat, lon)
-                    endereco_simples = ", ".join(endereco.split(",")[:3])
-                st.info(f"🏠 **Endereço aproximado:** {endereco_simples}")
+                
 
             with col2:
                 st.markdown("### 🎯 Análise de Viabilidade")
