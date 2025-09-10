@@ -6,6 +6,4 @@ folium
 streamlit-folium
 gdown
 pandas
-
-xml-etree
-
+requests
