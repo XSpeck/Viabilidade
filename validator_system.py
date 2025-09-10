@@ -72,6 +72,9 @@ def validate_plus_code(plus_code: str) -> bool:
     pattern = r'^[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3}$'
     return bool(re.match(pattern, plus_code.upper().strip()))
 
+def coords_to_pluscode(lat, lon):
+    return olc.encode(lat, lon)
+
 def validate_coordinates(lat: float, lon: float) -> bool:
     return -90 <= lat <= 90 and -180 <= lon <= 180
 
@@ -413,12 +416,14 @@ if plus_code_input:
                 st_folium(m, width=700, height=400)
 
                 # Depois do mapa: lista CTOs
-                st.markdown("### 🛠 CTOs mais próximas (até 800 m)")
+                st.markdown("### 🛠 CTOs mais próximas")
                 if nearest_ctos:
                     for cto in nearest_ctos[:3]:
+                        pluscode_cto = coords_to_pluscode(cto["lat"], cto["lon"])
                         st.success(
-                            f'**{cto["name"]}**\n'
+                            f'CTO:**{cto["name"]}**\n'
                             f'- Coordenadas: `{cto["lat"]:.6f}, {cto["lon"]:.6f}`\n'
+                            f'- Plus Code: `{pluscode_cto}`\n'
                             f'- Distância em linha reta: {format_distance(cto["distance"])}'
                         )
                 else:
