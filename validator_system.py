@@ -362,7 +362,7 @@ if plus_code_input:
                 st.markdown("### 📍 Informações da Localização")
                 coords_str = f"{lat:.6f}, {lon:.6f}"
                 
-                st.text_input("Coordenadas (copiar)",
+                st.caption("Coordenadas (copiar)"
                 st.code(coords_str, language="text")
                 
                 # Botão Google Maps com estilo melhorado
