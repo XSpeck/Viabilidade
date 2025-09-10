@@ -486,7 +486,7 @@ st.markdown("---")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("📡 UTPs Atendidas")
+    st.subheader("📡 UTPs/FTTAs Atendidas")
     search_utp = st.text_input("🔍 Buscar UTP/FTTA", key="search_utp", placeholder="Digite para filtrar...")
     
     if search_utp:
