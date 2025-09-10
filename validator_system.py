@@ -421,7 +421,7 @@ if plus_code_input:
                     for cto in nearest_ctos[:3]:
                         pluscode_cto = coords_to_pluscode(cto["lat"], cto["lon"])
                         st.success(
-                            f'CTO:**{cto["name"]}**\n'
+                            f'CTO: **{cto["name"]}**\n'
                             f'- Coordenadas: `{cto["lat"]:.6f}, {cto["lon"]:.6f}`\n'
                             f'- Plus Code: `{pluscode_cto}`\n'
                             f'- Distância em linha reta: {format_distance(cto["distance"])}'
