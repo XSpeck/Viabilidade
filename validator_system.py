@@ -325,7 +325,7 @@ try:
     with col1:
         st.metric("🗺️ Linhas de Rede", len(lines))
     with col2:
-        st.metric("📡 UTPs Atendidas", len(df_utp))
+        st.metric("📡 UTPs/FTTAs Atendidas", len(df_utp))
     with col3:
         st.metric("🏢 Prédios sem Viabilidade", len(df_sem))
     
@@ -488,7 +488,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("📡 UTPs Atendidas")
-    search_utp = st.text_input("🔍 Buscar UTP", key="search_utp", placeholder="Digite para filtrar...")
+    search_utp = st.text_input("🔍 Buscar UTP/FTTA", key="search_utp", placeholder="Digite para filtrar...")
     
     if search_utp:
         try:
@@ -540,8 +540,8 @@ st.markdown("---")
 st.markdown(
     """
     <div style='text-align: center; color: #666; padding: 20px;'>
-        <p>🔍 <strong>Validador de Projetos</strong> | Desenvolvido com Streamlit</p>
-        <p>📊 Dados atualizados automaticamente | 🗺️ Integração com Google Maps e LocationIQ</p>
+        <p>🔍 <strong>Validador de Projetos</strong> | Desenvolvido ByLeo</p>
+        <p>📊 Dados atualizados | 🗺️ Integração com Google Maps e LocationIQ</p>
     </div>
     """,
     unsafe_allow_html=True
