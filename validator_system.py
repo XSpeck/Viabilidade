@@ -356,7 +356,7 @@ if plus_code_input:
                         st.success(
                             f'**{cto["name"]}**\n'
                             f'- Coordenadas: `{cto["lat"]:.6f}, {cto["lon"]:.6f}`\n'
-                            f'- Distância: {format_distance(cto["distance"])}'
+                            f'- Distância em Linha reta: {format_distance(cto["distance"])}'
                         )
                 else:
                     st.warning("Nenhuma CTO encontrada próxima.")
