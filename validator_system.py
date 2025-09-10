@@ -352,7 +352,7 @@ if plus_code_input:
                 )
 
                 # 🗺️ MAPA PRIMEIRO
-                 st.markdown("### 🗺️ Visualização no Mapa")
+                st.markdown("### 🗺️ Visualização no Mapa")
                 if dist_m is not None and dist_m <= 100:
                     zoom_level = 18
                 elif dist_m is not None and dist_m <= 500:
