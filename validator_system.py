@@ -11,26 +11,73 @@ import requests
 import logging
 from datetime import datetime
 import time
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict
 import re
 
 # ======================
 # Configurações
 # ======================
 LOCATIONIQ_KEY = "pk.66f355328aaad40fe69b57c293f66815"
-file_id_kml = "1tuxvnc-2FHVVjtLHJ34LFpU3Uq5jiVul"
-kml_path = "REDE_CLONIX.kml"
 reference_lat = -28.6775
 reference_lon = -49.3696
 file_id_ctos = "1EcKNk2yqHDEMMXJZ17fT0flPV19HDhKJ"
 ctos_kml_path = "ctos.kml"
 
+# Configuração dos arquivos KML com suas respectivas cores e IDs
+KML_CONFIGS = {
+    "COOPER-COCAL": {
+        "file_id": "1XD-GgwgFgB2RcKkBAxf5RSBWu2yfIf2w",
+        "color": "#FF1493",  # Vermelho
+        "path": "cooper_cocal.kml"
+    },
+    "COOPERA": {
+        "file_id": "1E5tKI5brZMo1rcrJANXggYegV1IrCdnv",
+        "color": "#00FF00",  # Verde
+        "path": "coopera.kml"
+    },
+    "COPERALIANCA": {
+        "file_id": "1cDZwFpCDygrmZvP2_oSZoXT3oKXKT8Bh",
+        "color": "#0000FF",  # Azul
+        "path": "coperalianca.kml"
+    },
+    "CERMOFUL": {
+        "file_id": "1r4gnRFaNUmAZ6f9oTdR1x9RcfksWTXDx",
+        "color": "#FF8C00",  # Laranja escuro
+        "path": "cermoful.kml"
+    },
+    "CERTREL": {
+        "file_id": "1ZGczns-MIV897jQ8HRhH6LFgMRMdydm4",
+        "color": "#8A2BE2",  # Azul violeta
+        "path": "certrel.kml"
+    },
+    "FORÇALUZ": {
+        "file_id": "1CHAWKnha0C1f44uLJYXUOj0UcrtnlPKK",
+        "color": "#FFD700",  # Dourado
+        "path": "forcaluz.kml"
+    },
+    "CELESC": {
+        "file_id": "1M5P4_THpr1qxcxhPVOyQCdGTE5_7faRB",
+        "color": "#FF0000",  # Rosa profundo
+        "path": "celesc.kml"
+    }
+}
+
+# Configurações de distância padrão
 DISTANCE_CONFIGS = {
     "excellent": {"max": 25, "color": "success", "icon": "✅", "message": "Excelente viabilidade"},
     "good": {"max": 100, "color": "success", "icon": "✅", "message": "Boa viabilidade"},
     "moderate": {"max": 300, "color": "warning", "icon": "⚠️", "message": "Viabilidade moderada"},
     "poor": {"max": 500, "color": "warning", "icon": "⚠️", "message": "Viabilidade baixa"},
     "none": {"max": float('inf'), "color": "error", "icon": "❌", "message": "Sem viabilidade"}
+}
+
+# Configurações específicas para CELESC (limites menores)
+CELESC_DISTANCE_CONFIGS = {
+    "excellent": {"max": 15, "color": "success", "icon": "✅", "message": "Excelente viabilidade (CELESC)"},
+    "good": {"max": 50, "color": "success", "icon": "✅", "message": "Boa viabilidade (CELESC)"},
+    "moderate": {"max": 150, "color": "warning", "icon": "⚠️", "message": "Viabilidade moderada (CELESC)"},
+    "poor": {"max": 250, "color": "warning", "icon": "⚠️", "message": "Viabilidade baixa (CELESC)"},
+    "none": {"max": float('inf'), "color": "error", "icon": "❌", "message": "Sem viabilidade (CELESC)"}
 }
 
 csv_ids = {
@@ -84,11 +131,12 @@ def format_distance(distance_m: float) -> str:
     else:
         return f"{distance_m/1000:.2f}km"
 
-def get_distance_category(distance_m: float) -> dict:
-    for category, config in DISTANCE_CONFIGS.items():
+def get_distance_category(distance_m: float, is_celesc: bool = False) -> dict:
+    configs = CELESC_DISTANCE_CONFIGS if is_celesc else DISTANCE_CONFIGS
+    for category, config in configs.items():
         if distance_m <= config["max"]:
             return {"category": category, **config}
-    return {"category": "none", **DISTANCE_CONFIGS["none"]}
+    return {"category": "none", **configs["none"]}
 
 # ======================
 # Cache e Download
@@ -133,7 +181,7 @@ def load_lines_from_kml(path: str) -> List[List[Tuple[float, float]]]:
                 except (ValueError, IndexError) as e:
                     logger.warning(f"Linha KML inválida ignorada: {e}")
                     continue
-        logger.info(f"Carregadas {len(lines)} linhas do KML")
+        logger.info(f"Carregadas {len(lines)} linhas do KML {path}")
         return lines
     except Exception as e:
         logger.error(f"Erro ao carregar KML: {e}")
@@ -170,18 +218,41 @@ def load_ctos_from_kml(path: str) -> List[dict]:
 @st.cache_data(ttl=3600)
 def load_all_files():
     try:
-        download_file(file_id_kml, kml_path)
-        download_file(file_id_ctos, ctos_kml_path)
+        # Baixar arquivos CSV
         download_file(csv_ids["utp"], csv_files["utp"])
         download_file(csv_ids["sem_viabilidade"], csv_files["sem_viabilidade"])
-        lines = load_lines_from_kml(kml_path)
-        lines = [line for line in lines if line and len(line) > 1]
+        
+        # Baixar arquivo de CTOs
+        download_file(file_id_ctos, ctos_kml_path)
+        
+        # Baixar e carregar todos os arquivos KML
+        all_lines = {}
+        total_lines = 0
+        
+        for company, config in KML_CONFIGS.items():
+            try:
+                download_file(config["file_id"], config["path"])
+                lines = load_lines_from_kml(config["path"])
+                lines = [line for line in lines if line and len(line) > 1]
+                all_lines[company] = {
+                    "lines": lines,
+                    "color": config["color"],
+                    "count": len(lines)
+                }
+                total_lines += len(lines)
+                logger.info(f"Carregadas {len(lines)} linhas para {company}")
+            except Exception as e:
+                logger.error(f"Erro ao carregar {company}: {e}")
+                all_lines[company] = {"lines": [], "color": config["color"], "count": 0}
+        
+        # Carregar outros dados
         df_utp = pd.read_csv(csv_files["utp"])
         df_sem = pd.read_csv(csv_files["sem_viabilidade"])
         ctos = load_ctos_from_kml(ctos_kml_path)
-        logger.info(f"Arquivos carregados: {len(lines)} linhas, {len(ctos)} CTOs, {len(df_utp)} UTP, {len(df_sem)} sem viabilidade")
+        
+        logger.info(f"Total: {total_lines} linhas de {len(KML_CONFIGS)} empresas, {len(ctos)} CTOs, {len(df_utp)} UTP, {len(df_sem)} sem viabilidade")
         st.session_state.cache_timestamp = datetime.now()
-        return lines, ctos, df_utp, df_sem
+        return all_lines, ctos, df_utp, df_sem
     except Exception as e:
         logger.error(f"Erro ao carregar arquivos: {e}")
         raise
@@ -206,37 +277,54 @@ def pluscode_to_coords(pluscode: str) -> Tuple[float, float]:
         logger.error(f"Erro ao converter Plus Code {pluscode}: {e}")
         raise Exception(f"Erro ao processar Plus Code: {str(e)}")
 
-def check_proximity(point: Tuple[float, float], lines: List[List[Tuple[float, float]]]) -> Tuple[Optional[float], Optional[int]]:
-    if not lines:
-        return None, None
+def check_proximity_all_companies(point: Tuple[float, float], all_lines: Dict) -> Dict:
+    """Verifica proximidade para todas as empresas e retorna a mais próxima"""
+    if not all_lines:
+        return {"distance": None, "company": None, "line": None, "is_celesc": False}
+    
     try:
         pt = Point(point[1], point[0])
         closest_distance = float('inf')
+        closest_company = None
         closest_line = None
-        for i, line in enumerate(lines):
-            if not line or len(line) < 2:
+        
+        for company, data in all_lines.items():
+            lines = data["lines"]
+            if not lines:
                 continue
-            try:
-                line_coords = [(lon, lat) for lat, lon in line]
-                ln = LineString(line_coords)
-                if ln.is_empty or not ln.is_valid:
+                
+            for i, line in enumerate(lines):
+                if not line or len(line) < 2:
                     continue
-                closest_point = ln.interpolate(ln.project(pt))
-                if closest_point is None or closest_point.is_empty:
+                try:
+                    line_coords = [(lon, lat) for lat, lon in line]
+                    ln = LineString(line_coords)
+                    if ln.is_empty or not ln.is_valid:
+                        continue
+                    closest_point = ln.interpolate(ln.project(pt))
+                    if closest_point is None or closest_point.is_empty:
+                        continue
+                    distance = geodesic((point[0], point[1]), (closest_point.y, closest_point.x)).meters
+                    if distance < closest_distance:
+                        closest_distance = distance
+                        closest_company = company
+                        closest_line = i + 1
+                except Exception as line_error:
+                    logger.warning(f"Erro ao processar linha {i} da empresa {company}: {line_error}")
                     continue
-                distance = geodesic((point[0], point[1]), (closest_point.y, closest_point.x)).meters
-                if distance < closest_distance:
-                    closest_distance = distance
-                    closest_line = i + 1
-            except Exception as line_error:
-                logger.warning(f"Erro ao processar linha {i}: {line_error}")
-                continue
+        
         if closest_distance == float('inf'):
-            return None, None
-        return closest_distance, closest_line
+            return {"distance": None, "company": None, "line": None, "is_celesc": False}
+        
+        return {
+            "distance": closest_distance,
+            "company": closest_company,
+            "line": closest_line,
+            "is_celesc": closest_company == "CELESC"
+        }
     except Exception as e:
         logger.error(f"Erro ao verificar proximidade: {e}")
-        return None, None
+        return {"distance": None, "company": None, "line": None, "is_celesc": False}
 
 @st.cache_data(ttl=1800)
 def reverse_geocode(lat: float, lon: float) -> str:
@@ -277,12 +365,12 @@ def find_nearest_ctos(lat: float, lon: float, ctos: List[dict], max_radius: floa
 # ======================
 st.set_page_config(
     page_title="Validador de Projetos",
-    page_icon="🔍",
+    page_icon="📍",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-st.title("🔍 Validador de Projetos")
+st.title("📍 Validador de Projetos - Múltiplas Empresas")
 st.markdown("---")
 
 with st.sidebar:
@@ -292,10 +380,19 @@ with st.sidebar:
     if st.session_state.cache_timestamp:
         st.info(f"📅 Última atualização: {st.session_state.cache_timestamp.strftime('%H:%M:%S')}")
     st.markdown("---")
-    st.header("📋 Critérios de Viabilidade")
+    st.header("📋 Critérios de Viabilidade Padrão")
     for category, config in DISTANCE_CONFIGS.items():
         if config["max"] == float('inf'):
             distance_text = "> 500m"
+        else:
+            distance_text = f"≤ {config['max']}m"
+        st.markdown(f"{config['icon']} **{config['message']}**: {distance_text}")
+    
+    st.markdown("---")
+    st.header("⚡ Critérios CELESC (Especiais)")
+    for category, config in CELESC_DISTANCE_CONFIGS.items():
+        if config["max"] == float('inf'):
+            distance_text = "> 250m"
         else:
             distance_text = f"≤ {config['max']}m"
         st.markdown(f"{config['icon']} **{config['message']}**: {distance_text}")
@@ -305,21 +402,33 @@ if st.session_state.refresh_clicked:
     st.session_state.refresh_clicked = False
 
 try:
-    with st.spinner("Carregando arquivos..."):
-        lines, ctos, df_utp, df_sem = load_all_files()
+    with st.spinner("Carregando arquivos de todas as empresas..."):
+        all_lines, ctos, df_utp, df_sem = load_all_files()
+    
+    # Métricas por empresa
+    st.subheader("📊 Estatísticas por Empresa")
+    cols = st.columns(len(KML_CONFIGS))
+    for i, (company, data) in enumerate(all_lines.items()):
+        with cols[i % len(cols)]:
+            color_preview = f'<span style="background-color:{data["color"]}; width:20px; height:20px; display:inline-block; border-radius:3px; margin-right:5px;"></span>'
+            st.markdown(f'{color_preview}**{company}**', unsafe_allow_html=True)
+            st.metric("Linhas", data["count"])
+    
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("🗺️ Linhas de Rede", len(lines))
+        total_lines = sum(data["count"] for data in all_lines.values())
+        st.metric("🗺️ Total de Linhas", total_lines)
     with col2:
         st.metric("📡 UTPs/FTTAs Atendidas", len(df_utp))
     with col3:
         st.metric("🏢 Prédios sem Viabilidade", len(df_sem))
+        
 except Exception as e:
     st.error(f"❌ Erro ao carregar arquivos: {e}")
     st.stop()
 
 st.markdown("---")
-st.subheader("📍 Validação de Localização")
+st.subheader("🔍 Validação de Localização")
 
 plus_code_input = st.text_input(
     "Digite o Plus Code",
@@ -335,8 +444,8 @@ if plus_code_input:
             lat, lon = pluscode_to_coords(plus_code_input)
             col1, col2 = st.columns([2, 1])
 
-            # Calcule os valores ANTES do mapa/lista
-            dist_m, line_num = check_proximity((lat, lon), lines)
+            # Verificar proximidade com todas as empresas
+            proximity_result = check_proximity_all_companies((lat, lon), all_lines)
             nearest_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=800.0)
 
             with col1:
@@ -361,8 +470,9 @@ if plus_code_input:
                     unsafe_allow_html=True
                 )
 
-                # MAPA PRIMEIRO!
+                # MAPA com todas as empresas
                 st.markdown("### 🗺️ Visualização no Mapa")
+                dist_m = proximity_result["distance"]
                 if dist_m is not None and dist_m <= 100:
                     zoom_level = 18
                 elif dist_m is not None and dist_m <= 500:
@@ -376,23 +486,34 @@ if plus_code_input:
                     tiles='OpenStreetMap'
                 )
 
-                for i, line in enumerate(lines):
-                    folium.PolyLine(
-                        locations=line,
-                        color="blue",
-                        weight=3,
-                        opacity=0.7,
-                        popup=f"Linha #{i+1}"
-                    ).add_to(m)
+                # Adicionar linhas de todas as empresas com cores diferentes
+                for company, data in all_lines.items():
+                    lines = data["lines"]
+                    color = data["color"]
+                    for i, line in enumerate(lines):
+                        folium.PolyLine(
+                            locations=line,
+                            color=color,
+                            weight=3,
+                            opacity=0.8,
+                            popup=f"{company} - Linha #{i+1}",
+                            tooltip=f"{company}"
+                        ).add_to(m)
 
+                # Marker para o ponto pesquisado
                 marker_color = "green" if dist_m and dist_m <= 100 else "orange" if dist_m and dist_m <= 500 else "red"
+                popup_text = f"📍 {plus_code_input}<br>📏 {format_distance(dist_m) if dist_m else 'N/A'}"
+                if proximity_result["company"]:
+                    popup_text += f"<br>🏢 {proximity_result['company']}"
+                
                 folium.Marker(
                     location=[lat, lon],
-                    popup=f"📍 {plus_code_input}<br>📏 {format_distance(dist_m) if dist_m else 'N/A'}",
+                    popup=popup_text,
                     tooltip=f"Plus Code: {plus_code_input}",
                     icon=folium.Icon(color=marker_color, icon="info-sign")
                 ).add_to(m)
 
+                # Adicionar CTOs
                 if nearest_ctos:
                     for cto in nearest_ctos:
                         folium.Marker(
@@ -402,20 +523,23 @@ if plus_code_input:
                             icon=folium.Icon(color="blue", icon="cloud")
                         ).add_to(m)
 
+                # Círculo de proximidade
                 if dist_m is not None:
+                    max_radius = 250 if proximity_result["is_celesc"] else 500
+                    circle_radius = max(25, min(dist_m, max_radius))
                     folium.Circle(
                         location=[lat, lon],
-                        radius=max(25, min(dist_m, 500)),
+                        radius=circle_radius,
                         color="red",
                         weight=2,
                         fillColor="red",
                         fillOpacity=0.1,
-                        popup=f"Raio: {max(25, min(dist_m, 500)):.0f}m"
+                        popup=f"Raio: {circle_radius:.0f}m"
                     ).add_to(m)
 
                 st_folium(m, width=700, height=400)
 
-                # Depois do mapa: lista CTOs
+                # Lista de CTOs próximas
                 st.markdown("### 🛠 CTOs mais próximas")
                 if nearest_ctos:
                     for cto in nearest_ctos[:3]:
@@ -429,27 +553,40 @@ if plus_code_input:
                 else:
                     st.warning("Nenhuma CTO encontrada próxima.")
 
-                
-
             with col2:
                 st.markdown("### 🎯 Análise de Viabilidade")
-                if dist_m is not None:
-                    category_info = get_distance_category(dist_m)
+                if proximity_result["distance"] is not None:
+                    dist_m = proximity_result["distance"]
+                    company = proximity_result["company"]
+                    is_celesc = proximity_result["is_celesc"]
+                    
+                    # Mostrar informações da empresa mais próxima
+                    if company:
+                        company_color = all_lines[company]["color"]
+                        st.markdown(f'🏢 **Empresa mais próxima:** <span style="color:{company_color}; font-weight:bold;">{company}</span>', unsafe_allow_html=True)
+                    
+                    category_info = get_distance_category(dist_m, is_celesc)
                     distance_formatted = format_distance(dist_m)
+                    
                     if category_info["color"] == "success":
                         st.success(f"{category_info['icon']} **{category_info['message']}**")
                     elif category_info["color"] == "warning":
                         st.warning(f"{category_info['icon']} **{category_info['message']}**")
                     else:
                         st.error(f"{category_info['icon']} **{category_info['message']}**")
+                    
                     st.metric("📏 Distância", distance_formatted)
+                    
+                    if is_celesc:
+                        st.info("⚡ Aplicados critérios especiais da CELESC (limites menores)")
                 else:
                     st.error("❌ Não foi possível calcular a distância")
 
             search_entry = {
                 "plus_code": plus_code_input,
                 "coordinates": coords_str,
-                "distance": dist_m,
+                "distance": proximity_result["distance"],
+                "company": proximity_result["company"],
                 "timestamp": datetime.now()
             }
             if search_entry not in st.session_state.search_history:
@@ -492,26 +629,40 @@ with col2:
     else:
         st.dataframe(df_sem, use_container_width=True, height=300)
 
+# Legenda de cores das empresas
+st.markdown("---")
+st.subheader("🎨 Legenda de Cores das Empresas")
+cols = st.columns(len(KML_CONFIGS))
+for i, (company, config) in enumerate(KML_CONFIGS.items()):
+    with cols[i % len(cols)]:
+        color_box = f'<div style="background-color:{config["color"]}; width:100%; height:30px; border-radius:5px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; text-shadow:1px 1px 2px rgba(0,0,0,0.7);">{company}</div>'
+        st.markdown(color_box, unsafe_allow_html=True)
+
 if st.session_state.search_history:
     st.markdown("---")
     st.subheader("📚 Histórico de Pesquisas")
     for i, entry in enumerate(st.session_state.search_history[:5]):
-        with st.expander(f"🕒 {entry['plus_code']} - {entry['timestamp'].strftime('%H:%M:%S')}"):
-            col1, col2, col3 = st.columns(3)
+        company_info = f" - {entry['company']}" if entry.get('company') else ""
+        with st.expander(f"🕐 {entry['plus_code']}{company_info} - {entry['timestamp'].strftime('%H:%M:%S')}"):
+            col1, col2, col3, col4 = st.columns(4)
             with col1:
                 st.text(f"Plus Code: {entry['plus_code']}")
             with col2:
                 st.text(f"Coordenadas: {entry['coordinates']}")
             with col3:
                 distance_text = format_distance(entry['distance']) if entry['distance'] else "N/A"
-                st.text(f"Distância em linha: {distance_text}")
+                st.text(f"Distância: {distance_text}")
+            with col4:
+                company_text = entry.get('company', 'N/A')
+                st.text(f"Empresa: {company_text}")
 
 st.markdown("---")
 st.markdown(
     """
     <div style='text-align: center; color: #666; padding: 20px;'>
-        <p>🔍 <strong>Validador de Projetos</strong> | Desenvolvido ByLeo</p>
-        <p>📊 Dados atualizados | 🗺️ Integração com Google Maps e LocationIQ</p>
+        <p>📍 <strong>Validador de Projetos - Múltiplas Empresas</strong> | Desenvolvido ByLeo</p>
+        <p>📊 Sistema integrado para análise de viabilidade com múltiplas concessionárias</p>
+        <p>🗺️ Integração com Google Maps e LocationIQ | ⚡ Critérios especiais para CELESC</p>
     </div>
     """,
     unsafe_allow_html=True
