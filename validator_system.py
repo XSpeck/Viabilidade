@@ -354,7 +354,7 @@ if plus_code_input:
                 nearest_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=800.0)
                 st.markdown("### 🛠 CTOs mais próximas")
                 if nearest_ctos:
-                    for cto in nearest_ctos:
+                    for cto in nearest_ctos[:3]:
                         st.success(
                             f'**{cto["name"]}**\n'
                             f'- Coordenadas: `{cto["lat"]:.6f}, {cto["lon"]:.6f}`\n'
