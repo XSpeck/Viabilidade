@@ -406,8 +406,7 @@ if plus_code_input:
                     
                     st.metric("📏 Distância", distance_formatted)
                     
-                    if line_num:
-                        st.metric("🔗 Linha mais próxima", f"#{line_num}")
+                    
                 else:
                     st.error("❌ Não foi possível calcular a distância")
             
