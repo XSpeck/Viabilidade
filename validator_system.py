@@ -351,6 +351,60 @@ if plus_code_input:
                     unsafe_allow_html=True
                 )
 
+                # 🗺️ MAPA PRIMEIRO
+                 st.markdown("### 🗺️ Visualização no Mapa")
+                if dist_m is not None and dist_m <= 100:
+                    zoom_level = 18
+                elif dist_m is not None and dist_m <= 500:
+                    zoom_level = 16
+                else:
+                    zoom_level = 15
+    
+                m = folium.Map(
+                    location=[lat, lon],
+                    zoom_start=zoom_level,
+                    tiles='OpenStreetMap'
+                )
+    
+                for i, line in enumerate(lines):
+                    folium.PolyLine(
+                        locations=line,
+                        color="blue",
+                        weight=3,
+                        opacity=0.7,
+                        popup=f"Linha #{i+1}"
+                    ).add_to(m)
+    
+                marker_color = "green" if dist_m and dist_m <= 100 else "orange" if dist_m and dist_m <= 500 else "red"
+                folium.Marker(
+                    location=[lat, lon],
+                    popup=f"📍 {plus_code_input}<br>📏 {format_distance(dist_m) if dist_m else 'N/A'}",
+                    tooltip=f"Plus Code: {plus_code_input}",
+                    icon=folium.Icon(color=marker_color, icon="info-sign")
+                ).add_to(m)
+    
+                if nearest_ctos:
+                    for cto in nearest_ctos:
+                        folium.Marker(
+                            location=[cto["lat"], cto["lon"]],
+                            popup=f'CTO: {cto["name"]}<br>Distância: {format_distance(cto["distance"])}',
+                            tooltip=f'CTO: {cto["name"]}',
+                            icon=folium.Icon(color="blue", icon="cloud")
+                        ).add_to(m)
+    
+                if dist_m is not None:
+                    folium.Circle(
+                        location=[lat, lon],
+                        radius=max(25, min(dist_m, 500)),
+                        color="red",
+                        weight=2,
+                        fillColor="red",
+                        fillOpacity=0.1,
+                        popup=f"Raio: {max(25, min(dist_m, 500)):.0f}m"
+                    ).add_to(m)
+    
+                st_folium(m, width=700, height=400)
+
                 nearest_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=400.0)
                 st.markdown("### 🛠 CTOs mais próximas")
                 if nearest_ctos:
@@ -385,59 +439,7 @@ if plus_code_input:
                 else:
                     st.error("❌ Não foi possível calcular a distância")
 
-            st.markdown("### 🗺️ Visualização no Mapa")
-            if dist_m is not None and dist_m <= 100:
-                zoom_level = 18
-            elif dist_m is not None and dist_m <= 500:
-                zoom_level = 16
-            else:
-                zoom_level = 15
-
-            m = folium.Map(
-                location=[lat, lon],
-                zoom_start=zoom_level,
-                tiles='OpenStreetMap'
-            )
-
-            for i, line in enumerate(lines):
-                folium.PolyLine(
-                    locations=line,
-                    color="blue",
-                    weight=3,
-                    opacity=0.7,
-                    popup=f"Linha #{i+1}"
-                ).add_to(m)
-
-            marker_color = "green" if dist_m and dist_m <= 100 else "orange" if dist_m and dist_m <= 500 else "red"
-            folium.Marker(
-                location=[lat, lon],
-                popup=f"📍 {plus_code_input}<br>📏 {format_distance(dist_m) if dist_m else 'N/A'}",
-                tooltip=f"Plus Code: {plus_code_input}",
-                icon=folium.Icon(color=marker_color, icon="info-sign")
-            ).add_to(m)
-
-            if nearest_ctos:
-                for cto in nearest_ctos:
-                    folium.Marker(
-                        location=[cto["lat"], cto["lon"]],
-                        popup=f'CTO: {cto["name"]}<br>Distância: {format_distance(cto["distance"])}',
-                        tooltip=f'CTO: {cto["name"]}',
-                        icon=folium.Icon(color="blue", icon="cloud")
-                    ).add_to(m)
-
-            if dist_m is not None:
-                folium.Circle(
-                    location=[lat, lon],
-                    radius=max(25, min(dist_m, 500)),
-                    color="red",
-                    weight=2,
-                    fillColor="red",
-                    fillOpacity=0.1,
-                    popup=f"Raio: {max(25, min(dist_m, 500)):.0f}m"
-                ).add_to(m)
-
-            st_folium(m, width=700, height=400)
-
+           
             search_entry = {
                 "plus_code": plus_code_input,
                 "coordinates": coords_str,
