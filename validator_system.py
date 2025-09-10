@@ -332,12 +332,15 @@ if plus_code_input:
             lat, lon = pluscode_to_coords(plus_code_input)
             col1, col2 = st.columns([2, 1])
 
+            # Calcule os valores ANTES do mapa/lista
+            dist_m, line_num = check_proximity((lat, lon), lines)
+            nearest_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=800.0)
+
             with col1:
                 st.markdown("### 📍 Informações da Localização")
                 coords_str = f"{lat:.6f}, {lon:.6f}"
                 st.caption("Coordenadas (copiar)")
                 st.code(coords_str, language="text")
-
                 maps_url = f"https://www.google.com/maps/search/?api=1&query={lat},{lon}"
                 st.markdown(
                     f'''
@@ -351,7 +354,7 @@ if plus_code_input:
                     unsafe_allow_html=True
                 )
 
-                # 🗺️ MAPA PRIMEIRO
+                # MAPA PRIMEIRO!
                 st.markdown("### 🗺️ Visualização no Mapa")
                 if dist_m is not None and dist_m <= 100:
                     zoom_level = 18
@@ -359,13 +362,13 @@ if plus_code_input:
                     zoom_level = 16
                 else:
                     zoom_level = 15
-    
+
                 m = folium.Map(
                     location=[lat, lon],
                     zoom_start=zoom_level,
                     tiles='OpenStreetMap'
                 )
-    
+
                 for i, line in enumerate(lines):
                     folium.PolyLine(
                         locations=line,
@@ -374,7 +377,7 @@ if plus_code_input:
                         opacity=0.7,
                         popup=f"Linha #{i+1}"
                     ).add_to(m)
-    
+
                 marker_color = "green" if dist_m and dist_m <= 100 else "orange" if dist_m and dist_m <= 500 else "red"
                 folium.Marker(
                     location=[lat, lon],
@@ -382,7 +385,7 @@ if plus_code_input:
                     tooltip=f"Plus Code: {plus_code_input}",
                     icon=folium.Icon(color=marker_color, icon="info-sign")
                 ).add_to(m)
-    
+
                 if nearest_ctos:
                     for cto in nearest_ctos:
                         folium.Marker(
@@ -391,7 +394,7 @@ if plus_code_input:
                             tooltip=f'CTO: {cto["name"]}',
                             icon=folium.Icon(color="blue", icon="cloud")
                         ).add_to(m)
-    
+
                 if dist_m is not None:
                     folium.Circle(
                         location=[lat, lon],
@@ -402,17 +405,17 @@ if plus_code_input:
                         fillOpacity=0.1,
                         popup=f"Raio: {max(25, min(dist_m, 500)):.0f}m"
                     ).add_to(m)
-    
+
                 st_folium(m, width=700, height=400)
 
-                nearest_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=400.0)
-                st.markdown("### 🛠 CTOs mais próximas")
+                # Depois do mapa: lista CTOs
+                st.markdown("### 🛠 CTOs mais próximas (até 800 m)")
                 if nearest_ctos:
                     for cto in nearest_ctos[:3]:
                         st.success(
                             f'**{cto["name"]}**\n'
                             f'- Coordenadas: `{cto["lat"]:.6f}, {cto["lon"]:.6f}`\n'
-                            f'- Distância em Linha reta: {format_distance(cto["distance"])}'
+                            f'- Distância em linha reta: {format_distance(cto["distance"])}'
                         )
                 else:
                     st.warning("Nenhuma CTO encontrada próxima.")
@@ -424,8 +427,6 @@ if plus_code_input:
 
             with col2:
                 st.markdown("### 🎯 Análise de Viabilidade")
-                with st.spinner("Calculando distância..."):
-                    dist_m, line_num = check_proximity((lat, lon), lines)
                 if dist_m is not None:
                     category_info = get_distance_category(dist_m)
                     distance_formatted = format_distance(dist_m)
@@ -439,7 +440,6 @@ if plus_code_input:
                 else:
                     st.error("❌ Não foi possível calcular a distância")
 
-           
             search_entry = {
                 "plus_code": plus_code_input,
                 "coordinates": coords_str,
