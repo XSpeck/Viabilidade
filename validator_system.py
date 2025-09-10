@@ -494,7 +494,7 @@ if st.session_state.search_history:
                 st.text(f"Coordenadas: {entry['coordinates']}")
             with col3:
                 distance_text = format_distance(entry['distance']) if entry['distance'] else "N/A"
-                st.text(f"Distância: {distance_text}")
+                st.text(f"Distância em linha: {distance_text}")
 
 st.markdown("---")
 st.markdown(
