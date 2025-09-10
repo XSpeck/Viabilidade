@@ -257,7 +257,8 @@ def reverse_geocode(lat: float, lon: float) -> str:
             time.sleep(1)
     return "Erro na consulta após múltiplas tentativas"
 
-def find_nearest_ctos(lat: float, lon: float, ctos: List[dict], max_results: int = 3) -> List[dict]:
+def find_nearest_ctos(lat: float, lon: float, ctos: List[dict], max_radius: float = 800.0) -> List[dict]:
+    """Retorna as CTOs dentro do raio máximo da coordenada"""
     if not ctos:
         return []
     dists = []
@@ -349,7 +350,7 @@ if plus_code_input:
                     unsafe_allow_html=True
                 )
 
-                nearest_ctos = find_nearest_ctos(lat, lon, ctos, max_results=3)
+                nearest_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=800.0)
                 st.markdown("### 🛠 CTOs mais próximas")
                 if nearest_ctos:
                     for cto in nearest_ctos:
