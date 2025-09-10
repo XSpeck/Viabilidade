@@ -264,9 +264,10 @@ def find_nearest_ctos(lat: float, lon: float, ctos: List[dict], max_radius: floa
     dists = []
     for cto in ctos:
         dist = geodesic((lat, lon), (cto["lat"], cto["lon"])).meters
-        dists.append({**cto, "distance": dist})
+        if dist <= max_radius:
+            dists.append({**cto, "distance": dist})
     dists.sort(key=lambda x: x["distance"])
-    return dists[:max_results]
+    return dists
 
 # ======================
 # Interface Streamlit
