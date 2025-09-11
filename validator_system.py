@@ -406,22 +406,22 @@ try:
         all_lines, ctos, df_utp, df_sem = load_all_files()
     
     # Métricas por empresa
-    st.subheader("📊 Estatísticas por Empresa")
-    cols = st.columns(len(KML_CONFIGS))
-    for i, (company, data) in enumerate(all_lines.items()):
-        with cols[i % len(cols)]:
-            color_preview = f'<span style="background-color:{data["color"]}; width:20px; height:20px; display:inline-block; border-radius:3px; margin-right:5px;"></span>'
-            st.markdown(f'{color_preview}**{company}**', unsafe_allow_html=True)
-            st.metric("Linhas", data["count"])
+    #st.subheader("📊 Estatísticas por Empresa")
+    #cols = st.columns(len(KML_CONFIGS))
+    #for i, (company, data) in enumerate(all_lines.items()):
+    #    with cols[i % len(cols)]:
+    #        color_preview = f'<span style="background-color:{data["color"]}; width:20px; height:20px; display:inline-block; border-radius:3px; margin-right:5px;"></span>'
+    #        st.markdown(f'{color_preview}**{company}**', unsafe_allow_html=True)
+    #        st.metric("Linhas", data["count"])
     
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        total_lines = sum(data["count"] for data in all_lines.values())
-        st.metric("🗺️ Total de Linhas", total_lines)
-    with col2:
-        st.metric("📡 UTPs/FTTAs Atendidas", len(df_utp))
-    with col3:
-        st.metric("🏢 Prédios sem Viabilidade", len(df_sem))
+    #col1, col2, col3 = st.columns(3)
+    #with col1:
+    #    total_lines = sum(data["count"] for data in all_lines.values())
+    #    st.metric("🗺️ Total de Linhas", total_lines)
+    #with col2:
+    #    st.metric("📡 UTPs/FTTAs Atendidas", len(df_utp))
+    #with col3:
+    #    st.metric("🏢 Prédios sem Viabilidade", len(df_sem))
         
 except Exception as e:
     st.error(f"❌ Erro ao carregar arquivos: {e}")
@@ -491,7 +491,7 @@ if plus_code_input:
                         else:
                             st.error(f"{category_info['icon']} **{category_info['message']}**")
                         
-                        st.metric("📏 Distância", distance_formatted)
+                        st.metric("📏 Distância até a rede", distance_formatted)
                         
                         if is_celesc:
                             st.info("⚡ Aplicados critérios especiais da CELESC (limites menores)")
