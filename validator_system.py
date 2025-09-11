@@ -73,10 +73,10 @@ DISTANCE_CONFIGS = {
 
 # Configurações específicas para CELESC (limites menores)
 CELESC_DISTANCE_CONFIGS = {
-    "excellent": {"max": 15, "color": "success", "icon": "✅", "message": "Excelente viabilidade (CELESC)"},
-    "good": {"max": 50, "color": "success", "icon": "✅", "message": "Boa viabilidade (CELESC)"},
-    "moderate": {"max": 150, "color": "warning", "icon": "⚠️", "message": "Viabilidade moderada (CELESC)"},
-    "poor": {"max": 250, "color": "warning", "icon": "⚠️", "message": "Viabilidade baixa (CELESC)"},
+    "excellent": {"max": 5, "color": "success", "icon": "✅", "message": "Excelente viabilidade (CELESC)"},
+    "good": {"max": 10, "color": "success", "icon": "✅", "message": "Boa viabilidade (CELESC)"},
+    "moderate": {"max": 25, "color": "warning", "icon": "⚠️", "message": "Viabilidade moderada (CELESC)"},
+    "poor": {"max": 50, "color": "warning", "icon": "⚠️", "message": "Viabilidade baixa (CELESC)"},
     "none": {"max": float('inf'), "color": "error", "icon": "❌", "message": "Sem viabilidade (CELESC)"}
 }
 
@@ -370,7 +370,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-st.title("📍 Validador de Projetos - Múltiplas Empresas")
+st.title("📍 Validador de Projetos")
 st.markdown("---")
 
 with st.sidebar:
@@ -392,7 +392,7 @@ with st.sidebar:
     st.header("⚡ Critérios CELESC (Especiais)")
     for category, config in CELESC_DISTANCE_CONFIGS.items():
         if config["max"] == float('inf'):
-            distance_text = "> 250m"
+            distance_text = "> 50m"
         else:
             distance_text = f"≤ {config['max']}m"
         st.markdown(f"{config['icon']} **{config['message']}**: {distance_text}")
