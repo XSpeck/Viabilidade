@@ -1,20 +1,31 @@
-streamlit
-xml.etree.ElementTree
-lxml
-shapely
-geopy
-openlocationcode
-folium
-streamlit-folium
-gdown
-pandas
-numpy
-requests
-logging
-datetime
-time
-re
-typing
-beautifulsoup4
-certifi
-charset-normalizer
+# Core Streamlit
+streamlit>=1.28.0
+
+# Processamento de arquivos KML/XML
+lxml>=4.9.0
+
+# Geometria e cálculos geoespaciais
+shapely>=2.0.0
+geopy>=2.3.0
+
+# Plus Codes (Google Open Location Code)
+openlocationcode>=1.0.1
+
+# Mapas interativos
+folium>=0.14.0
+streamlit-folium>=0.13.0
+
+# Download de arquivos do Google Drive
+gdown>=4.7.1
+
+# Manipulação de dados
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Requisições HTTP para geocoding
+requests>=2.31.0
+
+# Extras para melhor performance
+beautifulsoup4>=4.12.0
+certifi>=2023.0.0
+charset-normalizer>=3.0.0
