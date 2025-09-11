@@ -553,7 +553,7 @@ if plus_code_input:
                 else:
                     st.warning("Nenhuma CTO encontrada próxima.")
 
-            with col2:
+            with col1:
                 st.markdown("### 🎯 Análise de Viabilidade")
                 if proximity_result["distance"] is not None:
                     dist_m = proximity_result["distance"]
@@ -563,7 +563,7 @@ if plus_code_input:
                     # Mostrar informações da empresa mais próxima
                     if company:
                         company_color = all_lines[company]["color"]
-                        st.markdown(f'🏢 **Empresa mais próxima:** <span style="color:{company_color}; font-weight:bold;">{company}</span>', unsafe_allow_html=True)
+                        st.markdown(f'💡 **Postes da ** <span style="color:{company_color}; font-weight:bold;">{company}</span>', unsafe_allow_html=True)
                     
                     category_info = get_distance_category(dist_m, is_celesc)
                     distance_formatted = format_distance(dist_m)
