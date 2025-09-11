@@ -660,8 +660,7 @@ st.markdown("---")
 st.markdown(
     """
     <div style='text-align: center; color: #666; padding: 20px;'>
-        <p>📍 <strong>Validador de Projetos - Múltiplas Empresas</strong> | Desenvolvido ByLeo</p>
-        <p>📊 Sistema integrado para análise de viabilidade com múltiplas concessionárias</p>
+        <p>📍 <strong>Validador de Projetos</strong> | Desenvolvido ByLeo</p>
         <p>🗺️ Integração com Google Maps e LocationIQ | ⚡ Critérios especiais para CELESC</p>
     </div>
     """,
