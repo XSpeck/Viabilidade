@@ -371,7 +371,7 @@ st.set_page_config(
 )
 
 st.title("📍 Validador de Projetos")
-st.markdown("---")
+
 
 with st.sidebar:
     st.header("⚙️ Controles")
