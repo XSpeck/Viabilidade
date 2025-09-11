@@ -470,33 +470,33 @@ if plus_code_input:
                     unsafe_allow_html=True
                 )
                 with col1:
-                st.markdown("### 🎯 Análise de Viabilidade")
-                if proximity_result["distance"] is not None:
-                    dist_m = proximity_result["distance"]
-                    company = proximity_result["company"]
-                    is_celesc = proximity_result["is_celesc"]
-                    
-                    # Mostrar informações da empresa mais próxima
-                    if company:
-                        company_color = all_lines[company]["color"]
-                        st.markdown(f'💡 Postes da <span style="color:{company_color}; font-weight:bold;">{company}</span>', unsafe_allow_html=True)
-                    
-                    category_info = get_distance_category(dist_m, is_celesc)
-                    distance_formatted = format_distance(dist_m)
-                    
-                    if category_info["color"] == "success":
-                        st.success(f"{category_info['icon']} **{category_info['message']}**")
-                    elif category_info["color"] == "warning":
-                        st.warning(f"{category_info['icon']} **{category_info['message']}**")
+                    st.markdown("### 🎯 Análise de Viabilidade")
+                    if proximity_result["distance"] is not None:
+                        dist_m = proximity_result["distance"]
+                        company = proximity_result["company"]
+                        is_celesc = proximity_result["is_celesc"]
+                        
+                        # Mostrar informações da empresa mais próxima
+                        if company:
+                            company_color = all_lines[company]["color"]
+                            st.markdown(f'💡 Postes da <span style="color:{company_color}; font-weight:bold;">{company}</span>', unsafe_allow_html=True)
+                        
+                        category_info = get_distance_category(dist_m, is_celesc)
+                        distance_formatted = format_distance(dist_m)
+                        
+                        if category_info["color"] == "success":
+                            st.success(f"{category_info['icon']} **{category_info['message']}**")
+                        elif category_info["color"] == "warning":
+                            st.warning(f"{category_info['icon']} **{category_info['message']}**")
+                        else:
+                            st.error(f"{category_info['icon']} **{category_info['message']}**")
+                        
+                        st.metric("📏 Distância", distance_formatted)
+                        
+                        if is_celesc:
+                            st.info("⚡ Aplicados critérios especiais da CELESC (limites menores)")
                     else:
-                        st.error(f"{category_info['icon']} **{category_info['message']}**")
-                    
-                    st.metric("📏 Distância", distance_formatted)
-                    
-                    if is_celesc:
-                        st.info("⚡ Aplicados critérios especiais da CELESC (limites menores)")
-                else:
-                    st.error("❌ Não foi possível calcular a distância")
+                        st.error("❌ Não foi possível calcular a distância")
                 # MAPA com todas as empresas
                 st.markdown("### 🗺️ Visualização no Mapa")
                 dist_m = proximity_result["distance"]
