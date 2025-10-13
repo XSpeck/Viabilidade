@@ -365,12 +365,12 @@ def find_nearest_ctos(lat: float, lon: float, ctos: List[dict], max_radius: floa
 # ======================
 st.set_page_config(
     page_title="Validador de Projetos",
-    page_icon="📍",
+    page_icon="🔍",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-st.title("📍 Validador de Projetos")
+st.title("🔍 Validador de Projetos")
 
 
 with st.sidebar:
@@ -507,71 +507,64 @@ if plus_code_input:
                 else:
                     zoom_level = 15
 
-                # Criar o mapa apenas se ainda não existir ou se Plus Code mudou
-                if "map_data" not in st.session_state or st.session_state.get("last_plus_code") != plus_code_input:
-                    m = folium.Map(
-                        location=[lat, lon],
-                        zoom_start=zoom_level,
-                        tiles='OpenStreetMap'
-                    )
+                m = folium.Map(
+                    location=[lat, lon],
+                    zoom_start=zoom_level,
+                    tiles='OpenStreetMap'
+                )
 
-                    # Adicionar linhas de todas as empresas com cores diferentes
-                    for company, data in all_lines.items():
-                        lines = data["lines"]
-                        color = data["color"]
-                        for i, line in enumerate(lines):
-                            folium.PolyLine(
-                                locations=line,
-                                color=color,
-                                weight=3,
-                                opacity=0.8,
-                                popup=f"{company} - Linha #{i+1}",
-                                tooltip=f"{company}"
-                            ).add_to(m)
-
-                    # Marker para o ponto pesquisado
-                    marker_color = "green" if dist_m and dist_m <= 100 else "orange" if dist_m and dist_m <= 500 else "red"
-                    popup_text = f"📍 {plus_code_input}<br>📏 {format_distance(dist_m) if dist_m else 'N/A'}"
-                    if proximity_result["company"]:
-                        popup_text += f"<br>🏢 {proximity_result['company']}"
-                
-                    folium.Marker(
-                        location=[lat, lon],
-                        popup=popup_text,
-                        tooltip=f"Plus Code: {plus_code_input}",
-                        icon=folium.Icon(color=marker_color, icon="info-sign")
-                    ).add_to(m)
-
-                    # Adicionar CTOs
-                    if nearest_ctos:
-                        for cto in nearest_ctos:
-                            folium.Marker(
-                                location=[cto["lat"], cto["lon"]],
-                                popup=f'CTO: {cto["name"]}<br>Distância: {format_distance(cto["distance"])}',
-                                tooltip=f'CTO: {cto["name"]}',
-                                icon=folium.Icon(color="blue", icon="cloud")
-                            ).add_to(m)
-
-                    # Círculo de proximidade
-                    if dist_m is not None:
-                        max_radius = 250 if proximity_result["is_celesc"] else 500
-                        circle_radius = max(25, min(dist_m, max_radius))
-                        folium.Circle(
-                            location=[lat, lon],
-                            radius=circle_radius,
-                            color="red",
-                            weight=2,
-                            fillColor="red",
-                            fillOpacity=0.1,
-                            popup=f"Raio: {circle_radius:.0f}m"
+                # Adicionar linhas de todas as empresas com cores diferentes
+                for company, data in all_lines.items():
+                    lines = data["lines"]
+                    color = data["color"]
+                    for i, line in enumerate(lines):
+                        folium.PolyLine(
+                            locations=line,
+                            color=color,
+                            weight=3,
+                            opacity=0.8,
+                            popup=f"{company} - Linha #{i+1}",
+                            tooltip=f"{company}"
                         ).add_to(m)
 
-                    # Salvar no estado
-                    st.session_state["map_data"] = m
-                    st.session_state["last_plus_code"] = plus_code_input
+                # Marker para o ponto pesquisado
+                marker_color = "green" if dist_m and dist_m <= 100 else "orange" if dist_m and dist_m <= 500 else "red"
+                popup_text = f"📍 {plus_code_input}<br>📏 {format_distance(dist_m) if dist_m else 'N/A'}"
+                if proximity_result["company"]:
+                    popup_text += f"<br>🏢 {proximity_result['company']}"
+                
+                folium.Marker(
+                    location=[lat, lon],
+                    popup=popup_text,
+                    tooltip=f"Plus Code: {plus_code_input}",
+                    icon=folium.Icon(color=marker_color, icon="info-sign")
+                ).add_to(m)
 
-                # Exibir o mapa salvo (sem recarregar)
-                st_folium(st.session_state["map_data"], width=700, height=400)
+                # Adicionar CTOs
+                if nearest_ctos:
+                    for cto in nearest_ctos:
+                        folium.Marker(
+                            location=[cto["lat"], cto["lon"]],
+                            popup=f'CTO: {cto["name"]}<br>Distância: {format_distance(cto["distance"])}',
+                            tooltip=f'CTO: {cto["name"]}',
+                            icon=folium.Icon(color="blue", icon="cloud")
+                        ).add_to(m)
+
+                # Círculo de proximidade
+                if dist_m is not None:
+                    max_radius = 250 if proximity_result["is_celesc"] else 500
+                    circle_radius = max(25, min(dist_m, max_radius))
+                    folium.Circle(
+                        location=[lat, lon],
+                        radius=circle_radius,
+                        color="red",
+                        weight=2,
+                        fillColor="red",
+                        fillOpacity=0.1,
+                        popup=f"Raio: {circle_radius:.0f}m"
+                    ).add_to(m)
+
+                st_folium(m, width=700, height=400, key=f"map_{plus_code_input}", returned_objects=[])
 
                 # Lista de CTOs próximas
                 st.markdown("### 🛠 CTOs mais próximas")
@@ -608,7 +601,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("📡 UTPs/FTTAs Atendidas")
-    search_utp = st.text_input("🔍 Buscar UTP/FTTA", key="search_utp", placeholder="Digite para filtrar...")
+    search_utp = st.text_input("🔎 Buscar UTP/FTTA", key="search_utp", placeholder="Digite para filtrar...")
     if search_utp:
         try:
             mask = df_utp.astype(str).apply(lambda x: x.str.lower().str.contains(search_utp.lower(), na=False)).any(axis=1)
@@ -623,7 +616,7 @@ with col1:
 
 with col2:
     st.subheader("🏢 Prédios sem Viabilidade")
-    search_sem = st.text_input("🔍 Buscar Prédios", key="search_sem_viab", placeholder="Digite para filtrar...")
+    search_sem = st.text_input("🔎 Buscar Prédios", key="search_sem_viab", placeholder="Digite para filtrar...")
     if search_sem:
         try:
             mask = df_sem.astype(str).apply(lambda x: x.str.lower().str.contains(search_sem.lower(), na=False)).any(axis=1)
@@ -667,7 +660,7 @@ st.markdown("---")
 st.markdown(
     """
     <div style='text-align: center; color: #666; padding: 20px;'>
-        <p>📍 <strong>Validador de Projetos</strong> | Desenvolvido ByLeo</p>
+        <p>🔍 <strong>Validador de Projetos</strong> | Desenvolvido ByLeo</p>
         <p>🗺️ Integração com Google Maps e LocationIQ | ⚡ Critérios especiais para CELESC</p>
     </div>
     """,
