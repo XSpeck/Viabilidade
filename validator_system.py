@@ -507,64 +507,71 @@ if plus_code_input:
                 else:
                     zoom_level = 15
 
-                m = folium.Map(
-                    location=[lat, lon],
-                    zoom_start=zoom_level,
-                    tiles='OpenStreetMap'
-                )
-
-                # Adicionar linhas de todas as empresas com cores diferentes
-                for company, data in all_lines.items():
-                    lines = data["lines"]
-                    color = data["color"]
-                    for i, line in enumerate(lines):
-                        folium.PolyLine(
-                            locations=line,
-                            color=color,
-                            weight=3,
-                            opacity=0.8,
-                            popup=f"{company} - Linha #{i+1}",
-                            tooltip=f"{company}"
-                        ).add_to(m)
-
-                # Marker para o ponto pesquisado
-                marker_color = "green" if dist_m and dist_m <= 100 else "orange" if dist_m and dist_m <= 500 else "red"
-                popup_text = f"📍 {plus_code_input}<br>📏 {format_distance(dist_m) if dist_m else 'N/A'}"
-                if proximity_result["company"]:
-                    popup_text += f"<br>🏢 {proximity_result['company']}"
-                
-                folium.Marker(
-                    location=[lat, lon],
-                    popup=popup_text,
-                    tooltip=f"Plus Code: {plus_code_input}",
-                    icon=folium.Icon(color=marker_color, icon="info-sign")
-                ).add_to(m)
-
-                # Adicionar CTOs
-                if nearest_ctos:
-                    for cto in nearest_ctos:
-                        folium.Marker(
-                            location=[cto["lat"], cto["lon"]],
-                            popup=f'CTO: {cto["name"]}<br>Distância: {format_distance(cto["distance"])}',
-                            tooltip=f'CTO: {cto["name"]}',
-                            icon=folium.Icon(color="blue", icon="cloud")
-                        ).add_to(m)
-
-                # Círculo de proximidade
-                if dist_m is not None:
-                    max_radius = 250 if proximity_result["is_celesc"] else 500
-                    circle_radius = max(25, min(dist_m, max_radius))
-                    folium.Circle(
+                # Criar o mapa apenas se ainda não existir ou se Plus Code mudou
+                if "map_data" not in st.session_state or st.session_state.get("last_plus_code") != plus_code_input:
+                    m = folium.Map(
                         location=[lat, lon],
-                        radius=circle_radius,
-                        color="red",
-                        weight=2,
-                        fillColor="red",
-                        fillOpacity=0.1,
-                        popup=f"Raio: {circle_radius:.0f}m"
+                        zoom_start=zoom_level,
+                        tiles='OpenStreetMap'
+                    )
+
+                    # Adicionar linhas de todas as empresas com cores diferentes
+                    for company, data in all_lines.items():
+                        lines = data["lines"]
+                        color = data["color"]
+                        for i, line in enumerate(lines):
+                            folium.PolyLine(
+                                locations=line,
+                                color=color,
+                                weight=3,
+                                opacity=0.8,
+                                popup=f"{company} - Linha #{i+1}",
+                                tooltip=f"{company}"
+                            ).add_to(m)
+
+                    # Marker para o ponto pesquisado
+                    marker_color = "green" if dist_m and dist_m <= 100 else "orange" if dist_m and dist_m <= 500 else "red"
+                    popup_text = f"📍 {plus_code_input}<br>📏 {format_distance(dist_m) if dist_m else 'N/A'}"
+                    if proximity_result["company"]:
+                        popup_text += f"<br>🏢 {proximity_result['company']}"
+                
+                    folium.Marker(
+                        location=[lat, lon],
+                        popup=popup_text,
+                        tooltip=f"Plus Code: {plus_code_input}",
+                        icon=folium.Icon(color=marker_color, icon="info-sign")
                     ).add_to(m)
 
-                st_folium(m, width=700, height=400)
+                    # Adicionar CTOs
+                    if nearest_ctos:
+                        for cto in nearest_ctos:
+                            folium.Marker(
+                                location=[cto["lat"], cto["lon"]],
+                                popup=f'CTO: {cto["name"]}<br>Distância: {format_distance(cto["distance"])}',
+                                tooltip=f'CTO: {cto["name"]}',
+                                icon=folium.Icon(color="blue", icon="cloud")
+                            ).add_to(m)
+
+                    # Círculo de proximidade
+                    if dist_m is not None:
+                        max_radius = 250 if proximity_result["is_celesc"] else 500
+                        circle_radius = max(25, min(dist_m, max_radius))
+                        folium.Circle(
+                            location=[lat, lon],
+                            radius=circle_radius,
+                            color="red",
+                            weight=2,
+                            fillColor="red",
+                            fillOpacity=0.1,
+                            popup=f"Raio: {circle_radius:.0f}m"
+                        ).add_to(m)
+
+                    # Salvar no estado
+                    st.session_state["map_data"] = m
+                    st.session_state["last_plus_code"] = plus_code_input
+
+                # Exibir o mapa salvo (sem recarregar)
+                st_folium(st.session_state["map_data"], width=700, height=400)
 
                 # Lista de CTOs próximas
                 st.markdown("### 🛠 CTOs mais próximas")
