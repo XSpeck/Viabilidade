@@ -563,7 +563,7 @@ if plus_code_input:
                         popup=f"Raio: {circle_radius:.0f}m"
                     ).add_to(m)
 
-                st_folium(m, width=700, height=400, key=f"map_{plus_code_input}", returned_objects=[])
+                st_folium(m, width=1000, height=800, key=f"map_{plus_code_input}", returned_objects=[])
 
                 # Lista de CTOs próximas
                 st.markdown("### 🛠 CTOs mais próximas")
