@@ -360,6 +360,62 @@ def find_nearest_ctos(lat: float, lon: float, ctos: List[dict], max_radius: floa
     dists.sort(key=lambda x: x["distance"])
     return dists
 
+@st.cache_data(ttl=3600)
+def get_walking_route(start_lat: float, start_lon: float, end_lat: float, end_lon: float) -> Optional[Dict]:
+    """
+    Calcula a rota real a pé usando OSRM (Open Source Routing Machine)
+    API pública e 100% gratuita - sem necessidade de API key
+    Retorna distância e duração estimada
+    """
+    try:
+        # OSRM API público - perfil "foot" para pedestres
+        url = f"http://router.project-osrm.org/route/v1/foot/{start_lon},{start_lat};{end_lon},{end_lat}"
+        params = {
+            "overview": "full",
+            "geometries": "geojson",
+            "steps": "false"
+        }
+        
+        response = requests.get(url, params=params, timeout=15)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("code") == "Ok" and data.get("routes") and len(data["routes"]) > 0:
+                route = data["routes"][0]
+                return {
+                    "distance": route["distance"],  # em metros
+                    "duration": route["duration"],  # em segundos
+                    "geometry": route["geometry"]   # GeoJSON da rota
+                }
+            else:
+                logger.warning(f"OSRM: Nenhuma rota encontrada - {data.get('code', 'unknown')}")
+                return None
+        else:
+            logger.warning(f"OSRM API retornou status {response.status_code}")
+            return None
+            
+    except requests.Timeout:
+        logger.error("OSRM: Timeout na requisição (servidor público pode estar lento)")
+        return None
+    except requests.RequestException as e:
+        logger.error(f"Erro ao consultar OSRM API: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Erro inesperado na rota: {e}")
+        return None
+
+def format_duration(seconds: float) -> str:
+    """Formata duração em segundos para formato legível"""
+    if seconds < 60:
+        return f"{int(seconds)}s"
+    elif seconds < 3600:
+        minutes = int(seconds / 60)
+        return f"{minutes}min"
+    else:
+        hours = int(seconds / 3600)
+        minutes = int((seconds % 3600) / 60)
+        return f"{hours}h {minutes}min"
+
 # ======================
 # Interface Streamlit
 # ======================
@@ -428,6 +484,7 @@ except Exception as e:
     st.stop()
 
 st.markdown("---")
+st.subheader("🔍 Validação de Localização")
 
 plus_code_input = st.text_input(
     "Digite o Plus Code",
@@ -446,6 +503,38 @@ if plus_code_input:
             # Verificar proximidade com todas as empresas
             proximity_result = check_proximity_all_companies((lat, lon), all_lines)
             nearest_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=800.0)
+            
+            # Calcular rota real até o ponto mais próximo (se houver)
+            walking_route = None
+            closest_point_coords = None
+            
+            if proximity_result["distance"] is not None and proximity_result["distance"] <= 1000:
+                # Encontrar o ponto exato mais próximo na linha
+                company = proximity_result["company"]
+                if company and company in all_lines:
+                    lines = all_lines[company]["lines"]
+                    pt = Point(lon, lat)
+                    min_dist = float('inf')
+                    
+                    for line in lines:
+                        if not line or len(line) < 2:
+                            continue
+                        try:
+                            line_coords = [(ln, lt) for lt, ln in line]
+                            ln = LineString(line_coords)
+                            if ln.is_valid:
+                                closest_pt = ln.interpolate(ln.project(pt))
+                                dist = geodesic((lat, lon), (closest_pt.y, closest_pt.x)).meters
+                                if dist < min_dist:
+                                    min_dist = dist
+                                    closest_point_coords = (closest_pt.y, closest_pt.x)
+                        except:
+                            continue
+                    
+                    # Calcular rota real a pé
+                    if closest_point_coords:
+                        with st.spinner("🚶 Calculando rota a pé..."):
+                            walking_route = get_walking_route(lat, lon, closest_point_coords[0], closest_point_coords[1])
 
             with col1:
                 st.markdown("### 📍 Informações da Localização")
@@ -491,6 +580,22 @@ if plus_code_input:
                             st.error(f"{category_info['icon']} **{category_info['message']}**")
                         
                         st.metric("📏 Distância até a rede", distance_formatted)
+                        
+                        # Mostrar rota real a pé se disponível
+                        if walking_route:
+                            route_distance = format_distance(walking_route["distance"])
+                            route_duration = format_duration(walking_route["duration"])
+                            
+                            col_route1, col_route2 = st.columns(2)
+                            with col_route1:
+                                st.metric("🚶 Distância real (a pé)", route_distance, 
+                                         delta=f"+{walking_route['distance'] - dist_m:.1f}m vs linha reta")
+                            with col_route2:
+                                st.metric("⏱️ Tempo estimado", route_duration)
+                            
+                            st.info("🗺️ Rota calculada usando OSRM (Open Source) - considera ruas e calçadas")
+                        elif proximity_result["distance"] <= 1000:
+                            st.caption("⏳ Não foi possível calcular rota (servidor OSRM pode estar lento)")
                         
                         if is_celesc:
                             st.info("⚡ Aplicados critérios especiais da CELESC (limites menores)")
@@ -549,6 +654,35 @@ if plus_code_input:
                             icon=folium.Icon(color="blue", icon="cloud")
                         ).add_to(m)
 
+                # Desenhar rota real a pé no mapa
+                if walking_route and walking_route.get("geometry"):
+                    try:
+                        # GeoJSON vem como {"type": "LineString", "coordinates": [[lon, lat], ...]}
+                        coords = walking_route["geometry"]["coordinates"]
+                        # Converter de [lon, lat] para [lat, lon] para o folium
+                        route_points = [[coord[1], coord[0]] for coord in coords]
+                        
+                        folium.PolyLine(
+                            locations=route_points,
+                            color="#FF6B6B",
+                            weight=4,
+                            opacity=0.8,
+                            popup=f"🚶 Rota a pé: {format_distance(walking_route['distance'])} - {format_duration(walking_route['duration'])}",
+                            tooltip="Rota sugerida a pé",
+                            dash_array="10, 5"
+                        ).add_to(m)
+                        
+                        # Adicionar marker no ponto de chegada (poste mais próximo)
+                        if closest_point_coords:
+                            folium.Marker(
+                                location=[closest_point_coords[0], closest_point_coords[1]],
+                                popup=f"🎯 Poste mais próximo<br>{proximity_result['company']}",
+                                tooltip="Ponto mais próximo da rede",
+                                icon=folium.Icon(color="purple", icon="flag")
+                            ).add_to(m)
+                    except Exception as e:
+                        logger.error(f"Erro ao desenhar rota no mapa: {e}")
+
                 # Círculo de proximidade
                 if dist_m is not None:
                     max_radius = 250 if proximity_result["is_celesc"] else 500
@@ -563,7 +697,7 @@ if plus_code_input:
                         popup=f"Raio: {circle_radius:.0f}m"
                     ).add_to(m)
 
-                st_folium(m, width=1000, height=800, key=f"map_{plus_code_input}", returned_objects=[])
+                st_folium(m, width=700, height=400, key=f"map_{plus_code_input}", returned_objects=[])
 
                 # Lista de CTOs próximas
                 st.markdown("### 🛠 CTOs mais próximas")
