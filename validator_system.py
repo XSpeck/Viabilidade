@@ -486,9 +486,6 @@ except Exception as e:
     st.error(f"❌ Erro ao carregar arquivos: {e}")
     st.stop()
 
-st.markdown("---")
-st.subheader("🔍 Validação de Localização")
-
 plus_code_input = st.text_input(
     "Digite o Plus Code",
     placeholder="Ex: 8JV4+8XR ou 589G8JV4+8XR",
@@ -505,45 +502,27 @@ if plus_code_input:
 
             # Verificar proximidade com todas as empresas
             proximity_result = check_proximity_all_companies((lat, lon), all_lines)
+            nearest_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=800.0)
             
-            # Buscar CTOs em um raio maior inicialmente
-            candidate_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=1500.0)
-            
-            # Calcular rotas reais para as CTOs candidatas
-            cto_routes = []
-            if candidate_ctos:
-                with st.spinner("🗺️ Calculando rotas reais para CTOs..."):
-                    for cto in candidate_ctos[:10]:  # Calcular para até 10 CTOs
-                        route = get_walking_route(lat, lon, cto["lat"], cto["lon"])
-                        if route:  # Só adicionar se conseguiu calcular a rota
-                            cto_routes.append({
-                                "cto": cto,
-                                "route": route,
-                                "distance": route["distance"]  # Distância real
-                            })
-                        else:
-                            # Se não conseguiu calcular rota, usar distância em linha reta como fallback
-                            cto_routes.append({
-                                "cto": cto,
-                                "route": None,
-                                "distance": cto["distance"]  # Distância em linha reta
-                            })
-                    
-                    # Ordenar pela distância REAL (da rota)
-                    cto_routes.sort(key=lambda x: x["distance"])
-                    
-                    # Pegar apenas as 3 mais próximas pela rota real
-                    cto_routes = cto_routes[:3]
-            
-            # Definir a CTO mais próxima e sua rota
-            closest_cto = None
+            # Calcular rota real até a CTO mais próxima
             walking_route_cto = None
-            nearest_ctos = []
+            closest_cto = None
             
-            if cto_routes:
-                closest_cto = cto_routes[0]["cto"]
-                walking_route_cto = cto_routes[0]["route"]
-                nearest_ctos = [item["cto"] for item in cto_routes]
+            if nearest_ctos:
+                closest_cto = nearest_ctos[0]
+                with st.spinner("🚶 Calculando rota até CTO mais próxima..."):
+                    walking_route_cto = get_walking_route(lat, lon, closest_cto["lat"], closest_cto["lon"])
+            
+            # Calcular rotas para as 3 CTOs mais próximas
+            cto_routes = []
+            if nearest_ctos:
+                with st.spinner("🗺️ Calculando rotas para CTOs próximas..."):
+                    for cto in nearest_ctos[:3]:
+                        route = get_walking_route(lat, lon, cto["lat"], cto["lon"])
+                        cto_routes.append({
+                            "cto": cto,
+                            "route": route
+                        })
 
             with col1:
                 st.markdown("### 📍 Informações da Localização")
@@ -589,17 +568,22 @@ if plus_code_input:
                         
                         # Mostrar rota até CTO mais próxima
                         if walking_route_cto and closest_cto:
-                            route_distance = format_distance(walking_route_cto["distance"])
+                          
+                            route_distance = walking_route_cto["distance"]  # distância real em metros
+                            route_distance_sobra_val = route_distance + 50  # soma 50 metros
+                            route_distance_sobra = format_distance(route_distance_sobra_val)
+                            route_distance_fmt = format_distance(route_distance)
                             route_duration = format_duration(walking_route_cto["duration"])
+                            
                             
                             st.markdown(f"### 🎯 CTO Mais Próxima: **{closest_cto['name']}**")
                             
                             col_route1, col_route2 = st.columns(2)
                             with col_route1:
-                                st.metric("🚶 Distância real (a pé)", route_distance)
+                                st.metric("🚶 Distância real (a pé)", route_distance_fmt)
                             with col_route2:
-                                st.metric("⏱️ Tempo estimado", route_duration)
-                            
+                                st.metric("🏃‍♂️ Distância com sobra (+50m)", route_distance_sobra)
+                                                        
                             st.info("🗺️ Rota calculada usando OSRM (Open Source) - considera ruas e calçadas")
                         elif nearest_ctos:
                             st.caption("⏳ Não foi possível calcular rota (servidor OSRM pode estar lento)")
@@ -701,7 +685,9 @@ if plus_code_input:
                         popup=f"Raio: {circle_radius:.0f}m"
                     ).add_to(m)
 
-                st_folium(m, width=700, height=400, key=f"map_{plus_code_input}", returned_objects=[])
+                st.markdown("<div style='display: flex; justify-content: center;'>", unsafe_allow_html=True)
+                st_folium(m, width=None, height=600, key=f"map_{plus_code_input}", returned_objects=[])
+                st.markdown("</div>", unsafe_allow_html=True)
 
                 # Lista de CTOs próximas com distância real
                 st.markdown("### 🛠 CTOs mais próximas (com distância real)")
@@ -723,13 +709,19 @@ if plus_code_input:
                             style = "background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 10px;"
                         
                         if route:
+
+                            dist_real = route["distance"]  # em metros
+                            dist_com_sobra = dist_real + 50  # soma 50 metros
+                            dist_sobra_fmt = format_distance(dist_com_sobra)
+                            
                             st.markdown(f"""
                             <div style="{style}">
                                 <h4>{icon} CTO: {cto["name"]}</h4>
                                 <p>📍 Coordenadas: <code>{cto["lat"]:.6f}, {cto["lon"]:.6f}</code></p>
                                 <p>🔢 Plus Code: <code>{pluscode_cto}</code></p>
                                 <p>🚶 <strong>Distância real (a pé): {format_distance(route["distance"])}</strong></p>
-                                <p>⏱️ <strong>Tempo estimado: {format_duration(route["duration"])}</strong></p>
+                                <p>🏃‍♂️ <strong>Distância com sobra (+50 m): {dist_sobra_fmt}</strong></p>
+                                
                             </div>
                             """, unsafe_allow_html=True)
                         else:
