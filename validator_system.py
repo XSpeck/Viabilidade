@@ -504,37 +504,25 @@ if plus_code_input:
             proximity_result = check_proximity_all_companies((lat, lon), all_lines)
             nearest_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=800.0)
             
-            # Calcular rota real até o ponto mais próximo (se houver)
-            walking_route = None
-            closest_point_coords = None
+            # Calcular rota real até a CTO mais próxima
+            walking_route_cto = None
+            closest_cto = None
             
-            if proximity_result["distance"] is not None and proximity_result["distance"] <= 1000:
-                # Encontrar o ponto exato mais próximo na linha
-                company = proximity_result["company"]
-                if company and company in all_lines:
-                    lines = all_lines[company]["lines"]
-                    pt = Point(lon, lat)
-                    min_dist = float('inf')
-                    
-                    for line in lines:
-                        if not line or len(line) < 2:
-                            continue
-                        try:
-                            line_coords = [(ln, lt) for lt, ln in line]
-                            ln = LineString(line_coords)
-                            if ln.is_valid:
-                                closest_pt = ln.interpolate(ln.project(pt))
-                                dist = geodesic((lat, lon), (closest_pt.y, closest_pt.x)).meters
-                                if dist < min_dist:
-                                    min_dist = dist
-                                    closest_point_coords = (closest_pt.y, closest_pt.x)
-                        except:
-                            continue
-                    
-                    # Calcular rota real a pé
-                    if closest_point_coords:
-                        with st.spinner("🚶 Calculando rota a pé..."):
-                            walking_route = get_walking_route(lat, lon, closest_point_coords[0], closest_point_coords[1])
+            if nearest_ctos:
+                closest_cto = nearest_ctos[0]
+                with st.spinner("🚶 Calculando rota até CTO mais próxima..."):
+                    walking_route_cto = get_walking_route(lat, lon, closest_cto["lat"], closest_cto["lon"])
+            
+            # Calcular rotas para as 3 CTOs mais próximas
+            cto_routes = []
+            if nearest_ctos:
+                with st.spinner("🗺️ Calculando rotas para CTOs próximas..."):
+                    for cto in nearest_ctos[:3]:
+                        route = get_walking_route(lat, lon, cto["lat"], cto["lon"])
+                        cto_routes.append({
+                            "cto": cto,
+                            "route": route
+                        })
 
             with col1:
                 st.markdown("### 📍 Informações da Localização")
@@ -570,7 +558,6 @@ if plus_code_input:
                             st.markdown(f'💡 Postes da <span style="color:{company_color}; font-weight:bold;">{company}</span>', unsafe_allow_html=True)
                         
                         category_info = get_distance_category(dist_m, is_celesc)
-                        distance_formatted = format_distance(dist_m)
                         
                         if category_info["color"] == "success":
                             st.success(f"{category_info['icon']} **{category_info['message']}**")
@@ -579,22 +566,21 @@ if plus_code_input:
                         else:
                             st.error(f"{category_info['icon']} **{category_info['message']}**")
                         
-                        st.metric("📏 Distância até a rede", distance_formatted)
-                        
-                        # Mostrar rota real a pé se disponível
-                        if walking_route:
-                            route_distance = format_distance(walking_route["distance"])
-                            route_duration = format_duration(walking_route["duration"])
+                        # Mostrar rota até CTO mais próxima
+                        if walking_route_cto and closest_cto:
+                            route_distance = format_distance(walking_route_cto["distance"])
+                            route_duration = format_duration(walking_route_cto["duration"])
+                            
+                            st.markdown(f"### 🎯 CTO Mais Próxima: **{closest_cto['name']}**")
                             
                             col_route1, col_route2 = st.columns(2)
                             with col_route1:
-                                st.metric("🚶 Distância real (a pé)", route_distance, 
-                                         delta=f"+{walking_route['distance'] - dist_m:.1f}m vs linha reta")
+                                st.metric("🚶 Distância real (a pé)", route_distance)
                             with col_route2:
                                 st.metric("⏱️ Tempo estimado", route_duration)
                             
                             st.info("🗺️ Rota calculada usando OSRM (Open Source) - considera ruas e calçadas")
-                        elif proximity_result["distance"] <= 1000:
+                        elif nearest_ctos:
                             st.caption("⏳ Não foi possível calcular rota (servidor OSRM pode estar lento)")
                         
                         if is_celesc:
@@ -654,32 +640,29 @@ if plus_code_input:
                             icon=folium.Icon(color="blue", icon="cloud")
                         ).add_to(m)
 
-                # Desenhar rota real a pé no mapa
-                if walking_route and walking_route.get("geometry"):
+                # Desenhar rota real a pé até a CTO mais próxima
+                if walking_route_cto and walking_route_cto.get("geometry") and closest_cto:
                     try:
-                        # GeoJSON vem como {"type": "LineString", "coordinates": [[lon, lat], ...]}
-                        coords = walking_route["geometry"]["coordinates"]
-                        # Converter de [lon, lat] para [lat, lon] para o folium
+                        coords = walking_route_cto["geometry"]["coordinates"]
                         route_points = [[coord[1], coord[0]] for coord in coords]
                         
                         folium.PolyLine(
                             locations=route_points,
                             color="#FF6B6B",
-                            weight=4,
-                            opacity=0.8,
-                            popup=f"🚶 Rota a pé: {format_distance(walking_route['distance'])} - {format_duration(walking_route['duration'])}",
-                            tooltip="Rota sugerida a pé",
+                            weight=5,
+                            opacity=0.9,
+                            popup=f"🚶 Rota até {closest_cto['name']}: {format_distance(walking_route_cto['distance'])} - {format_duration(walking_route_cto['duration'])}",
+                            tooltip=f"Rota até CTO: {closest_cto['name']}",
                             dash_array="10, 5"
                         ).add_to(m)
                         
-                        # Adicionar marker no ponto de chegada (poste mais próximo)
-                        if closest_point_coords:
-                            folium.Marker(
-                                location=[closest_point_coords[0], closest_point_coords[1]],
-                                popup=f"🎯 Poste mais próximo<br>{proximity_result['company']}",
-                                tooltip="Ponto mais próximo da rede",
-                                icon=folium.Icon(color="purple", icon="flag")
-                            ).add_to(m)
+                        # Destacar a CTO mais próxima com cor diferente
+                        folium.Marker(
+                            location=[closest_cto["lat"], closest_cto["lon"]],
+                            popup=f"🎯 CTO MAIS PRÓXIMA<br>{closest_cto['name']}<br>Distância: {format_distance(walking_route_cto['distance'])}<br>Tempo: {format_duration(walking_route_cto['duration'])}",
+                            tooltip=f"🎯 CTO Mais Próxima: {closest_cto['name']}",
+                            icon=folium.Icon(color="red", icon="star")
+                        ).add_to(m)
                     except Exception as e:
                         logger.error(f"Erro ao desenhar rota no mapa: {e}")
 
@@ -699,17 +682,45 @@ if plus_code_input:
 
                 st_folium(m, width=700, height=400, key=f"map_{plus_code_input}", returned_objects=[])
 
-                # Lista de CTOs próximas
-                st.markdown("### 🛠 CTOs mais próximas")
-                if nearest_ctos:
-                    for cto in nearest_ctos[:3]:
+                # Lista de CTOs próximas com distância real
+                st.markdown("### 🛠 CTOs mais próximas (com distância real)")
+                if cto_routes:
+                    for idx, item in enumerate(cto_routes):
+                        cto = item["cto"]
+                        route = item["route"]
                         pluscode_cto = coords_to_pluscode(cto["lat"], cto["lon"])
-                        st.success(
-                            f'CTO: **{cto["name"]}**\n'
-                            f'- Coordenadas: `{cto["lat"]:.6f}, {cto["lon"]:.6f}`\n'
-                            f'- Plus Code: `{pluscode_cto}`\n'
-                            f'- Distância em linha reta: {format_distance(cto["distance"])}'
-                        )
+                        
+                        # Definir ícone e cor baseado na posição
+                        if idx == 0:
+                            icon = "🥇"
+                            style = "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 10px;"
+                        elif idx == 1:
+                            icon = "🥈"
+                            style = "background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 10px;"
+                        else:
+                            icon = "🥉"
+                            style = "background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 10px;"
+                        
+                        if route:
+                            st.markdown(f"""
+                            <div style="{style}">
+                                <h4>{icon} CTO: {cto["name"]}</h4>
+                                <p>📍 Coordenadas: <code>{cto["lat"]:.6f}, {cto["lon"]:.6f}</code></p>
+                                <p>🔢 Plus Code: <code>{pluscode_cto}</code></p>
+                                <p>🚶 <strong>Distância real (a pé): {format_distance(route["distance"])}</strong></p>
+                                <p>⏱️ <strong>Tempo estimado: {format_duration(route["duration"])}</strong></p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"""
+                            <div style="{style}">
+                                <h4>{icon} CTO: {cto["name"]}</h4>
+                                <p>📍 Coordenadas: <code>{cto["lat"]:.6f}, {cto["lon"]:.6f}</code></p>
+                                <p>🔢 Plus Code: <code>{pluscode_cto}</code></p>
+                                <p>📏 Distância em linha reta: {format_distance(cto["distance"])}</p>
+                                <p>⚠️ <em>Não foi possível calcular rota real</em></p>
+                            </div>
+                            """, unsafe_allow_html=True)
                 else:
                     st.warning("Nenhuma CTO encontrada próxima.")
 
