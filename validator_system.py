@@ -573,10 +573,12 @@ if plus_code_input:
                             
                             st.markdown(f"### 🎯 CTO Mais Próxima: **{closest_cto['name']}**")
                             
-                            col_route1, col_route2 = st.columns(2)
+                            col_route1, col_route2, col_route3 = st.columns(3)
                             with col_route1:
                                 st.metric("🚶 Distância real (a pé)", route_distance)
                             with col_route2:
+                                st.metric("🚶 Distância com sobra (+50m)", route_distance+50)
+                            with col_route3:
                                 st.metric("⏱️ Tempo estimado", route_duration)
                             
                             st.info("🗺️ Rota calculada usando OSRM (Open Source) - considera ruas e calçadas")
