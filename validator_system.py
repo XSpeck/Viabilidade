@@ -349,11 +349,14 @@ def reverse_geocode(lat: float, lon: float) -> str:
     return "Erro na consulta após múltiplas tentativas"
 
 def find_nearest_ctos(lat: float, lon: float, ctos: List[dict], max_radius: float = 400.0) -> List[dict]:
-    """Retorna as CTOs dentro do raio máximo da coordenada"""
+    """Retorna as CTOs dentro do raio máximo da coordenada, excluindo CTOs CDOI"""
     if not ctos:
         return []
     dists = []
     for cto in ctos:
+        # Ignorar CTOs que começam com CDOI
+        if cto["name"].upper().startswith("CDOI"):
+            continue
         dist = geodesic((lat, lon), (cto["lat"], cto["lon"])).meters
         if dist <= max_radius:
             dists.append({**cto, "distance": dist})
@@ -482,6 +485,9 @@ try:
 except Exception as e:
     st.error(f"❌ Erro ao carregar arquivos: {e}")
     st.stop()
+
+st.markdown("---")
+st.subheader("🔍 Validação de Localização")
 
 plus_code_input = st.text_input(
     "Digite o Plus Code",
