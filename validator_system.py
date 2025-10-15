@@ -577,7 +577,7 @@ if plus_code_input:
                             with col_route1:
                                 st.metric("🚶 Distância real (a pé)", route_distance)
                             with col_route2:
-                                st.metric("🚶 Distância com sobra (+50m)", route_distance+50)
+                                st.metric("🚶 Distância com sobra (+50m)", route_distance)
                             with col_route3:
                                 st.metric("⏱️ Tempo estimado", route_duration)
                             
