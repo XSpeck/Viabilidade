@@ -463,24 +463,6 @@ if st.session_state.refresh_clicked:
 try:
     with st.spinner("Carregando arquivos de todas as empresas..."):
         all_lines, ctos, df_utp, df_sem = load_all_files()
-    
-    # Métricas por empresa
-    #st.subheader("📊 Estatísticas por Empresa")
-    #cols = st.columns(len(KML_CONFIGS))
-    #for i, (company, data) in enumerate(all_lines.items()):
-    #    with cols[i % len(cols)]:
-    #        color_preview = f'<span style="background-color:{data["color"]}; width:20px; height:20px; display:inline-block; border-radius:3px; margin-right:5px;"></span>'
-    #        st.markdown(f'{color_preview}**{company}**', unsafe_allow_html=True)
-    #        st.metric("Linhas", data["count"])
-    
-    #col1, col2, col3 = st.columns(3)
-    #with col1:
-    #    total_lines = sum(data["count"] for data in all_lines.values())
-    #    st.metric("🗺️ Total de Linhas", total_lines)
-    #with col2:
-    #    st.metric("📡 UTPs/FTTAs Atendidas", len(df_utp))
-    #with col3:
-    #    st.metric("🏢 Prédios sem Viabilidade", len(df_sem))
         
 except Exception as e:
     st.error(f"❌ Erro ao carregar arquivos: {e}")
@@ -502,27 +484,45 @@ if plus_code_input:
 
             # Verificar proximidade com todas as empresas
             proximity_result = check_proximity_all_companies((lat, lon), all_lines)
-            nearest_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=800.0)
             
-            # Calcular rota real até a CTO mais próxima
-            walking_route_cto = None
-            closest_cto = None
+            # Buscar CTOs em um raio maior inicialmente
+            candidate_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=1500.0)
             
-            if nearest_ctos:
-                closest_cto = nearest_ctos[0]
-                with st.spinner("🚶 Calculando rota até CTO mais próxima..."):
-                    walking_route_cto = get_walking_route(lat, lon, closest_cto["lat"], closest_cto["lon"])
-            
-            # Calcular rotas para as 3 CTOs mais próximas
+            # Calcular rotas reais para as CTOs candidatas
             cto_routes = []
-            if nearest_ctos:
-                with st.spinner("🗺️ Calculando rotas para CTOs próximas..."):
-                    for cto in nearest_ctos[:3]:
+            if candidate_ctos:
+                with st.spinner("🗺️ Calculando rotas reais para CTOs..."):
+                    for cto in candidate_ctos[:10]:  # Calcular para até 10 CTOs
                         route = get_walking_route(lat, lon, cto["lat"], cto["lon"])
-                        cto_routes.append({
-                            "cto": cto,
-                            "route": route
-                        })
+                        if route:  # Só adicionar se conseguiu calcular a rota
+                            cto_routes.append({
+                                "cto": cto,
+                                "route": route,
+                                "distance": route["distance"]  # Distância real
+                            })
+                        else:
+                            # Se não conseguiu calcular rota, usar distância em linha reta como fallback
+                            cto_routes.append({
+                                "cto": cto,
+                                "route": None,
+                                "distance": cto["distance"]  # Distância em linha reta
+                            })
+                    
+                    # Ordenar pela distância REAL (da rota)
+                    cto_routes.sort(key=lambda x: x["distance"])
+                    
+                    # Pegar apenas as 3 mais próximas pela rota real
+                    cto_routes = cto_routes[:3]
+            
+            # Definir a CTO mais próxima e sua rota
+            closest_cto = None
+            walking_route_cto = None
+            nearest_ctos = []
+            
+            if cto_routes:
+                closest_cto = cto_routes[0]["cto"]
+                walking_route_cto = cto_routes[0]["route"]
+                nearest_ctos = [item["cto"] for item in cto_routes]
 
             with col1:
                 st.markdown("### 📍 Informações da Localização")
