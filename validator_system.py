@@ -568,8 +568,7 @@ if plus_code_input:
                         
                         # Mostrar rota até CTO mais próxima
                         if walking_route_cto and closest_cto:
-                            #route_distance = format_distance(walking_route_cto["distance"])
-                            #route_duration = format_duration(walking_route_cto["duration"])
+                          
                             route_distance = walking_route_cto["distance"]  # distância real em metros
                             route_distance_sobra_val = route_distance + 50  # soma 50 metros
                             route_distance_sobra = format_distance(route_distance_sobra_val)
@@ -716,6 +715,7 @@ if plus_code_input:
                                 <p>📍 Coordenadas: <code>{cto["lat"]:.6f}, {cto["lon"]:.6f}</code></p>
                                 <p>🔢 Plus Code: <code>{pluscode_cto}</code></p>
                                 <p>🚶 <strong>Distância real (a pé): {format_distance(route["distance"])}</strong></p>
+                                <p>🏃‍♂️ <strong>Distância com sobra (+50 m): {route_distance_sobra}</strong></p>
                                 <p>⏱️ <strong>Tempo estimado: {format_duration(route["duration"])}</strong></p>
                             </div>
                             """, unsafe_allow_html=True)
