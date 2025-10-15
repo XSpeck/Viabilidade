@@ -569,7 +569,7 @@ if plus_code_input:
                         # Mostrar rota até CTO mais próxima
                         if walking_route_cto and closest_cto:
                             route_distance = format_distance(walking_route_cto["distance"])
-                            route_distance_sobra = route_distance + 50
+                            route_distance_sobra = route_distance
                             route_duration = format_duration(walking_route_cto["duration"])
                             
                             st.markdown(f"### 🎯 CTO Mais Próxima: **{closest_cto['name']}**")
