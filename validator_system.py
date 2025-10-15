@@ -687,7 +687,9 @@ if plus_code_input:
                         popup=f"Raio: {circle_radius:.0f}m"
                     ).add_to(m)
 
+                st.markdown("<div style='display: flex; justify-content: center;'>", unsafe_allow_html=True)
                 st_folium(m, width=None, height=600, key=f"map_{plus_code_input}", returned_objects=[])
+                st.markdown("</div>", unsafe_allow_html=True)
 
                 # Lista de CTOs próximas com distância real
                 st.markdown("### 🛠 CTOs mais próximas (com distância real)")
