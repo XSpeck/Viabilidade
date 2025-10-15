@@ -578,14 +578,12 @@ if plus_code_input:
                             
                             st.markdown(f"### 🎯 CTO Mais Próxima: **{closest_cto['name']}**")
                             
-                            col_route1, col_route2, col_route3 = st.columns(3)
+                            col_route1, col_route2 = st.columns(2)
                             with col_route1:
                                 st.metric("🚶 Distância real (a pé)", route_distance_fmt)
                             with col_route2:
                                 st.metric("🏃‍♂️ Distância com sobra (+50m)", route_distance_sobra)
-                            with col_route3:
-                                st.metric("⏱️ Tempo estimado", route_duration)
-                            
+                                                        
                             st.info("🗺️ Rota calculada usando OSRM (Open Source) - considera ruas e calçadas")
                         elif nearest_ctos:
                             st.caption("⏳ Não foi possível calcular rota (servidor OSRM pode estar lento)")
@@ -723,7 +721,7 @@ if plus_code_input:
                                 <p>🔢 Plus Code: <code>{pluscode_cto}</code></p>
                                 <p>🚶 <strong>Distância real (a pé): {format_distance(route["distance"])}</strong></p>
                                 <p>🏃‍♂️ <strong>Distância com sobra (+50 m): {dist_sobra_fmt}</strong></p>
-                                <p>⏱️ <strong>Tempo estimado: {format_duration(route["duration"])}</strong></p>
+                                
                             </div>
                             """, unsafe_allow_html=True)
                         else:
