@@ -709,13 +709,18 @@ if plus_code_input:
                             style = "background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 10px;"
                         
                         if route:
+
+                            dist_real = route["distance"]  # em metros
+                            dist_com_sobra = dist_real + 50  # soma 50 metros
+                            dist_sobra_fmt = format_distance(dist_com_sobra)
+                            
                             st.markdown(f"""
                             <div style="{style}">
                                 <h4>{icon} CTO: {cto["name"]}</h4>
                                 <p>📍 Coordenadas: <code>{cto["lat"]:.6f}, {cto["lon"]:.6f}</code></p>
                                 <p>🔢 Plus Code: <code>{pluscode_cto}</code></p>
                                 <p>🚶 <strong>Distância real (a pé): {format_distance(route["distance"])}</strong></p>
-                                <p>🏃‍♂️ <strong>Distância com sobra (+50 m): {route_distance_sobra}</strong></p>
+                                <p>🏃‍♂️ <strong>Distância com sobra (+50 m): {dist_sobra_fmt}</strong></p>
                                 <p>⏱️ <strong>Tempo estimado: {format_duration(route["duration"])}</strong></p>
                             </div>
                             """, unsafe_allow_html=True)
