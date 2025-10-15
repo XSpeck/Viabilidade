@@ -483,9 +483,6 @@ except Exception as e:
     st.error(f"❌ Erro ao carregar arquivos: {e}")
     st.stop()
 
-st.markdown("---")
-st.subheader("🔍 Validação de Localização")
-
 plus_code_input = st.text_input(
     "Digite o Plus Code",
     placeholder="Ex: 8JV4+8XR ou 589G8JV4+8XR",
