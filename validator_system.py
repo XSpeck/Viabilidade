@@ -569,6 +569,7 @@ if plus_code_input:
                         # Mostrar rota até CTO mais próxima
                         if walking_route_cto and closest_cto:
                             route_distance = format_distance(walking_route_cto["distance"])
+                            route_distance_sobra = route_distance + 50
                             route_duration = format_duration(walking_route_cto["duration"])
                             
                             st.markdown(f"### 🎯 CTO Mais Próxima: **{closest_cto['name']}**")
@@ -577,7 +578,7 @@ if plus_code_input:
                             with col_route1:
                                 st.metric("🚶 Distância real (a pé)", route_distance)
                             with col_route2:
-                                st.metric("🚶 Distância com sobra (+50m)", route_distance)
+                                st.metric("🏃‍♂️ Distância com sobra (+50m)", route_distance_sobra)
                             with col_route3:
                                 st.metric("⏱️ Tempo estimado", route_duration)
                             
