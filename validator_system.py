@@ -5,6 +5,7 @@ from openlocationcode import openlocationcode as olc
 from geopy.distance import geodesic
 import folium
 from streamlit_folium import st_folium
+from login_system import require_authentication
 import gdown
 import pandas as pd
 import requests
@@ -431,6 +432,8 @@ st.set_page_config(
 
 st.title("🔍 Validador de Projetos")
 
+if not require_authentication():
+       st.stop()    
 
 with st.sidebar:
     st.header("⚙️ Controles")
