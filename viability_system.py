@@ -18,6 +18,7 @@ def create_viability_request(user_name: str, viability_data: Dict) -> bool:
         
         new_request = {
             'usuario': user_name,
+            'plus_code_cliente': viability_data.get('plus_code', ''),
             'cto_numero': viability_data.get('cto_numero', ''),
             'distancia_real': viability_data.get('distancia_real', ''),
             'distancia_sobra': viability_data.get('distancia_sobra', ''),
