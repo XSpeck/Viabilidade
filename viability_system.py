@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import logging
 from datetime import datetime
+from typing import Dict
 import supabase_config
 
 logger = logging.getLogger(__name__)
