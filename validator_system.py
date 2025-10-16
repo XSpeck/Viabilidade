@@ -430,10 +430,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-st.title("🔍 Validador de Projetos")
-
 if not require_authentication():
        st.stop()    
+    
+st.title("🔍 Validador de Projetos")
 
 with st.sidebar:
     st.header("⚙️ Controles")
