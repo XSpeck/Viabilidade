@@ -14,6 +14,8 @@ from datetime import datetime
 import time
 from typing import Optional, Tuple, List, Dict
 import re
+from login_system import require_authentication
+from viability_system import show_viability_system, create_viability_request
 
 # ======================
 # Configurações
@@ -586,6 +588,24 @@ if plus_code_input:
                                 st.metric("🚶 Distância real (a pé)", route_distance_fmt)
                             with col_route2:
                                 st.metric("🏃‍♂️ Distância com sobra (+50m)", route_distance_sobra)
+
+                            # ===== ADICIONAR AQUI O BOTÃO VIABILIZAR =====
+                            st.markdown("---")
+                            if st.button("🎯 Viabilizar Esta CTO", type="primary", use_container_width=True, key=f"viabilizar_{plus_code_input}"):
+                                viability_data = {
+                                    'plus_code': plus_code_input,
+                                    'cto_numero': closest_cto['name'],
+                                    'distancia_real': route_distance_fmt,
+                                    'distancia_sobra': route_distance_sobra,
+                                    'localizacao_caixa': coords_to_pluscode(closest_cto['lat'], closest_cto['lon'])
+                                }
+                                
+                                if create_viability_request(st.session_state.user_name, viability_data):
+                                    st.success("✅ Solicitação de viabilização enviada para auditoria!")
+                                    st.balloons()
+                                else:
+                                    st.error("❌ Erro ao criar solicitação. Tente novamente.")
+                            # ===== FIM DO BOTÃO =====                            
                                                         
                             st.info("🗺️ Rota calculada usando OSRM (Open Source) - considera ruas e calçadas")
                         elif nearest_ctos:
@@ -815,6 +835,12 @@ if st.session_state.search_history:
             with col4:
                 company_text = entry.get('company', 'N/A')
                 st.text(f"Empresa: {company_text}")
+# ===== ADICIONAR AQUI O SISTEMA DE VIABILIZAÇÃO =====
+st.markdown("---")
+st.markdown("---")
+st.markdown("## 📋 Sistema de Viabilização")
+show_viability_system()
+# ===== FIM DO SISTEMA =====
 
 st.markdown("---")
 st.markdown(
