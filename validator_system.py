@@ -15,7 +15,7 @@ import time
 from typing import Optional, Tuple, List, Dict
 import re
 from login_system import require_authentication
-from viability_system import show_viability_system, create_viability_request
+import viability_system
 import supabase_config
 
 # ======================
