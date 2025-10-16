@@ -592,20 +592,17 @@ if plus_code_input:
 
                             # ===== ADICIONAR AQUI O BOTÃO VIABILIZAR =====
                             st.markdown("---")
-                            if st.button("🎯 Viabilizar Esta CTO", type="primary", use_container_width=True, key=f"viabilizar_{plus_code_input}"):
+                            if st.button("Viabilizar", type="primary", use_container_width=True):
                                 viability_data = {
-                                    'plus_code': plus_code_input,
                                     'cto_numero': closest_cto['name'],
-                                    'distancia_real': route_distance_fmt,
-                                    'distancia_sobra': route_distance_sobra,
+                                    'distancia_real': format_distance(walking_route_cto['distance']),
+                                    'distancia_sobra': format_distance(walking_route_cto['distance'] + 50),
                                     'localizacao_caixa': coords_to_pluscode(closest_cto['lat'], closest_cto['lon'])
                                 }
-                                
                                 if create_viability_request(st.session_state.user_name, viability_data):
-                                    st.success("✅ Solicitação de viabilização enviada para auditoria!")
-                                    st.balloons()
+                                    st.success("Solicitação enviada!")
                                 else:
-                                    st.error("❌ Erro ao criar solicitação. Tente novamente.")
+                                    st.error("Erro ao enviar")
                             # ===== FIM DO BOTÃO =====                            
                                                         
                             st.info("🗺️ Rota calculada usando OSRM (Open Source) - considera ruas e calçadas")
