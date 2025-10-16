@@ -99,12 +99,13 @@ def show_audit_tab():
     st.markdown("---")
     
     for idx, row in pending.iterrows():
-        with st.expander(f"Solicitação #{row['id'][:8]} - {row['usuario']}", expanded=True):
+        with st.expander(f"Solicitação #{str(row['id'])[:8]} - {row['usuario']}", expanded=True):
             
             col1, col2 = st.columns(2)
             
             with col1:
                 st.write(f"**Usuário:** {row['usuario']}")
+                st.write(f"**Plus Code Cliente:** {row['plus_code_cliente']}")
                 st.write(f"**Nº Caixa:** {row['cto_numero']}")
                 st.write(f"**Distância Real:** {row['distancia_real']}")
                 st.write(f"**Distância c/ Sobra:** {row['distancia_sobra']}")
@@ -114,49 +115,56 @@ def show_audit_tab():
                 portas = st.number_input(
                     "Portas Disponíveis",
                     min_value=0, max_value=50, value=0,
-                    key=f"portas_{row['id']}"
+                    key=f"portas_{str(row['id'])}"
                 )
                 
                 menor_rx = st.text_input(
                     "Menor RX (dBm)",
                     placeholder="Ex: -18.67",
-                    key=f"rx_{row['id']}"
+                    key=f"rx_{str(row['id'])}"
                 )
             
             col_btn1, col_btn2 = st.columns(2)
             
             with col_btn1:
-                if st.button("OK - Aprovar", key=f"approve_{row['id']}", type="primary", use_container_width=True):
+                if st.button("OK - Aprovar", key=f"approve_{str(row['id'])}", type="primary", width="stretch"):
                     if portas > 0 and menor_rx:
                         if update_viability_status(
                             row['id'],
                             'aprovado',
-                            portas_disponiveis=portas,
-                            menor_rx=menor_rx,
+                            portas_disponiveis=int(portas),
+                            menor_rx=str(menor_rx),
                             data_auditoria=datetime.now().isoformat(),
                             auditado_por='leo'
                         ):
                             st.success("Aprovado!")
                             st.rerun()
+                        else:
+                            st.error("Erro ao aprovar")
                     else:
                         st.warning("Preencha Portas e RX")
             
             with col_btn2:
-                if st.button("Rejeitar", key=f"reject_{row['id']}", type="secondary", use_container_width=True):
+                if st.button("Rejeitar", key=f"reject_{str(row['id'])}", type="secondary", width="stretch"):
                     motivo = st.text_input(
                         "Motivo da rejeição",
-                        key=f"motivo_input_{row['id']}"
+                        key=f"motivo_input_{str(row['id'])}"
                     )
-                    if motivo:
-                        if update_viability_status(
-                            row['id'],
-                            'sem_viabilidade',
-                            motivo_rejeicao=motivo,
-                            data_auditoria=datetime.now().isoformat(),
-                            auditado_por='leo'
-                        ):
-                            st.success("Rejeitado!")
-                            st.rerun()
+                    if st.button("Confirmar Rejeição", key=f"confirm_reject_{str(row['id'])}"):
+                        if motivo:
+                            if update_viability_status(
+                                row['id'],
+                                'sem_viabilidade',
+                                motivo_rejeicao=str(motivo),
+                                data_auditoria=datetime.now().isoformat(),
+                                auditado_por='leo'
+                            ):
+                                st.success("Rejeitado!")
+                                st.rerun()
+                            else:
+                                st.error("Erro ao rejeitar")
+                        else:
+                            st.warning("Digite o motivo")
 
 # ======================
 # ABA 2: RESULTADOS (Usuário)
@@ -196,7 +204,9 @@ def show_results_tab():
         st.subheader("Viabilizações Aprovadas")
         
         for idx, row in user_approved.iterrows():
-            with st.expander(f"CTO {row['cto_numero']} - {row['data_auditoria'][:10]}"):
+            data_aud = row['data_auditoria'][:10] if isinstance(row['data_auditoria'], str) else str(row['data_auditoria'])[:10]
+            
+            with st.expander(f"CTO {row['cto_numero']} - {data_aud}"):
                 
                 dados = f"""Nº Caixa: {row['cto_numero']}
 Portas Disponíveis: {row['portas_disponiveis']}
@@ -205,10 +215,11 @@ Distância até Cliente: {row['distancia_sobra']}
 Localização da Caixa: {row['localizacao_caixa']}"""
                 
                 st.code(dados, language="text")
+                st.caption("Use Ctrl+C para copiar")
                 
-                if st.button("Finalizar", key=f"finish_{row['id']}", type="primary", use_container_width=True):
+                if st.button("Finalizar", key=f"finish_{str(row['id'])}", type="primary", width="stretch"):
                     if update_viability_status(row['id'], 'finalizado', data_finalizacao=datetime.now().isoformat()):
-                        st.success("Viabilização finalizada!")
+                        st.success("Viabilização finalizada e arquivada!")
                         st.rerun()
     
     # Sem viabilidade
@@ -217,8 +228,11 @@ Localização da Caixa: {row['localizacao_caixa']}"""
         st.subheader("Sem Viabilidade")
         
         for idx, row in user_rejected.iterrows():
-            with st.expander(f"CTO {row['cto_numero']} - {row['data_auditoria'][:10]}"):
-                st.warning(f"Motivo: {row['motivo_rejeicao']}")
+            data_aud = row['data_auditoria'][:10] if isinstance(row['data_auditoria'], str) else str(row['data_auditoria'])[:10]
+            
+            with st.expander(f"CTO {row['cto_numero']} - {data_aud}"):
+                st.error(f"Motivo: {row['motivo_rejeicao']}")
+                st.info("Esta solicitação foi arquivada como sem viabilidade")
 
 # ======================
 # ABA 3: RELATÓRIOS/ARQUIVO
@@ -293,16 +307,17 @@ def show_reports_tab():
                 with st.expander(f"CTO {row['cto_numero']} - {row['usuario']}"):
                     st.write(f"**Usuário:** {row['usuario']}")
                     st.write(f"**Nº Caixa:** {row['cto_numero']}")
-                    st.warning(f"**Motivo:** {row['motivo_rejeicao']}")
+                    st.error(f"**Motivo:** {row['motivo_rejeicao']}")
 
 # ======================
 # FUNÇÃO PRINCIPAL
 # ======================
 
 def show_viability_system():
-    """Mostra as 3 abas de viabilização"""
+    """Mostra as abas de viabilização"""
     
     st.markdown("---")
+    st.markdown("## Sistema de Viabilização")
     
     if st.session_state.user_name.lower() == "leo":
         tab1, tab2, tab3 = st.tabs(["Auditoria", "Meus Resultados", "Relatórios"])
