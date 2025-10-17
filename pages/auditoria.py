@@ -37,67 +37,7 @@ if st.session_state.user_login.lower() != "leo":
     st.stop()
 
 # ======================
-# Header
-# ======================
-st.title("🔍 Auditoria de Viabilizações")
-st.markdown("Análise técnica das solicitações de viabilidade")
-
-# Botão de atualizar
-col_header1, col_header2 = st.columns([4, 1])
-with col_header2:
-    if st.button("🔄 Atualizar", width='stretch'):
-        st.rerun()
-
-st.markdown("---")
-
-# ======================
-# Estatísticas
-# ======================
-stats = get_statistics()
-
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric("⏳ Pendentes", stats['pendentes'])
-with col2:
-    st.metric("🔥 Urgentes", stats['urgentes_pendentes'])
-with col3:
-    st.metric("✅ Finalizadas", stats['finalizadas'])
-with col4:
-    st.metric("📊 Taxa Aprovação", f"{stats['taxa_aprovacao']:.1f}%")
-
-st.markdown("---")
-
-# ======================
-# Buscar Pendências
-# ======================
-pending = get_pending_viabilities()
-
-if not pending:
-    st.info("✅ Não há solicitações pendentes de auditoria no momento.")
-    st.success("👏 Parabéns! Todas as solicitações foram processadas.")
-else:
-    st.subheader(f"📋 {len(pending)} Solicitações Pendentes")
-    
-    # Separar urgentes e normais
-    urgentes = [p for p in pending if p.get('urgente', False)]
-    normais = [p for p in pending if not p.get('urgente', False)]
-    
-    # Mostrar urgentes primeiro
-    if urgentes:
-        st.markdown("### 🔥 URGENTES - Cliente Presencial")
-        for row in urgentes:
-            show_viability_form(row, urgente=True)
-    
-    # Mostrar normais
-    if normais:
-        if urgentes:
-            st.markdown("---")
-        st.markdown("### 📝 Solicitações Normais")
-        for row in normais:
-            show_viability_form(row, urgente=False)
-
-# ======================
-# Função de Formulário
+# Função de Formulário (DEFINIR ANTES DE USAR)
 # ======================
 def show_viability_form(row: dict, urgente: bool = False):
     """Exibe formulário de auditoria para uma viabilização"""
@@ -167,10 +107,10 @@ def show_viability_form(row: dict, urgente: bool = False):
                     col_btn1, col_btn2, col_btn3 = st.columns(3)
                     
                     with col_btn1:
-                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", width='stretch')
+                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
                     
                     with col_btn3:
-                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", width='stretch')
+                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
                     
                     if aprovado:
                         if cto and portas > 0 and rx and distancia and localizacao:
@@ -215,10 +155,10 @@ def show_viability_form(row: dict, urgente: bool = False):
                     col_btn1, col_btn2, col_btn3 = st.columns(3)
                     
                     with col_btn1:
-                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", width='stretch')
+                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
                     
                     with col_btn3:
-                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", width='stretch')
+                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
                     
                     if aprovado:
                         if predio and portas > 0 and media_rx:
