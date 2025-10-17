@@ -96,7 +96,7 @@ def show_login_page():
                 with col_btn2:
                     submit = st.form_submit_button(
                         "🚀 Entrar",
-                        use_container_width=True,
+                        width='stretch',
                         type="primary"
                     )
                 
@@ -136,7 +136,7 @@ def show_user_info():
             login_time = st.session_state.login_timestamp.strftime('%H:%M:%S')
             st.caption(f"🕐 Login: {login_time}")
         
-        if st.button("🚪 Sair", use_container_width=True, type="secondary"):
+        if st.button("🚪 Sair", width='stretch', type="secondary"):
             logout()
             st.rerun()
 
@@ -151,20 +151,20 @@ def show_navigation_menu():
         st.markdown("### 📋 Menu de Navegação")
         
         # Página Principal
-        if st.button("🏠 Busca", use_container_width=True, key="nav_home"):
+        if st.button("🏠 Busca", width='stretch', key="nav_home"):
             st.switch_page("validator_system.py")
         
         # Página de Resultados (todos)
-        if st.button("📊 Meus Resultados", use_container_width=True, key="nav_results"):
+        if st.button("📊 Meus Resultados", width='stretch', key="nav_results"):
             st.switch_page("pages/resultados.py")
         
         # Página de Auditoria (só Leo)
         if st.session_state.user_login.lower() == "leo":
-            if st.button("🔍 Auditoria", use_container_width=True, key="nav_audit"):
+            if st.button("🔍 Auditoria", width='stretch', key="nav_audit"):
                 st.switch_page("pages/auditoria.py")
         
         # Página de Relatórios (todos)
-        if st.button("📁 Relatórios", use_container_width=True, key="nav_reports"):
+        if st.button("📁 Relatórios", width='stretch', key="nav_reports"):
             st.switch_page("pages/relatorios.py")
 
 # ======================
