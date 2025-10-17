@@ -500,6 +500,17 @@ if plus_code_input:
                 with st.spinner("🗺️ Calculando rotas reais para CTOs..."):
                     for cto in candidate_ctos[:20]:  # Calcular para até 10 CTOs
                         route = get_walking_route(lat, lon, cto["lat"], cto["lon"])
+
+                        # DEBUG
+                        st.write(f"DEBUG - CTO: {cto['name']}")
+                        st.write(f"Start coords: {lat}, {lon}")
+                        st.write(f"End coords: {cto['lat']}, {cto['lon']}")
+                        if route:
+                            st.write(f"Distância retornada OSRM: {route['distance']}m")
+                        else:
+                            st.write(f"Rota não calculada (None)")
+                        st.write("---")
+            
                         if route:  # Só adicionar se conseguiu calcular a rota
                             cto_routes.append({
                                 "cto": cto,
