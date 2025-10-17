@@ -68,35 +68,6 @@ with col4:
 st.markdown("---")
 
 # ======================
-# Buscar Pendências
-# ======================
-pending = get_pending_viabilities()
-
-if not pending:
-    st.info("✅ Não há solicitações pendentes de auditoria no momento.")
-    st.success("👏 Parabéns! Todas as solicitações foram processadas.")
-else:
-    st.subheader(f"📋 {len(pending)} Solicitações Pendentes")
-    
-    # Separar urgentes e normais
-    urgentes = [p for p in pending if p.get('urgente', False)]
-    normais = [p for p in pending if not p.get('urgente', False)]
-    
-    # Mostrar urgentes primeiro
-    if urgentes:
-        st.markdown("### 🔥 URGENTES - Cliente Presencial")
-        for row in urgentes:
-            show_viability_form(row, urgente=True)
-    
-    # Mostrar normais
-    if normais:
-        if urgentes:
-            st.markdown("---")
-        st.markdown("### 📝 Solicitações Normais")
-        for row in normais:
-            show_viability_form(row, urgente=False)
-
-# ======================
 # Função de Formulário
 # ======================
 def show_viability_form(row: dict, urgente: bool = False):
@@ -244,6 +215,37 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 st.rerun()
         
         st.markdown("---")
+
+# ======================
+# Buscar Pendências
+# ======================
+pending = get_pending_viabilities()
+
+if not pending:
+    st.info("✅ Não há solicitações pendentes de auditoria no momento.")
+    st.success("👏 Parabéns! Todas as solicitações foram processadas.")
+else:
+    st.subheader(f"📋 {len(pending)} Solicitações Pendentes")
+    
+    # Separar urgentes e normais
+    urgentes = [p for p in pending if p.get('urgente', False)]
+    normais = [p for p in pending if not p.get('urgente', False)]
+    
+    # Mostrar urgentes primeiro
+    if urgentes:
+        st.markdown("### 🔥 URGENTES - Cliente Presencial")
+        for row in urgentes:
+            show_viability_form(row, urgente=True)
+    
+    # Mostrar normais
+    if normais:
+        if urgentes:
+            st.markdown("---")
+        st.markdown("### 📝 Solicitações Normais")
+        for row in normais:
+            show_viability_form(row, urgente=False)
+
+
 
 # ======================
 # Footer
