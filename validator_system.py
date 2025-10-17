@@ -523,7 +523,9 @@ if plus_code_input:
                     cto_routes.sort(key=lambda x: x["distance"])
                     
                     # Pegar apenas as 3 mais próximas pela rota real
-                    cto_routes = cto_routes[:10]
+                    cto_routes_all = cto_routes  # Todas (até 10)
+                    cto_routes = cto_routes[:3]   # Apenas 3 para o card
+                    
             
             # Definir a CTO mais próxima e sua rota
             closest_cto = None
@@ -651,8 +653,11 @@ if plus_code_input:
                 ).add_to(m)
 
                 # Adicionar CTOs
-                if nearest_ctos:
-                    for cto in nearest_ctos:
+              #  if nearest_ctos:
+               #     for cto in nearest_ctos:
+                if cto_routes_all:
+                    for item in cto_routes_all:
+                        cto = item["cto"]
                         folium.Marker(
                             location=[cto["lat"], cto["lon"]],
                             popup=f'CTO: {cto["name"]}<br>Distância: {format_distance(cto["distance"])}',
