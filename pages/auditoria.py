@@ -37,7 +37,7 @@ if st.session_state.user_login.lower() != "leo":
     st.stop()
 
 # ======================
-# Função de Formulário (DEFINIR ANTES DE USAR)
+# Função de Formulário (DEFINIR PRIMEIRO)
 # ======================
 def show_viability_form(row: dict, urgente: bool = False):
     """Exibe formulário de auditoria para uma viabilização"""
@@ -86,33 +86,27 @@ def show_viability_form(row: dict, urgente: bool = False):
             if row['tipo_instalacao'] == 'FTTH':
                 st.markdown("#### 🏠 Dados FTTH (Casa)")
                 
-                with st.form(key=f"form_ftth_{row['id']}"):
-                    cto = st.text_input("N° Caixa (CTO)", key=f"cto_{row['id']}")
-                    
-                    col_f1, col_f2 = st.columns(2)
-                    with col_f1:
-                        portas = st.number_input("Portas Disponíveis", min_value=0, max_value=50, value=0, key=f"portas_{row['id']}")
-                    with col_f2:
-                        rx = st.text_input("Menor RX (dBm)", placeholder="-18.67", key=f"rx_{row['id']}")
-                    
-                    col_f3, col_f4 = st.columns(2)
-                    with col_f3:
-                        distancia = st.text_input("Distância até Cliente", placeholder="64.3m", key=f"dist_{row['id']}")
-                    with col_f4:
-                        localizacao = st.text_input("Localização da Caixa", key=f"loc_{row['id']}")
-                    
-                    obs = st.text_area("Observações", key=f"obs_{row['id']}", height=80)
-                    
-                    # Botões
-                    col_btn1, col_btn2, col_btn3 = st.columns(3)
-                    
-                    with col_btn1:
-                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
-                    
-                    with col_btn3:
-                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
-                    
-                    if aprovado:
+                cto = st.text_input("N° Caixa (CTO)", key=f"cto_{row['id']}")
+                
+                col_f1, col_f2 = st.columns(2)
+                with col_f1:
+                    portas = st.number_input("Portas Disponíveis", min_value=0, max_value=50, value=0, key=f"portas_{row['id']}")
+                with col_f2:
+                    rx = st.text_input("Menor RX (dBm)", placeholder="-18.67", key=f"rx_{row['id']}")
+                
+                col_f3, col_f4 = st.columns(2)
+                with col_f3:
+                    distancia = st.text_input("Distância até Cliente", placeholder="64.3m", key=f"dist_{row['id']}")
+                with col_f4:
+                    localizacao = st.text_input("Localização da Caixa", key=f"loc_{row['id']}")
+                
+                obs = st.text_area("Observações", key=f"obs_{row['id']}", height=80)
+                
+                # Botões
+                col_btn1, col_btn2, col_btn3 = st.columns(3)
+                
+                with col_btn1:
+                    if st.button("✅ Viabilizar", type="primary", use_container_width=True, key=f"approve_{row['id']}"):
                         if cto and portas > 0 and rx and distancia and localizacao:
                             dados = {
                                 'cto_numero': cto,
@@ -128,39 +122,34 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 st.rerun()
                         else:
                             st.error("❌ Preencha todos os campos obrigatórios!")
-                    
-                    if rejeitado:
-                        motivo = st.text_input("Motivo da Rejeição", value="Não temos projeto neste ponto", key=f"motivo_temp_{row['id']}")
-                        if st.button("Confirmar Rejeição", key=f"confirm_rej_{row['id']}"):
+                
+                with col_btn3:
+                    if st.button("❌ Sem Viabilidade", type="secondary", use_container_width=True, key=f"reject_{row['id']}"):
+                        motivo = st.text_input("Motivo", value="Não temos projeto neste ponto", key=f"motivo_{row['id']}")
+                        if st.button("Confirmar", key=f"confirm_rej_{row['id']}"):
                             dados = {'motivo_rejeicao': motivo}
                             if update_viability_ftth(row['id'], 'rejeitado', dados):
-                                st.success("❌ Solicitação rejeitada")
+                                st.success("❌ Rejeitada")
                                 st.rerun()
             
             else:  # FTTA
                 st.markdown("#### 🏢 Dados FTTA (Edifício)")
                 
-                with st.form(key=f"form_ftta_{row['id']}"):
-                    predio = st.text_input("Prédio FTTA", key=f"predio_{row['id']}")
-                    
-                    col_f1, col_f2 = st.columns(2)
-                    with col_f1:
-                        portas = st.number_input("Portas Disponíveis", min_value=0, max_value=50, value=0, key=f"portas_ftta_{row['id']}")
-                    with col_f2:
-                        media_rx = st.text_input("Média RX (dBm)", placeholder="-20.5", key=f"media_rx_{row['id']}")
-                    
-                    obs = st.text_area("Observações", key=f"obs_ftta_{row['id']}", height=80)
-                    
-                    # Botões
-                    col_btn1, col_btn2, col_btn3 = st.columns(3)
-                    
-                    with col_btn1:
-                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
-                    
-                    with col_btn3:
-                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
-                    
-                    if aprovado:
+                predio = st.text_input("Prédio FTTA", key=f"predio_{row['id']}")
+                
+                col_f1, col_f2 = st.columns(2)
+                with col_f1:
+                    portas = st.number_input("Portas Disponíveis", min_value=0, max_value=50, value=0, key=f"portas_ftta_{row['id']}")
+                with col_f2:
+                    media_rx = st.text_input("Média RX (dBm)", placeholder="-20.5", key=f"media_rx_{row['id']}")
+                
+                obs = st.text_area("Observações", key=f"obs_ftta_{row['id']}", height=80)
+                
+                # Botões
+                col_btn1, col_btn2, col_btn3 = st.columns(3)
+                
+                with col_btn1:
+                    if st.button("✅ Viabilizar", type="primary", use_container_width=True, key=f"approve_ftta_{row['id']}"):
                         if predio and portas > 0 and media_rx:
                             dados = {
                                 'predio_ftta': predio,
@@ -174,16 +163,77 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 st.rerun()
                         else:
                             st.error("❌ Preencha todos os campos obrigatórios!")
-                    
-                    if rejeitado:
-                        motivo = st.text_input("Motivo da Rejeição", value="Não temos projeto neste ponto", key=f"motivo_ftta_temp_{row['id']}")
-                        if st.button("Confirmar Rejeição", key=f"confirm_rej_ftta_{row['id']}"):
+                
+                with col_btn3:
+                    if st.button("❌ Sem Viabilidade", type="secondary", use_container_width=True, key=f"reject_ftta_{row['id']}"):
+                        motivo = st.text_input("Motivo", value="Não temos projeto neste ponto", key=f"motivo_ftta_{row['id']}")
+                        if st.button("Confirmar", key=f"confirm_rej_ftta_{row['id']}"):
                             dados = {'motivo_rejeicao': motivo}
                             if update_viability_ftta(row['id'], 'rejeitado', dados):
-                                st.success("❌ Solicitação rejeitada")
+                                st.success("❌ Rejeitada")
                                 st.rerun()
         
         st.markdown("---")
+
+# ======================
+# Header
+# ======================
+st.title("🔍 Auditoria de Viabilizações")
+st.markdown("Análise técnica das solicitações de viabilidade")
+
+# Botão de atualizar
+col_header1, col_header2 = st.columns([4, 1])
+with col_header2:
+    if st.button("🔄 Atualizar", use_container_width=True):
+        st.rerun()
+
+st.markdown("---")
+
+# ======================
+# Estatísticas
+# ======================
+stats = get_statistics()
+
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.metric("⏳ Pendentes", stats['pendentes'])
+with col2:
+    st.metric("🔥 Urgentes", stats['urgentes_pendentes'])
+with col3:
+    st.metric("✅ Finalizadas", stats['finalizadas'])
+with col4:
+    st.metric("📊 Taxa Aprovação", f"{stats['taxa_aprovacao']:.1f}%")
+
+st.markdown("---")
+
+# ======================
+# Buscar Pendências
+# ======================
+pending = get_pending_viabilities()
+
+if not pending:
+    st.info("✅ Não há solicitações pendentes de auditoria no momento.")
+    st.success("👏 Parabéns! Todas as solicitações foram processadas.")
+else:
+    st.subheader(f"📋 {len(pending)} Solicitações Pendentes")
+    
+    # Separar urgentes e normais
+    urgentes = [p for p in pending if p.get('urgente', False)]
+    normais = [p for p in pending if not p.get('urgente', False)]
+    
+    # Mostrar urgentes primeiro
+    if urgentes:
+        st.markdown("### 🔥 URGENTES - Cliente Presencial")
+        for row in urgentes:
+            show_viability_form(row, urgente=True)
+    
+    # Mostrar normais
+    if normais:
+        if urgentes:
+            st.markdown("---")
+        st.markdown("### 📝 Solicitações Normais")
+        for row in normais:
+            show_viability_form(row, urgente=False)
 
 # ======================
 # Footer
