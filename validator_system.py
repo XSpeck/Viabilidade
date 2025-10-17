@@ -15,7 +15,7 @@ import time
 from typing import Optional, Tuple, List, Dict
 import re
 from login_system import require_authentication
-from viability_system import show_viability_system, create_viability_request
+from viability_functions import create_viability_request
 import supabase_config
 
 # ======================
@@ -598,7 +598,91 @@ if plus_code_input:
                                 st.metric("🏃‍♂️ Distância com sobra (+50m)", route_distance_sobra)
 
                             # ===== ADICIONAR AQUI O BOTÃO VIABILIZAR =====
+                            st.markdown("---")
+
+                            # Inicializar estado do modal se não existir
+                            if 'show_viability_modal' not in st.session_state:
+                                st.session_state.show_viability_modal = False
+                            if 'viability_plus_code' not in st.session_state:
+                                st.session_state.viability_plus_code = None
                             
+                            # Botão principal de viabilizar
+                            if st.button("🎯 Viabilizar Esta Localização", type="primary", use_container_width=True, key=f"btn_viabilizar_{plus_code_input}"):
+                                st.session_state.show_viability_modal = True
+                                st.session_state.viability_plus_code = plus_code_input
+                            
+                            # Modal de seleção
+                            if st.session_state.show_viability_modal and st.session_state.viability_plus_code == plus_code_input:
+                                
+                                st.markdown("""
+                                <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                            padding: 20px; border-radius: 10px; margin: 20px 0;'>
+                                    <h3 style='color: white; text-align: center; margin: 0;'>
+                                        🏠 Qual o tipo de instalação?
+                                    </h3>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                col_modal1, col_modal2 = st.columns(2)
+                                
+                                with col_modal1:
+                                    st.markdown("""
+                                    <div style='text-align: center; padding: 20px; background: white; 
+                                                border-radius: 10px; border: 2px solid #4CAF50;'>
+                                        <h2 style='margin: 0;'>🏠</h2>
+                                        <h4 style='margin: 10px 0;'>Casa</h4>
+                                        <p style='color: #666; margin: 0;'>FTTH - Fibra até a casa</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    urgente_casa = st.checkbox("🔥 Cliente Presencial (Urgente)", key="urgente_casa")
+                                    
+                                    if st.button("Confirmar - Casa (FTTH)", type="primary", use_container_width=True, key="confirm_ftth"):
+                                        if create_viability_request(
+                                            st.session_state.user_name, 
+                                            plus_code_input, 
+                                            'FTTH',
+                                            urgente_casa
+                                        ):
+                                            st.session_state.show_viability_modal = False
+                                            st.success("✅ Solicitação de viabilização enviada para auditoria técnica!")
+                                            st.info("👉 Acesse 'Meus Resultados' no menu lateral para acompanhar.")
+                                            st.balloons()
+                                        else:
+                                            st.error("❌ Erro ao criar solicitação. Tente novamente.")
+                                
+                                with col_modal2:
+                                    st.markdown("""
+                                    <div style='text-align: center; padding: 20px; background: white; 
+                                                border-radius: 10px; border: 2px solid #2196F3;'>
+                                        <h2 style='margin: 0;'>🏢</h2>
+                                        <h4 style='margin: 10px 0;'>Edifício</h4>
+                                        <p style='color: #666; margin: 0;'>FTTA - Fibra até o prédio</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    urgente_edificio = st.checkbox("🔥 Cliente Presencial (Urgente)", key="urgente_edificio")
+                                    
+                                    if st.button("Confirmar - Edifício (FTTA)", type="primary", use_container_width=True, key="confirm_ftta"):
+                                        if create_viability_request(
+                                            st.session_state.user_name, 
+                                            plus_code_input, 
+                                            'FTTA',
+                                            urgente_edificio
+                                        ):
+                                            st.session_state.show_viability_modal = False
+                                            st.success("✅ Solicitação de viabilização enviada para auditoria técnica!")
+                                            st.info("👉 Acesse 'Meus Resultados' no menu lateral para acompanhar.")
+                                            st.balloons()
+                                        else:
+                                            st.error("❌ Erro ao criar solicitação. Tente novamente.")
+                                
+                                # Botão cancelar
+                                col_cancel = st.columns([2, 1, 2])[1]
+                                with col_cancel:
+                                    if st.button("❌ Cancelar", use_container_width=True, key="cancel_viability"):
+                                        st.session_state.show_viability_modal = False
+                                        st.rerun()
                             # ===== FIM DO BOTÃO =====                            
                                                         
                             st.info("🗺️ Rota calculada usando OSRM (Open Source) - considera ruas e calçadas")
