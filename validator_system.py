@@ -498,7 +498,7 @@ if plus_code_input:
             cto_routes = []
             if candidate_ctos:
                 with st.spinner("🗺️ Calculando rotas reais para CTOs..."):
-                    for cto in candidate_ctos[:10]:  # Calcular para até 10 CTOs
+                    for cto in candidate_ctos[:20]:  # Calcular para até 10 CTOs
                         route = get_walking_route(lat, lon, cto["lat"], cto["lon"])
                         if route:  # Só adicionar se conseguiu calcular a rota
                             cto_routes.append({
