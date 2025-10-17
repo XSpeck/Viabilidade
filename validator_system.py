@@ -359,8 +359,8 @@ def find_nearest_ctos(lat: float, lon: float, ctos: List[dict], max_radius: floa
     dists = []
     for cto in ctos:
         # Ignorar CTOs que começam com CDOI
-        if cto["name"].upper().startswith("CDOI"):
-            continue
+      #  if cto["name"].upper().startswith("CDOI"):
+       #     continue
         dist = geodesic((lat, lon), (cto["lat"], cto["lon"])).meters
         if dist <= max_radius:
             dists.append({**cto, "distance": dist})
