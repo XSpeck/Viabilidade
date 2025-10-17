@@ -783,13 +783,13 @@ with col1:
         try:
             mask = df_utp.astype(str).apply(lambda x: x.str.lower().str.contains(search_utp.lower(), na=False)).any(axis=1)
             filtered_df = df_utp[mask]
-            st.dataframe(filtered_df, use_container_width=True, height=300)
+            st.dataframe(filtered_df, width='stretch', height=300)
             st.caption(f"Mostrando {len(filtered_df)} de {len(df_utp)} registros")
         except Exception as e:
             st.warning(f"Erro ao filtrar UTP: {e}")
-            st.dataframe(df_utp, use_container_width=True, height=300)
+            st.dataframe(df_utp, width='stretch', height=300)
     else:
-        st.dataframe(df_utp, use_container_width=True, height=300)
+        st.dataframe(df_utp, width='stretch', height=300)
 
 with col2:
     st.subheader("🏢 Prédios sem Viabilidade")
@@ -798,13 +798,13 @@ with col2:
         try:
             mask = df_sem.astype(str).apply(lambda x: x.str.lower().str.contains(search_sem.lower(), na=False)).any(axis=1)
             filtered_df = df_sem[mask]
-            st.dataframe(filtered_df, use_container_width=True, height=300)
+            st.dataframe(filtered_df, width='stretch', height=300)
             st.caption(f"Mostrando {len(filtered_df)} de {len(df_sem)} registros")
         except Exception as e:
             st.warning(f"Erro ao filtrar prédios: {e}")
-            st.dataframe(df_sem, use_container_width=True, height=300)
+            st.dataframe(df_sem, width='stretch', height=300)
     else:
-        st.dataframe(df_sem, use_container_width=True, height=300)
+        st.dataframe(df_sem, width='stretch', height=300)
 
 # Legenda de cores das empresas
 st.markdown("---")
