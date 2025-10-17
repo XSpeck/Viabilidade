@@ -359,8 +359,8 @@ def find_nearest_ctos(lat: float, lon: float, ctos: List[dict], max_radius: floa
     dists = []
     for cto in ctos:
         # Ignorar CTOs que começam com CDOI
-      #  if cto["name"].upper().startswith("CDOI"):
-       #     continue
+        if cto["name"].upper().startswith("CDOI"):
+            continue
         dist = geodesic((lat, lon), (cto["lat"], cto["lon"])).meters
         if dist <= max_radius:
             dists.append({**cto, "distance": dist})
@@ -492,7 +492,7 @@ if plus_code_input:
             proximity_result = check_proximity_all_companies((lat, lon), all_lines)
             
             # Buscar CTOs em um raio maior inicialmente
-            candidate_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=1500.0)
+            candidate_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=3500.0)
             
             # Calcular rotas reais para as CTOs candidatas
             cto_routes = []
