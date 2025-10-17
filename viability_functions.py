@@ -66,7 +66,7 @@ def get_user_results(username: str) -> List[Dict]:
         response = supabase.table('viabilizacoes')\
             .select('*')\
             .eq('usuario', username)\
-            .in_('status', ['aprovado', 'rejeitado'])\
+            .in_('status', ['aprovado', 'rejeitado', 'utp'])\
             .order('data_auditoria', desc=True)\
             .execute()
         return response.data if response.data else []
