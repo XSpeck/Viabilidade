@@ -161,7 +161,7 @@ def show_navigation_menu():
         # Página de Auditoria (só Leo)
         if st.session_state.user_login.lower() == "leo":
             if st.button("🔍 Auditoria", use_container_width=True, key="nav_audit"):
-                st.switch_page("pages/auditoria.py")
+                st.switch_page("auditoria.py")
         
         # Página de Relatórios (todos)
         if st.button("📁 Relatórios", use_container_width=True, key="nav_reports"):
