@@ -673,7 +673,7 @@ if plus_code_input:
                         
                         folium.PolyLine(
                             locations=route_points,
-                            color="#FF6B6B",
+                            color="#000000",
                             weight=5,
                             opacity=0.9,
                             popup=f"🚶 Rota até {closest_cto['name']}: {format_distance(walking_route_cto['distance'])} - {format_duration(walking_route_cto['duration'])}",
