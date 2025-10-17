@@ -823,18 +823,14 @@ if st.session_state.search_history:
                 company_text = entry.get('company', 'N/A')
                 st.text(f"Empresa: {company_text}")
 # ===== ADICIONAR AQUI O SISTEMA DE VIABILIZAÇÃO =====
-st.markdown("---")
-st.markdown("---")
-st.markdown("## 📋 Sistema de Viabilização")
-show_viability_system()
+
 # ===== FIM DO SISTEMA =====
 
 st.markdown("---")
 st.markdown(
     """
     <div style='text-align: center; color: #666; padding: 20px;'>
-        <p>🔍 <strong>Validador de Projetos</strong> | Desenvolvido ByLeo</p>
-        <p>🗺️ Integração com Google Maps e LocationIQ | ⚡ Critérios especiais para CELESC</p>
+        <p>🔍 <strong>Validador de Projetos</strong> | Desenvolvido ByLeo</p>        
     </div>
     """,
     unsafe_allow_html=True
