@@ -57,14 +57,17 @@ if not results:
 # Separar aprovados e rejeitados
 approved = [r for r in results if r['status'] == 'aprovado']
 rejected = [r for r in results if r['status'] == 'rejeitado']
+utp = [r for r in results if r['status'] == 'utp']
 
 # Métricas
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("📊 Total", len(results))
 with col2:
     st.metric("✅ Aprovadas", len(approved))
 with col3:
+    st.metric("📡 UTP", len(utp))
+with col4:
     st.metric("❌ Rejeitadas", len(rejected))
 
 st.markdown("---")
@@ -142,7 +145,31 @@ if rejected:
             st.text(f"Tipo: {row['tipo_instalacao']}")
             st.text(f"Plus Code: {row['plus_code_cliente']}")
             st.caption(f"🕐 Analisado por: {row['auditado_por']} em {row['data_auditoria'][:16]}")
-
+            
+# ======================
+# Mostrar UTP
+# ======================
+if utp:
+    st.markdown("---")
+    st.subheader("📡 Atendemos UTP")
+    
+    for row in utp:
+        with st.expander(f"📡 {row['plus_code_cliente']} - {row['data_auditoria'][:16]}"):
+            
+            # Mensagem padrão
+            st.info("### 📡 Atendemos UTP")
+            
+            # Informações adicionais
+            st.text(f"Tipo: {row['tipo_instalacao']}")
+            st.text(f"Plus Code: {row['plus_code_cliente']}")
+            st.caption(f"🕐 Analisado por: {row['auditado_por']} em {row['data_auditoria'][:16]}")
+            
+            # Botão finalizar (não arquiva, apenas remove da lista)
+            if st.button("✅ Finalizar", key=f"finish_utp_{row['id']}", type="primary", use_container_width=True):
+                if finalize_viability(row['id']):
+                    st.success("✅ Finalizado!")
+                    st.rerun()
+                    
 # ======================
 # Footer
 # ======================
