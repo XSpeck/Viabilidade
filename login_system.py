@@ -1,14 +1,12 @@
+"""
+Sistema de Login integrado com Supabase
+Salve como: login_system.py
+"""
+
 import streamlit as st
-import pandas as pd
-import gdown
 import logging
 from datetime import datetime
-
-# ======================
-# Configurações de Login
-# ======================
-LOGIN_FILE_ID = "1rbE1en0BZCiKJU5Cy302bKjwkdVYOvuk"  # ID do arquivo users.csv no Google Drive
-LOGIN_CSV_PATH = "users.csv"
+from supabase_config import supabase
 
 logger = logging.getLogger(__name__)
 
@@ -16,45 +14,25 @@ logger = logging.getLogger(__name__)
 # Funções de Autenticação
 # ======================
 
-@st.cache_data(ttl=300)  # Cache de 5 minutos
-def load_users() -> pd.DataFrame:
-    """Carrega usuários do Google Drive"""
-    try:
-        url = f"https://drive.google.com/uc?id={LOGIN_FILE_ID}"
-        gdown.download(url, LOGIN_CSV_PATH, quiet=True, fuzzy=True)
-        df = pd.read_csv(LOGIN_CSV_PATH)
-        logger.info(f"Carregados {len(df)} usuários")
-        return df
-    except Exception as e:
-        logger.error(f"Erro ao carregar usuários: {e}")
-        # Retorna DataFrame vazio com estrutura correta
-        return pd.DataFrame(columns=['nome', 'login', 'senha'])
-
-def verify_credentials(login: str, password: str) -> tuple[bool, str]:
+def verify_credentials(login: str, password: str) -> tuple[bool, str, str]:
     """
-    Verifica credenciais do usuário
-    Retorna: (autenticado: bool, nome_usuario: str)
+    Verifica credenciais do usuário no Supabase
+    Retorna: (autenticado: bool, nome_usuario: str, login: str)
     """
     try:
-        df_users = load_users()
+        # Buscar usuário pelo login e senha
+        response = supabase.table('users').select('*').eq('login', login).eq('senha', password).execute()
         
-        if df_users.empty:
-            return False, ""
+        if response.data and len(response.data) > 0:
+            user = response.data[0]
+            logger.info(f"Login bem-sucedido: {login}")
+            return True, user['nome'], user['login']
         
-        # Busca usuário pelo login
-        user = df_users[df_users['login'].str.lower() == login.lower()]
-        
-        if user.empty:
-            return False, ""
-        
-        # Verifica senha (texto simples)
-        if user.iloc[0]['senha'] == password:
-            return True, user.iloc[0]['nome']
-        
-        return False, ""
+        logger.warning(f"Tentativa de login falhou: {login}")
+        return False, "", ""
     except Exception as e:
         logger.error(f"Erro ao verificar credenciais: {e}")
-        return False, ""
+        return False, "", ""
 
 def init_login_state():
     """Inicializa estado de sessão do login"""
@@ -62,6 +40,8 @@ def init_login_state():
         st.session_state.authenticated = False
     if 'user_name' not in st.session_state:
         st.session_state.user_name = ""
+    if 'user_login' not in st.session_state:
+        st.session_state.user_login = ""
     if 'login_timestamp' not in st.session_state:
         st.session_state.login_timestamp = None
 
@@ -69,8 +49,8 @@ def logout():
     """Faz logout do usuário"""
     st.session_state.authenticated = False
     st.session_state.user_name = ""
+    st.session_state.user_login = ""
     st.session_state.login_timestamp = None
-    st.cache_data.clear()
 
 # ======================
 # Interface de Login
@@ -125,11 +105,12 @@ def show_login_page():
                         st.error("❌ Preencha todos os campos!")
                     else:
                         with st.spinner("🔄 Verificando credenciais..."):
-                            authenticated, user_name = verify_credentials(login, password)
+                            authenticated, user_name, user_login = verify_credentials(login, password)
                             
                             if authenticated:
                                 st.session_state.authenticated = True
                                 st.session_state.user_name = user_name
+                                st.session_state.user_login = user_login
                                 st.session_state.login_timestamp = datetime.now()
                                 st.success(f"✅ Bem-vindo, {user_name}!")
                                 st.rerun()
@@ -160,6 +141,33 @@ def show_user_info():
             st.rerun()
 
 # ======================
+# Menu de Navegação
+# ======================
+
+def show_navigation_menu():
+    """Exibe menu de navegação na sidebar"""
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown("### 📋 Menu de Navegação")
+        
+        # Página Principal
+        if st.button("🏠 Busca", use_container_width=True, key="nav_home"):
+            st.switch_page("validator_system.py")
+        
+        # Página de Resultados (todos)
+        if st.button("📊 Meus Resultados", use_container_width=True, key="nav_results"):
+            st.switch_page("pages/resultados.py")
+        
+        # Página de Auditoria (só Leo)
+        if st.session_state.user_login.lower() == "leo":
+            if st.button("🔍 Auditoria", use_container_width=True, key="nav_audit"):
+                st.switch_page("pages/auditoria.py")
+        
+        # Página de Relatórios (todos)
+        if st.button("📁 Relatórios", use_container_width=True, key="nav_reports"):
+            st.switch_page("pages/relatorios.py")
+
+# ======================
 # Função Principal de Integração
 # ======================
 
@@ -176,66 +184,7 @@ def require_authentication():
         show_login_page()
         return False
     
-    # Se autenticado, mostra informações do usuário
+    # Se autenticado, mostra informações do usuário e menu
     show_user_info()
+    show_navigation_menu()
     return True
-
-
-# ======================
-# INSTRUÇÕES DE USO
-# ======================
-"""
-COMO INTEGRAR NO SEU SISTEMA:
-
-1. CRIAR ARQUIVO users.csv NO GOOGLE DRIVE:
-   
-   Estrutura do CSV (senhas em texto simples):
-   nome,login,senha
-   Leonardo Silva,leo,123456
-   Admin Sistema,admin,admin123
-   João Santos,joao,senha123
-   Maria Oliveira,maria,maria2024
-
-2. OBTER ID DO ARQUIVO:
-   - Faça upload do users.csv no Google Drive
-   - Clique com botão direito > Compartilhar > "Qualquer pessoa com o link"
-   - Copie o ID do link (parte entre /d/ e /view)
-   - Substitua em LOGIN_FILE_ID acima
-
-3. INTEGRAR NO SEU CÓDIGO PRINCIPAL (validator_system.py):
-   
-   No início do arquivo, após os imports:
-   
-   from login_system import require_authentication
-   
-   Logo após st.set_page_config(), adicione:
-   
-   # Verificar autenticação
-   if not require_authentication():
-       st.stop()
-   
-   # Resto do seu código continua aqui...
-
-4. ESTRUTURA FINAL:
-   
-   validator_system.py (seu arquivo principal)
-   login_system.py (este arquivo)
-   users.csv (no Google Drive)
-
-5. ADICIONAR NOVOS USUÁRIOS:
-   
-   - Edite o users.csv no Google Drive
-   - Adicione nova linha com: nome,login,senha
-   - O cache é atualizado a cada 5 minutos automaticamente
-   
-   Exemplo:
-   Pedro Costa,pedro,pedro2024
-
-6. EXEMPLO DE ARQUIVO users.csv COMPLETO:
-   
-   nome,login,senha
-   Leonardo Silva,leo,123456
-   Admin Sistema,admin,admin123
-   João Santos,joao,senha123
-   Maria Oliveira,maria,maria2024
-"""
