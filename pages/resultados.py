@@ -33,7 +33,7 @@ st.markdown(f"Viabilizações de **{st.session_state.user_name}**")
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
 with col_header2:
-    if st.button("🔄 Atualizar", use_container_width=True):
+    if st.button("🔄 Atualizar", width='stretch'):
         st.rerun()
 
 st.markdown("---")
@@ -113,7 +113,7 @@ Média RX: {row['media_rx']} dBm"""
                 st.markdown("💡 **Dica:** Selecione o texto acima e use Ctrl+C para copiar")
             
             with col_btn3:
-                if st.button("✅ Finalizar", key=f"finish_{row['id']}", type="primary", use_container_width=True):
+                if st.button("✅ Finalizar", key=f"finish_{row['id']}", type="primary", width='stretch'):
                     if finalize_viability(row['id']):
                         st.success("✅ Viabilização finalizada e arquivada!")
                         st.balloons()
