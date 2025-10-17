@@ -135,12 +135,13 @@ def show_viability_form(row: dict, urgente: bool = False):
                     obs = st.text_area("Observações", key=f"obs_{row['id']}", height=80)
                     
                     # Botões
-                    col_btn1, col_btn2, col_btn3 = st.columns(3)
+                    col_btn1, col_btn2, col_btn3, col_btn4 = st.columns(4)
                     
                     with col_btn1:
                         aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
-                    
-                    with col_btn3:
+                    with col_btn2:  # ← NOVO BOTÃO AQUI
+                        utp = st.form_submit_button("📡 Atendemos UTP", use_container_width=True)
+                    with col_btn4:
                         rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
                     
                     if aprovado:
@@ -167,7 +168,11 @@ def show_viability_form(row: dict, urgente: bool = False):
                             if update_viability_ftth(row['id'], 'rejeitado', dados):
                                 st.success("❌ Solicitação rejeitada")
                                 st.rerun()
-            
+                    if utp:
+                        dados = {'motivo_rejeicao': 'Atendemos UTP'}
+                        if update_viability_ftth(row['id'], 'utp', dados):
+                            st.success("📡 Marcado como Atendemos UTP")
+                            st.rerun()
             else:  # FTTA
                 st.markdown("#### 🏢 Dados FTTA (Edifício)")
                 
@@ -187,8 +192,9 @@ def show_viability_form(row: dict, urgente: bool = False):
                     
                     with col_btn1:
                         aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
-                    
-                    with col_btn3:
+                    with col_btn2:
+                        utp = st.form_submit_button("📡 Atendemos UTP", use_container_width=True)                    
+                    with col_btn4:
                         rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
                     
                     if aprovado:
@@ -213,7 +219,12 @@ def show_viability_form(row: dict, urgente: bool = False):
                             if update_viability_ftta(row['id'], 'rejeitado', dados):
                                 st.success("❌ Solicitação rejeitada")
                                 st.rerun()
-        
+                    if utp:
+                        dados = {'motivo_rejeicao': 'Atendemos UTP'}
+                        if update_viability_ftta(row['id'], 'utp', dados):
+                            st.success("📡 Marcado como Atendemos UTP")
+                            st.rerun()
+                            
         st.markdown("---")
 
 # ======================
