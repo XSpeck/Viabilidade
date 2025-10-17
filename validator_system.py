@@ -591,18 +591,7 @@ if plus_code_input:
                                 st.metric("🏃‍♂️ Distância com sobra (+50m)", route_distance_sobra)
 
                             # ===== ADICIONAR AQUI O BOTÃO VIABILIZAR =====
-                            st.markdown("---")
-                            if st.button("Viabilizar", type="primary", use_container_width=True):
-                                viability_data = {
-                                    'cto_numero': closest_cto['name'],
-                                    'distancia_real': format_distance(walking_route_cto['distance']),
-                                    'distancia_sobra': format_distance(walking_route_cto['distance'] + 50),
-                                    'localizacao_caixa': coords_to_pluscode(closest_cto['lat'], closest_cto['lon'])
-                                }
-                                if create_viability_request(st.session_state.user_name, viability_data):
-                                    st.success("Solicitação enviada!")
-                                else:
-                                    st.error("Erro ao enviar")
+                            
                             # ===== FIM DO BOTÃO =====                            
                                                         
                             st.info("🗺️ Rota calculada usando OSRM (Open Source) - considera ruas e calçadas")
