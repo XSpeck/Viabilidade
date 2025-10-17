@@ -518,7 +518,7 @@ if plus_code_input:
                     cto_routes.sort(key=lambda x: x["distance"])
                     
                     # Pegar apenas as 3 mais próximas pela rota real
-                    cto_routes = cto_routes[:3]
+                    cto_routes = cto_routes[:10]
             
             # Definir a CTO mais próxima e sua rota
             closest_cto = None
