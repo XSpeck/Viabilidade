@@ -45,7 +45,7 @@ st.markdown("Análise técnica das solicitações de viabilidade")
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
 with col_header2:
-    if st.button("🔄 Atualizar", use_container_width=True):
+    if st.button("🔄 Atualizar", width='stretch'):
         st.rerun()
 
 st.markdown("---")
@@ -167,10 +167,10 @@ def show_viability_form(row: dict, urgente: bool = False):
                     col_btn1, col_btn2, col_btn3 = st.columns(3)
                     
                     with col_btn1:
-                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
+                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", width='stretch')
                     
                     with col_btn3:
-                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
+                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", width='stretch')
                     
                     if aprovado:
                         if cto and portas > 0 and rx and distancia and localizacao:
@@ -215,10 +215,10 @@ def show_viability_form(row: dict, urgente: bool = False):
                     col_btn1, col_btn2, col_btn3 = st.columns(3)
                     
                     with col_btn1:
-                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
+                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", width='stretch')
                     
                     with col_btn3:
-                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
+                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", width='stretch')
                     
                     if aprovado:
                         if predio and portas > 0 and media_rx:
