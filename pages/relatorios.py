@@ -34,7 +34,7 @@ st.markdown("Histórico completo de viabilizações")
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
 with col_header2:
-    if st.button("🔄 Atualizar", use_container_width=True):
+    if st.button("🔄 Atualizar", width='stretch'):
         st.rerun()
 
 st.markdown("---")
@@ -204,7 +204,7 @@ if st.session_state.user_login.lower() == "leo":
                 data=csv_fin,
                 file_name="viabilizacoes_aprovadas.csv",
                 mime="text/csv",
-                use_container_width=True
+                width='stretch'
             )
     
     with col_exp2:
@@ -216,7 +216,7 @@ if st.session_state.user_login.lower() == "leo":
                 data=csv_rej,
                 file_name="viabilizacoes_rejeitadas.csv",
                 mime="text/csv",
-                use_container_width=True
+                width='stretch'
             )
 
 # ======================
