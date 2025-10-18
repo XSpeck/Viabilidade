@@ -46,17 +46,17 @@ st.subheader("📊 Estatísticas Gerais")
 
 stats = get_statistics()
 
-col1, col2, col3, col4, col5 = st.columns(5)
+col1, col2, col3 = st.columns(3)
+#with col1:
+   # st.metric("📦 Total", stats['total'])
 with col1:
-    st.metric("📦 Total", stats['total'])
-with col2:
     st.metric("⏳ Pendentes", stats['pendentes'])
-with col3:
+with col2:
     st.metric("✅ Finalizadas", stats['finalizadas'])
-with col4:
+with col3:
     st.metric("❌ Rejeitadas", stats['rejeitadas'])
-with col5:
-    st.metric("📈 Taxa Aprovação", f"{stats['taxa_aprovacao']:.1f}%")
+#with col5:
+  #  st.metric("📈 Taxa Aprovação", f"{stats['taxa_aprovacao']:.1f}%")
 
 st.markdown("---")
 
