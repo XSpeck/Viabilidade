@@ -666,7 +666,7 @@ if plus_code_input:
 
                                     nome_predio = st.text_input(
                                         "🏢 Nome do Prédio *",
-                                        placeholder="Ex: Edifício Solar das Flores",
+                                        placeholder="Ex: Ed. Solar das Flores",
                                         key="nome_predio_ftta"
                                     )
                                     
@@ -680,7 +680,7 @@ if plus_code_input:
                                                 st.session_state.user_name, 
                                                 plus_code_input, 
                                                 'FTTA',
-                                                urgente_edificio
+                                                urgente_edificio,
                                                 nome_predio=nome_predio.strip()
                                             ):
                                                 st.session_state.show_viability_modal = False
