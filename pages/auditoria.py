@@ -48,25 +48,6 @@ with col_header2:
     if st.button("🔄 Atualizar", use_container_width=True):
         st.rerun()
 
-st.markdown("---")
-
-# ======================
-# Estatísticas
-# ======================
-stats = get_statistics()
-
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric("⏳ Pendentes", stats['pendentes'])
-with col2:
-    st.metric("🔥 Urgentes", stats['urgentes_pendentes'])
-with col3:
-    st.metric("✅ Finalizadas", stats['finalizadas'])
-with col4:
-    st.metric("📊 Taxa Aprovação", f"{stats['taxa_aprovacao']:.1f}%")
-
-st.markdown("---")
-
 # ======================
 # Função de Formulário
 # ======================
