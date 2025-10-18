@@ -663,22 +663,31 @@ if plus_code_input:
                                         <p style='color: #666; margin: 0;'>FTTA - Fibra até o prédio</p>
                                     </div>
                                     """, unsafe_allow_html=True)
+
+                                    nome_predio = st.text_input(
+                                        "🏢 Nome do Prédio *",
+                                        placeholder="Ex: Edifício Solar das Flores",
+                                        key="nome_predio_ftta"
+                                    )
                                     
                                     urgente_edificio = st.checkbox("🔥 Cliente Presencial (Urgente)", key="urgente_edificio")
                                     
                                     if st.button("Confirmar - Edifício (FTTA)", type="primary", use_container_width=True, key="confirm_ftta"):
-                                        if create_viability_request(
-                                            st.session_state.user_name, 
-                                            plus_code_input, 
-                                            'FTTA',
-                                            urgente_edificio
-                                        ):
-                                            st.session_state.show_viability_modal = False
-                                            st.success("✅ Solicitação de viabilização enviada para auditoria técnica!")
-                                            st.info("👉 Acesse 'Meus Resultados' no menu lateral para acompanhar.")
-                                            st.balloons()
+                                        if not nome_predio or nome_predio.strip() == "":
+                                            st.error("❌ Por favor, informe o nome do prédio!")
                                         else:
-                                            st.error("❌ Erro ao criar solicitação. Tente novamente.")
+                                            if create_viability_request(
+                                                st.session_state.user_name, 
+                                                plus_code_input, 
+                                                'FTTA',
+                                                urgente_edificio
+                                            ):
+                                                st.session_state.show_viability_modal = False
+                                                st.success("✅ Solicitação de viabilização enviada para auditoria técnica!")
+                                                st.info("👉 Acesse 'Meus Resultados' no menu lateral para acompanhar.")
+                                                st.balloons()
+                                            else:
+                                                st.error("❌ Erro ao criar solicitação. Tente novamente.")
                                 
                                 # Botão cancelar
                                 col_cancel = st.columns([2, 1, 2])[1]
