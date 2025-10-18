@@ -133,7 +133,13 @@ if rejected:
             st.text(f"Tipo: {row['tipo_instalacao']}")
             st.text(f"Plus Code: {row['plus_code_cliente']}")
             st.caption(f"🕐 Analisado por: {row['auditado_por']} em {row['data_auditoria'][:16]}")
-            
+
+            st.markdown("---")
+            if st.button("✅ OK, Entendi", key=f"finish_rejected_{row['id']}", type="secondary", use_container_width=True):
+                if finalize_viability(row['id']):
+                    st.success("✅ Confirmado!")
+                    st.rerun()
+                    
 # ======================
 # Mostrar UTP
 # ======================
