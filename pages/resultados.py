@@ -5,7 +5,7 @@ Salve como: pages/resultados.py
 
 import streamlit as st
 from login_system import require_authentication
-from viability_functions import get_user_results, finalize_viability
+from viability_functions import get_user_results, finalize_viability, finalize_viability_approved
 import logging
 
 logger = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ Média RX: {row['media_rx']} dBm"""
             
             with col_btn3:
                 if st.button("✅ Finalizar", key=f"finish_{row['id']}", type="primary", width='stretch'):
-                    if finalize_viability(row['id']):
+                    if finalize_viability_approved(row['id']):
                         st.success("✅ Viabilização finalizada e arquivada!")
                         st.balloons()
                         st.rerun()
