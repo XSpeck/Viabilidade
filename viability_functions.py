@@ -61,12 +61,13 @@ def get_pending_viabilities() -> List[Dict]:
         return []
 
 def get_user_results(username: str) -> List[Dict]:
-    """Busca resultados do usuário (aprovados e rejeitados que ainda não foram finalizados)"""
+    """Busca resultados do usuário (aprovados e rejeitados e UTPs que ainda não foram finalizados)"""
     try:
         response = supabase.table('viabilizacoes')\
             .select('*')\
             .eq('usuario', username)\
             .in_('status', ['aprovado', 'rejeitado', 'utp'])\
+            .is_('data_finalizacao', None)\
             .order('data_auditoria', desc=True)\
             .execute()
         return response.data if response.data else []
