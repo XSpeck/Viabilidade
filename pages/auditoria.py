@@ -89,7 +89,7 @@ def show_viability_form(row: dict, urgente: bool = False):
             st.text(f"👤 Usuário: {row['usuario']}")
             st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
             st.text(f"🔍 Tipo: {row['tipo_instalacao']}")
-            st.text(f"🏨 Nome: {row['tipo_instalacao']}")
+            st.text(f"🏨 Nome: {row['nome_predio']}")
             st.text(f"📅 Solicitado em: {row['data_solicitacao'][:16]}")
             if urgente:
                 st.error("🔥 **URGENTE - Cliente Presencial**")
