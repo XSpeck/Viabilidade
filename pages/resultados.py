@@ -36,7 +36,6 @@ with col_header2:
     if st.button("🔄 Atualizar", width='stretch'):
         st.rerun()
 
-st.markdown("---")
 
 # ======================
 # Buscar Resultados
