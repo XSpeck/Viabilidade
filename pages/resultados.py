@@ -59,17 +59,6 @@ approved = [r for r in results if r['status'] == 'aprovado']
 rejected = [r for r in results if r['status'] == 'rejeitado']
 utp = [r for r in results if r['status'] == 'utp']
 
-# Métricas
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric("📊 Total", len(results))
-with col2:
-    st.metric("✅ Aprovadas", len(approved))
-with col3:
-    st.metric("📡 UTP", len(utp))
-with col4:
-    st.metric("❌ Rejeitadas", len(rejected))
-
 st.markdown("---")
 
 # ======================
