@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # Funções de CRUD
 # ======================
 
-def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False) -> bool:
+def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None) -> bool:
     """
     Cria nova solicitação de viabilização no Supabase
     
