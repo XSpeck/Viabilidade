@@ -919,9 +919,7 @@ if st.session_state.search_history:
             with col4:
                 company_text = entry.get('company', 'N/A')
                 st.text(f"Empresa: {company_text}")
-# ===== ADICIONAR AQUI O SISTEMA DE VIABILIZAÇÃO =====
 
-# ===== FIM DO SISTEMA =====
 
 st.markdown("---")
 st.markdown(
