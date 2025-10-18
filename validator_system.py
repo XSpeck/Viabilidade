@@ -558,6 +558,9 @@ if plus_code_input:
                     ''',
                     unsafe_allow_html=True
                 )
+
+                st.markdown("---")
+                
                 with col1:
                     st.markdown("### 🎯 Análise de Viabilidade")
                     if proximity_result["distance"] is not None:
@@ -598,7 +601,7 @@ if plus_code_input:
                                 st.metric("🏃‍♂️ Distância com sobra (+50m)", route_distance_sobra)
 
                             # ===== ADICIONAR AQUI O BOTÃO VIABILIZAR =====
-                            st.markdown("---")
+                            
 
                             # Inicializar estado do modal se não existir
                             if 'show_viability_modal' not in st.session_state:
