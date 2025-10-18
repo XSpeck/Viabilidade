@@ -162,12 +162,10 @@ def show_viability_form(row: dict, urgente: bool = False):
                             st.error("❌ Preencha todos os campos obrigatórios!")
                     
                     if rejeitado:
-                        motivo = st.text_input("Motivo da Rejeição", value="Não temos projeto neste ponto", key=f"motivo_temp_{row['id']}")
-                        if st.button("Confirmar Rejeição", key=f"confirm_rej_{row['id']}"):
-                            dados = {'motivo_rejeicao': motivo}
-                            if update_viability_ftth(row['id'], 'rejeitado', dados):
-                                st.success("❌ Solicitação rejeitada")
-                                st.rerun()
+                        dados = {'motivo_rejeicao': 'Não temos projeto neste ponto'}
+                        if update_viability_ftth(row['id'], 'rejeitado', dados):
+                            st.success("❌ Solicitação rejeitada")
+                            st.rerun()
                     if utp:
                         dados = {'motivo_rejeicao': 'Atendemos UTP'}
                         if update_viability_ftth(row['id'], 'utp', dados):
@@ -213,12 +211,10 @@ def show_viability_form(row: dict, urgente: bool = False):
                             st.error("❌ Preencha todos os campos obrigatórios!")
                     
                     if rejeitado:
-                        motivo = st.text_input("Motivo da Rejeição", value="Não temos projeto neste ponto", key=f"motivo_ftta_temp_{row['id']}")
-                        if st.button("Confirmar Rejeição", key=f"confirm_rej_ftta_{row['id']}"):
-                            dados = {'motivo_rejeicao': motivo}
-                            if update_viability_ftta(row['id'], 'rejeitado', dados):
-                                st.success("❌ Solicitação rejeitada")
-                                st.rerun()
+                        dados = {'motivo_rejeicao': 'Não temos projeto neste ponto'}
+                        if update_viability_ftta(row['id'], 'rejeitado', dados):
+                            st.success("❌ Solicitação rejeitada")
+                            st.rerun()
                     if utp:
                         dados = {'motivo_rejeicao': 'Atendemos UTP'}
                         if update_viability_ftta(row['id'], 'utp', dados):
