@@ -159,8 +159,7 @@ if utp:
             # Mensagem padrão
             st.info("### 📡 Atendemos UTP")
             
-            # Informações adicionais
-            st.text(f"Tipo: {row['tipo_instalacao']}")
+            # Informações adicionais            
             st.text(f"Plus Code: {row['plus_code_cliente']}")
             st.caption(f"🕐 Analisado por: {row['auditado_por']} em {row['data_auditoria'][:16]}")
             
