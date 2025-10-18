@@ -215,9 +215,9 @@ def get_statistics() -> Dict:
             return {
                 'total': 0,
                 'pendentes': 0,
-                'aprovadas': 0,
-                'rejeitadas': 0,
                 'finalizadas': 0,
+                'rejeitadas': 0,
+                'utp': 0,
                 'urgentes_pendentes': 0,
                 'taxa_aprovacao': 0
             }
@@ -225,20 +225,20 @@ def get_statistics() -> Dict:
         data = response.data
         total = len(data)
         pendentes = len([d for d in data if d['status'] == 'pendente'])
-        aprovadas = len([d for d in data if d['status'] == 'aprovado'])
-        rejeitadas = len([d for d in data if d['status'] == 'rejeitado'])
         finalizadas = len([d for d in data if d['status'] == 'finalizado'])
+        rejeitadas = len([d for d in data if d['status'] == 'rejeitado'])
         urgentes_pendentes = len([d for d in data if d['status'] == 'pendente' and d.get('urgente', False)])
-        
-        total_processadas = finalizadas + rejeitadas
+
+        utp = total - (pendentes + finalizadas + rejeitadas)
+        total_processadas = finalizadas + rejeitadas + utp
         taxa_aprovacao = (finalizadas / total_processadas * 100) if total_processadas > 0 else 0
         
         return {
             'total': total,
             'pendentes': pendentes,
-            'aprovadas': aprovadas,
-            'rejeitadas': rejeitadas,
             'finalizadas': finalizadas,
+            'rejeitadas': rejeitadas,
+            'utp': utp,
             'urgentes_pendentes': urgentes_pendentes,
             'taxa_aprovacao': taxa_aprovacao
         }
@@ -247,9 +247,9 @@ def get_statistics() -> Dict:
         return {
             'total': 0,
             'pendentes': 0,
-            'aprovadas': 0,
-            'rejeitadas': 0,
             'finalizadas': 0,
+            'rejeitadas': 0,
+            'utp': 0,
             'urgentes_pendentes': 0,
             'taxa_aprovacao': 0
         }
