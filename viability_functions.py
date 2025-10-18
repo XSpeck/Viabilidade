@@ -178,7 +178,7 @@ def finalize_viability(viability_id: str) -> bool:
     """Marca viabilização como finalizada"""
     try:
         update_data = {
-            'status': 'finalizado',
+            
             'data_finalizacao': datetime.now().isoformat()
         }
         
@@ -190,6 +190,25 @@ def finalize_viability(viability_id: str) -> bool:
         return False
     except Exception as e:
         logger.error(f"Erro ao finalizar viabilização: {e}")
+        st.error(f"❌ Erro ao finalizar: {e}")
+        return False
+
+def finalize_viability_approved(viability_id: str) -> bool:
+    """Finaliza viabilização aprovada (muda status para finalizado)"""
+    try:
+        update_data = {
+            'status': 'finalizado',
+            'data_finalizacao': datetime.now().isoformat()
+        }
+        
+        response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
+        
+        if response.data:
+            logger.info(f"Viabilização aprovada {viability_id} finalizada")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Erro ao finalizar viabilização aprovada: {e}")
         st.error(f"❌ Erro ao finalizar: {e}")
         return False
 
