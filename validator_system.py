@@ -681,6 +681,7 @@ if plus_code_input:
                                                 plus_code_input, 
                                                 'FTTA',
                                                 urgente_edificio
+                                                nome_predio=nome_predio.strip()
                                             ):
                                                 st.session_state.show_viability_modal = False
                                                 st.success("✅ Solicitação de viabilização enviada para auditoria técnica!")
