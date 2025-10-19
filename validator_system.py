@@ -615,8 +615,7 @@ if plus_code_input:
                                     st.markdown("""
                                     <div style='text-align: center; padding: 20px; background: white; 
                                                 border-radius: 10px; border: 2px solid #4CAF50;'>
-                                        <h2 style='margin: 0;'>🏠</h2>
-                                        <h4 style='margin: 10px 0;'>Casa</h4>
+                                        <h2 style='margin: 0;'>🏠</h2>                                        
                                         <p style='color: #666; margin: 0;'>FTTH - Fibra até a casa</p>
                                     </div>
                                     """, unsafe_allow_html=True)
@@ -641,8 +640,7 @@ if plus_code_input:
                                     st.markdown("""
                                     <div style='text-align: center; padding: 20px; background: white; 
                                                 border-radius: 10px; border: 2px solid #2196F3;'>
-                                        <h2 style='margin: 0;'>🏢</h2>
-                                        <h4 style='margin: 10px 0;'>Edifício</h4>
+                                        <h2 style='margin: 0;'>🏢</h2>                                       
                                         <p style='color: #666; margin: 0;'>FTTA - Fibra até o prédio</p>
                                     </div>
                                     """, unsafe_allow_html=True)
