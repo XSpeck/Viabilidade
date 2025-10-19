@@ -4,7 +4,7 @@ Salve como: pages/relatorios.py
 """
 
 import streamlit as st
-from viability_functions import format_time_br_supa_supa
+from viability_functions import format_time_br_supa
 from login_system import require_authentication
 from viability_functions import get_archived_viabilities, get_statistics
 import pandas as pd
