@@ -59,6 +59,14 @@ def logout():
 def show_login_page():
     """Exibe página de login"""
     st.markdown("""
+        <style>
+            [data-testid="stSidebarNav"] {
+                display: none;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
         <div style='text-align: center; padding: 20px;'>
             <h1>🔐 Validador de Projetos</h1>
             <p style='color: #666;'>Faça login para acessar o sistema</p>
