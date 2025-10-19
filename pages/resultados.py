@@ -110,7 +110,7 @@ Média RX: {row['media_rx']} dBm"""
                         st.balloons()
                         st.rerun()
             
-            st.caption(f"🕐 Auditado por: {row['auditado_por']} em {format_time_br_supa(row['data_auditoria'])}")
+            st.caption(f"🕐 Auditado por: {row['auditado_por']} em {format_datetime_resultados(row['data_auditoria'])}")
 
 # ======================
 # Mostrar Rejeitadas
