@@ -105,7 +105,7 @@ with tab1:
             tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
             
             with st.expander(
-                f"{tipo_icon} {row['plus_code_cliente']} - {row['usuario']} - {row['data_finalizacao'][:16]}"
+                f"{tipo_icon} {row['plus_code_cliente']} - {row['usuario']} - {format_time_br_supa(row['data_finalizacao'])}"
             ):
                 col1, col2 = st.columns(2)
                 
@@ -169,7 +169,7 @@ with tab2:
             tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
             
             with st.expander(
-                f"❌ {tipo_icon} {row['plus_code_cliente']} - {row['usuario']} - {row['data_auditoria'][:16]}"
+                f"❌ {tipo_icon} {row['plus_code_cliente']} - {row['usuario']} - {format_time_br_supa(row['data_auditoria'])}"
             ):
                 col1, col2 = st.columns(2)
                 
@@ -178,8 +178,8 @@ with tab2:
                     st.text(f"Usuário: {row['usuario']}")
                     st.text(f"Plus Code: {row['plus_code_cliente']}")
                     st.text(f"Tipo: {row['tipo_instalacao']}")
-                    st.text(f"Solicitado: {row['data_solicitacao'][:16]}")
-                    st.text(f"Auditado: {row['data_auditoria'][:16]}")
+                    st.text(f"Solicitado: {format_time_br_supa(row['data_solicitacao'])}")
+                    st.text(f"Auditado: {format_time_br_supa(row['data_auditoria'])}")
                     st.text(f"Auditado por: {row['auditado_por']}")
                 
                 with col2:
