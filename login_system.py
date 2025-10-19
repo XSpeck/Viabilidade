@@ -138,8 +138,7 @@ def show_login_page():
 
 def show_user_info():
     """Exibe informações do usuário logado na sidebar"""
-    with st.sidebar:
-        st.markdown("---")
+    with st.sidebar:        
         st.markdown("### 👤 Usuário Logado")
         st.info(f"**{st.session_state.user_name}**")
         
