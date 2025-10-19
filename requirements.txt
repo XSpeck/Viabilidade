@@ -17,9 +17,11 @@ gdown
 pandas
 numpy>=1.24.0
 requests
+pytz
 
 # Extras para melhor performance
 beautifulsoup4>=4.12.0
 certifi>=2023.0.0
 charset-normalizer>=3.0.0
+
 
