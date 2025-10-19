@@ -69,7 +69,7 @@ if approved:
     st.success("🎉 Parabéns! Suas solicitações foram aprovadas!")
     
     for row in approved:
-        with st.expander(f"📦 {row['plus_code_cliente']} - Auditado em {format_time_br_supa(row['data_auditoria'])}", expanded=True):
+        with st.expander(f"📦 {row['plus_code_cliente']} - Auditado em {row['data_auditoria']}", expanded=True):
             
             # Verificar tipo
             if row['tipo_instalacao'] == 'FTTH':
