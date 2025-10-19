@@ -8,12 +8,18 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 from supabase_config import supabase
+import pytz
 
 logger = logging.getLogger(__name__)
 
+TIMEZONE_BR = pytz.timezone('America/Sao_Paulo')  # Brasília (UTC-3)
 # ======================
 # Funções de CRUD
 # ======================
+
+def get_current_time():
+    """Retorna data/hora atual no fuso horário do Brasil"""
+    return datetime.now(TIMEZONE_BR).isoformat()
 
 def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None) -> bool:
     """
@@ -115,7 +121,7 @@ def update_viability_ftth(viability_id: str, status: str, dados: Dict) -> bool:
     try:
         update_data = {
             'status': status,
-            'data_auditoria': datetime.now().isoformat(),
+            'data_auditoria': get_current_time(),
             'auditado_por': 'leo'
         }
         
@@ -154,7 +160,7 @@ def update_viability_ftta(viability_id: str, status: str, dados: Dict) -> bool:
     try:
         update_data = {
             'status': status,
-            'data_auditoria': datetime.now().isoformat(),
+            'data_auditoria': get_current_time(),
             'auditado_por': 'leo'
         }
         
@@ -184,7 +190,7 @@ def finalize_viability(viability_id: str) -> bool:
     try:
         update_data = {
             
-            'data_finalizacao': datetime.now().isoformat()
+            'data_finalizacao': get_current_time()
         }
         
         response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
@@ -203,7 +209,7 @@ def finalize_viability_approved(viability_id: str) -> bool:
     try:
         update_data = {
             'status': 'finalizado',
-            'data_finalizacao': datetime.now().isoformat()
+            'data_finalizacao': get_current_time()
         }
         
         response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
