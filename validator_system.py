@@ -899,7 +899,9 @@ if st.session_state.search_history:
     st.subheader("📚 Histórico de Pesquisas")
     for i, entry in enumerate(st.session_state.search_history[:5]):
         company_info = f" - {entry['company']}" if entry.get('company') else ""
-        with st.expander(f"🕐 {entry['plus_code']}{company_info} - {format_time_br(entry['timestamp'], only_time=True)}"):
+        timestamp_str = entry.get('timestamp')
+        formatted_time = format_time_br(timestamp_str, only_time=True) if timestamp_str else "-"
+        with st.expander(f"🕐 {entry.get('plus_code', '')}{company_info} - {formatted_time}"):
             col1, col2, col3, col4 = st.columns(4)
             with col1:
                 st.text(f"Plus Code: {entry['plus_code']}")
