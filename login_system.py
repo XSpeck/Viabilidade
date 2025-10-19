@@ -147,6 +147,15 @@ def show_user_info():
 def show_navigation_menu():
     """Exibe menu de navegação na sidebar"""
     with st.sidebar:
+        # Esconder menu automático de páginas do Streamlit
+        st.markdown("""
+            <style>
+                [data-testid="stSidebarNav"] {
+                    display: none;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+        
         st.markdown("---")
         st.markdown("### 📋 Menu de Navegação")
         
