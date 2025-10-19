@@ -444,24 +444,7 @@ with st.sidebar:
         on_refresh()
     if st.session_state.cache_timestamp:
         st.info(f"📅 Última atualização: {st.session_state.cache_timestamp.strftime('%H:%M:%S')}")
-    st.markdown("---")
-    st.header("📋 Critérios de Viabilidade Padrão")
-    for category, config in DISTANCE_CONFIGS.items():
-        if config["max"] == float('inf'):
-            distance_text = "> 500m"
-        else:
-            distance_text = f"≤ {config['max']}m"
-        st.markdown(f"{config['icon']} **{config['message']}**: {distance_text}")
     
-    st.markdown("---")
-    st.header("⚡ Critérios CELESC (Especiais)")
-    for category, config in CELESC_DISTANCE_CONFIGS.items():
-        if config["max"] == float('inf'):
-            distance_text = "> 50m"
-        else:
-            distance_text = f"≤ {config['max']}m"
-        st.markdown(f"{config['icon']} **{config['message']}**: {distance_text}")
-
 if st.session_state.refresh_clicked:
     st.success("✅ Arquivos atualizados com sucesso!")
     st.session_state.refresh_clicked = False
