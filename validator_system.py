@@ -15,7 +15,7 @@ import time
 from typing import Optional, Tuple, List, Dict
 import re
 from login_system import require_authentication
-from viability_functions import create_viability_request
+from viability_functions import create_viability_request, get_current_time
 import supabase_config
 
 # ======================
@@ -148,7 +148,7 @@ def get_distance_category(distance_m: float, is_celesc: bool = False) -> dict:
 def on_refresh():
     st.cache_data.clear()
     st.session_state.refresh_clicked = True
-    st.session_state.last_update = datetime.now()
+    st.session_state.last_update = get_current_time()
     logger.info("Cache limpo e arquivos marcados para atualização")
 
 @st.cache_data(ttl=3600)
@@ -255,7 +255,7 @@ def load_all_files():
         ctos = load_ctos_from_kml(ctos_kml_path)
         
         logger.info(f"Total: {total_lines} linhas de {len(KML_CONFIGS)} empresas, {len(ctos)} CTOs, {len(df_utp)} UTP, {len(df_sem)} sem viabilidade")
-        st.session_state.cache_timestamp = datetime.now()
+        st.session_state.cache_timestamp = get_current_time()
         return all_lines, ctos, df_utp, df_sem
     except Exception as e:
         logger.error(f"Erro ao carregar arquivos: {e}")
@@ -842,7 +842,7 @@ if plus_code_input:
                 "coordinates": coords_str,
                 "distance": proximity_result["distance"],
                 "company": proximity_result["company"],
-                "timestamp": datetime.now()
+                "timestamp": get_current_time()
             }
             if search_entry not in st.session_state.search_history:
                 st.session_state.search_history.insert(0, search_entry)
