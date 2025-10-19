@@ -4,9 +4,8 @@ Salve como: pages/resultados.py
 """
 
 import streamlit as st
-from viability_functions import format_time_br_supa, format_time_br
 from login_system import require_authentication
-from viability_functions import get_user_results, finalize_viability, finalize_viability_approved
+from viability_functions import get_user_results, finalize_viability, finalize_viability_approved, format_time_br_supa, format_time_br, format_datetime_resultados
 import logging
 
 logger = logging.getLogger(__name__)
@@ -69,7 +68,7 @@ if approved:
     st.success("🎉 Parabéns! Suas solicitações foram aprovadas!")
     
     for row in approved:
-        with st.expander(f"📦 {row['plus_code_cliente']} - Auditado em {row['data_auditoria']}", expanded=True):
+        with st.expander(f"📦 {row['plus_code_cliente']} - Auditado em {format_datetime_resultados(row['data_auditoria'])}", expanded=True):
             
             # Verificar tipo
             if row['tipo_instalacao'] == 'FTTH':
