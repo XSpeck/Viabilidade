@@ -918,7 +918,7 @@ if st.session_state.search_history:
             formatted_time = "-"
             import logging
             logging.warning(f"Erro ao formatar timestamp: {timestamp_value} ({e})")
-
+        st.write("🧩 DEBUG entry:", entry)
         with st.expander(f"🕐 {entry.get('plus_code', '')}{company_info} - {formatted_time}"):
             col1, col2, col3, col4 = st.columns(4)
             with col1:
