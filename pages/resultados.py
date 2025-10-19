@@ -4,7 +4,7 @@ Salve como: pages/resultados.py
 """
 
 import streamlit as st
-from viability_functions import format_time_br_supa
+from viability_functions import format_time_br_supa, format_time_br
 from login_system import require_authentication
 from viability_functions import get_user_results, finalize_viability, finalize_viability_approved
 import logging
@@ -149,14 +149,14 @@ if utp:
     st.subheader("📡 Atendemos UTP")
     
     for row in utp:
-        with st.expander(f"📡 {row['plus_code_cliente']} - {format_time_br_supa(row['data_auditoria'])}"):
+        with st.expander(f"📡 {row['plus_code_cliente']} - {format_time_br(row['data_auditoria'])}"):
             
             # Mensagem padrão
             st.info("### 📡 Atendemos UTP")
             
             # Informações adicionais            
             st.text(f"Plus Code: {row['plus_code_cliente']}")
-            st.caption(f"🕐 Analisado por: {row['auditado_por']} em {format_time_br_supa(row['data_auditoria'])}")
+            st.caption(f"🕐 Analisado por: {row['auditado_por']} em {format_time_br(row['data_auditoria'])}")
             
             # Botão finalizar (não arquiva, apenas remove da lista)
             if st.button("✅ Finalizar", key=f"finish_utp_{row['id']}", type="primary", use_container_width=True):
