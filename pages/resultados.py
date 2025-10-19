@@ -4,6 +4,7 @@ Salve como: pages/resultados.py
 """
 
 import streamlit as st
+from viability_functions import format_time_br
 from login_system import require_authentication
 from viability_functions import get_user_results, finalize_viability, finalize_viability_approved
 import logging
@@ -68,7 +69,7 @@ if approved:
     st.success("🎉 Parabéns! Suas solicitações foram aprovadas!")
     
     for row in approved:
-        with st.expander(f"📦 {row['plus_code_cliente']} - Auditado em {row['data_auditoria'][:16]}", expanded=True):
+        with st.expander(f"📦 {row['plus_code_cliente']} - Auditado em {format_time_br(row['data_auditoria'])}", expanded=True):
             
             # Verificar tipo
             if row['tipo_instalacao'] == 'FTTH':
@@ -110,7 +111,7 @@ Média RX: {row['media_rx']} dBm"""
                         st.balloons()
                         st.rerun()
             
-            st.caption(f"🕐 Auditado por: {row['auditado_por']} em {row['data_auditoria'][:16]}")
+            st.caption(f"🕐 Auditado por: {row['auditado_por']} em {format_time_br(row['data_auditoria'])}")
 
 # ======================
 # Mostrar Rejeitadas
@@ -120,7 +121,7 @@ if rejected:
     st.subheader("❌ Solicitações Sem Viabilidade")
     
     for row in rejected:
-        with st.expander(f"⚠️ {row['plus_code_cliente']} - {row['data_auditoria'][:16]}"):
+        with st.expander(f"⚠️ {row['plus_code_cliente']} - {format_time_br(row['data_auditoria'])}"):
             
             # Mensagem padrão
             st.error("### 📝 Não temos projeto neste ponto")
@@ -132,7 +133,7 @@ if rejected:
             # Informações adicionais
             st.text(f"Tipo: {row['tipo_instalacao']}")
             st.text(f"Plus Code: {row['plus_code_cliente']}")
-            st.caption(f"🕐 Analisado por: {row['auditado_por']} em {row['data_auditoria'][:16]}")
+            st.caption(f"🕐 Analisado por: {row['auditado_por']} em {format_time_br(row['data_auditoria'])}")
 
             st.markdown("---")
             if st.button("✅ OK, Entendi", key=f"finish_rejected_{row['id']}", type="secondary", use_container_width=True):
@@ -148,14 +149,14 @@ if utp:
     st.subheader("📡 Atendemos UTP")
     
     for row in utp:
-        with st.expander(f"📡 {row['plus_code_cliente']} - {row['data_auditoria'][:16]}"):
+        with st.expander(f"📡 {row['plus_code_cliente']} - {format_time_br(row['data_auditoria'])}"):
             
             # Mensagem padrão
             st.info("### 📡 Atendemos UTP")
             
             # Informações adicionais            
             st.text(f"Plus Code: {row['plus_code_cliente']}")
-            st.caption(f"🕐 Analisado por: {row['auditado_por']} em {row['data_auditoria'][:16]}")
+            st.caption(f"🕐 Analisado por: {row['auditado_por']} em {format_time_br(row['data_auditoria'])}")
             
             # Botão finalizar (não arquiva, apenas remove da lista)
             if st.button("✅ Finalizar", key=f"finish_utp_{row['id']}", type="primary", use_container_width=True):
