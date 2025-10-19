@@ -15,8 +15,9 @@ import time
 from typing import Optional, Tuple, List, Dict
 import re
 from login_system import require_authentication
-from viability_functions import create_viability_request, get_current_time
+from viability_functions import create_viability_request, get_current_time, TIMEZONE_BR
 import supabase_config
+
 
 # ======================
 # Configurações
@@ -443,8 +444,8 @@ with st.sidebar:
     if st.button("🔄 Atualizar Arquivos", help="Limpa o cache e recarrega todos os arquivos"):
         on_refresh()
     if st.session_state.cache_timestamp:
-        st.info(f"📅 Última atualização: {st.session_state.cache_timestamp.strftime('%H:%M:%S')}")
-    
+        st.info(f"📅 Última atualização: {datetime.now(TIMEZONE_BR).strftime('%d/%m/%Y %H:%M')}")
+            
 if st.session_state.refresh_clicked:
     st.success("✅ Arquivos atualizados com sucesso!")
     st.session_state.refresh_clicked = False
