@@ -38,7 +38,12 @@ def format_time_br(iso_string: str, only_time: bool = False) -> str:
         import logging
         logging.warning(f"Erro ao converter horário '{iso_string}': {e}")
         return "-"
-
+    # Converte string para datetime
+        try:
+            utc_dt = datetime.fromisoformat(utc_time_str)
+        except ValueError:
+            return utc_time_str  # Retorna original se não conseguir converter
+    
 def format_time_br_supa(utc_time_str: str) -> str:
     """
     Converte uma string de datetime UTC (ISO) para horário de Brasília (UTC-3)
@@ -75,11 +80,7 @@ def format_datetime_resultados(iso_datetime: str) -> str:
     except Exception as e:
         logger.error(f"Erro ao formatar data: {e}")
         return iso_datetime[:16]  # Fallback   
-# Converte string para datetime
-try:
-    utc_dt = datetime.fromisoformat(utc_time_str)
-except ValueError:
-    return utc_time_str  # Retorna original se não conseguir converter
+
     
 def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None) -> bool:
     """
