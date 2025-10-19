@@ -5,7 +5,7 @@ Salve como: pages/resultados.py
 
 import streamlit as st
 from login_system import require_authentication
-from viability_functions import get_user_results, finalize_viability, finalize_viability_approved, format_time_br_supa, format_time_br, format_datetime_resultados
+from viability_functions import get_user_results, finalize_viability, finalize_viability_approved, format_datetime_resultados
 import logging
 
 logger = logging.getLogger(__name__)
@@ -120,7 +120,7 @@ if rejected:
     st.subheader("❌ Solicitações Sem Viabilidade")
     
     for row in rejected:
-        with st.expander(f"⚠️ {row['plus_code_cliente']} - {format_time_br_supa(row['data_auditoria'])}"):
+        with st.expander(f"⚠️ {row['plus_code_cliente']} - {format_datetime_resultados(row['data_auditoria'])}"):
             
             # Mensagem padrão
             st.error("### 📝 Não temos projeto neste ponto")
@@ -132,7 +132,7 @@ if rejected:
             # Informações adicionais
             st.text(f"Tipo: {row['tipo_instalacao']}")
             st.text(f"Plus Code: {row['plus_code_cliente']}")
-            st.caption(f"🕐 Analisado por: {row['auditado_por']} em {format_time_br_supa(row['data_auditoria'])}")
+            st.caption(f"🕐 Analisado por: {row['auditado_por']} em {format_datetime_resultados(row['data_auditoria'])}")
 
             st.markdown("---")
             if st.button("✅ OK, Entendi", key=f"finish_rejected_{row['id']}", type="secondary", use_container_width=True):
@@ -148,14 +148,14 @@ if utp:
     st.subheader("📡 Atendemos UTP")
     
     for row in utp:
-        with st.expander(f"📡 {row['plus_code_cliente']} - {format_time_br(row['data_auditoria'])}"):
+        with st.expander(f"📡 {row['plus_code_cliente']} - {format_datetime_resultados(row['data_auditoria'])}"):
             
             # Mensagem padrão
             st.info("### 📡 Atendemos UTP")
             
             # Informações adicionais            
             st.text(f"Plus Code: {row['plus_code_cliente']}")
-            st.caption(f"🕐 Analisado por: {row['auditado_por']} em {format_time_br(row['data_auditoria'])}")
+            st.caption(f"🕐 Analisado por: {row['auditado_por']} em {format_datetime_resultados(row['data_auditoria'])}")
             
             # Botão finalizar (não arquiva, apenas remove da lista)
             if st.button("✅ Finalizar", key=f"finish_utp_{row['id']}", type="primary", use_container_width=True):
