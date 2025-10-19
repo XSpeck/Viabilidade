@@ -49,6 +49,17 @@ with col_header2:
     if st.button("🔄 Atualizar", use_container_width=True):
         st.rerun()
 
+def format_time_no_convert(iso_string: str) -> str:
+    """Formata a string ISO sem alterar o fuso horário (já vem em horário de Brasília)"""
+    if not iso_string:
+        return "-"
+    try:
+        dt = datetime.fromisoformat(str(iso_string))
+        # se já tem fuso (-03:00), apenas formata
+        return dt.strftime('%d/%m/%Y %H:%M')
+    except Exception:
+        return str(iso_string)[:16]
+
 # ======================
 # Função de Formulário
 # ======================
@@ -91,7 +102,7 @@ def show_viability_form(row: dict, urgente: bool = False):
             st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
             st.text(f"🔍 Tipo: {row['tipo_instalacao']}")
             st.text(f"🏨 Nome: {row['predio_ftta']}")
-            st.text(f"📅 Solicitado em: {row['data_solicitacao'][:16]}")
+            st.text(f"📅 Solicitado em: {format_time_no_convert(row['data_auditoria'])}")
             if urgente:
                 st.error("🔥 **URGENTE - Cliente Presencial**")
         
