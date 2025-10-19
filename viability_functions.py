@@ -46,7 +46,19 @@ def format_time_br_supa(utc_time_str: str) -> str:
     """
     if not utc_time_str:
         return "-"
-    
+ def format_datetime_resultados(iso_datetime: str) -> str:
+    """
+    Converte datetime ISO para formato brasileiro
+    Ex: 2025-10-19T20:19:15.374522 -> 19/10/2025 20:19
+    """
+    try:
+        if not iso_datetime:
+            return "N/A"
+        dt = datetime.fromisoformat(iso_datetime.replace('Z', '+00:00'))
+        return dt.strftime('%d/%m/%Y %H:%M')
+    except Exception as e:
+        logger.error(f"Erro ao formatar data: {e}")
+        return iso_datetime[:16]  # Fallback   
     # Converte string para datetime
     try:
         utc_dt = datetime.fromisoformat(utc_time_str)
