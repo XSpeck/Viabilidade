@@ -21,6 +21,16 @@ def get_current_time():
     """Retorna data/hora atual no fuso horário do Brasil"""
     return datetime.now(TIMEZONE_BR).isoformat()
 
+def format_time_br(iso_string: str) -> str:
+    """Converte string ISO em formato legível no fuso horário de Brasília"""
+    if not iso_string:
+        return "-"
+    try:
+        dt = datetime.fromisoformat(iso_string)
+        return dt.astimezone(TIMEZONE_BR).strftime('%d/%m/%Y %H:%M')
+    except Exception:
+        return str(iso_string)[:16]
+
 def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None) -> bool:
     """
     Cria nova solicitação de viabilização no Supabase
