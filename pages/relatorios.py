@@ -4,9 +4,8 @@ Salve como: pages/relatorios.py
 """
 
 import streamlit as st
-from viability_functions import format_time_br_supa
 from login_system import require_authentication
-from viability_functions import get_archived_viabilities, get_statistics
+from viability_functions import get_archived_viabilities, get_statistics, format_time_br_supa, format_datetime_resultados
 import pandas as pd
 import logging
 
@@ -105,7 +104,7 @@ with tab1:
             tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
             
             with st.expander(
-                f"{tipo_icon} {row['plus_code_cliente']} - {row['usuario']} - {format_time_br_supa(row['data_finalizacao'])}"
+                f"{tipo_icon} {row['plus_code_cliente']} - {row['usuario']} - {format_datetime_resultados(row['data_finalizacao'])}"
             ):
                 col1, col2 = st.columns(2)
                 
