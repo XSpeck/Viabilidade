@@ -4,6 +4,7 @@ Salve como: pages/auditoria.py
 """
 
 import streamlit as st
+from viability_functions import format_time_br
 from login_system import require_authentication
 from viability_functions import (
     get_pending_viabilities,
@@ -90,7 +91,7 @@ def show_viability_form(row: dict, urgente: bool = False):
             st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
             st.text(f"🔍 Tipo: {row['tipo_instalacao']}")
             st.text(f"🏨 Nome: {row['predio_ftta']}")
-            st.text(f"📅 Solicitado em: {row['data_solicitacao'][:16]}")
+            st.text(f"📅 Solicitado em: {format_time_br(row['data_solicitacao'])}")
             if urgente:
                 st.error("🔥 **URGENTE - Cliente Presencial**")
         
