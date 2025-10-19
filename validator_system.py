@@ -15,7 +15,7 @@ import time
 from typing import Optional, Tuple, List, Dict
 import re
 from login_system import require_authentication
-from viability_functions import create_viability_request, get_current_time, TIMEZONE_BR
+from viability_functions import create_viability_request, get_current_time, TIMEZONE_BR, format_time_br
 import supabase_config
 
 
@@ -899,7 +899,7 @@ if st.session_state.search_history:
     st.subheader("📚 Histórico de Pesquisas")
     for i, entry in enumerate(st.session_state.search_history[:5]):
         company_info = f" - {entry['company']}" if entry.get('company') else ""
-        with st.expander(f"🕐 {entry['plus_code']}{company_info} - {entry['timestamp'].strftime('%H:%M:%S')}"):
+        with st.expander(f"🕐 {entry['plus_code']}{company_info} - {format_time_br(entry['timestamp'], only_time=True)}"):
             col1, col2, col3, col4 = st.columns(4)
             with col1:
                 st.text(f"Plus Code: {entry['plus_code']}")
