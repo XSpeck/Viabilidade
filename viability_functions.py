@@ -62,7 +62,7 @@ def format_time_br_supa(utc_time_str: str) -> str:
     # Formata dd/mm/aaaa hh:mm
     return br_dt.strftime("%d/%m/%Y %H:%M")
 
- def format_datetime_resultados(iso_datetime: str) -> str:
+def format_datetime_resultados(iso_datetime: str) -> str:
     """
     Converte datetime ISO para formato brasileiro
     Ex: 2025-10-19T20:19:15.374522 -> 19/10/2025 20:19
@@ -75,11 +75,11 @@ def format_time_br_supa(utc_time_str: str) -> str:
     except Exception as e:
         logger.error(f"Erro ao formatar data: {e}")
         return iso_datetime[:16]  # Fallback   
-    # Converte string para datetime
-    try:
-        utc_dt = datetime.fromisoformat(utc_time_str)
-    except ValueError:
-        return utc_time_str  # Retorna original se não conseguir converter
+# Converte string para datetime
+try:
+    utc_dt = datetime.fromisoformat(utc_time_str)
+except ValueError:
+    return utc_time_str  # Retorna original se não conseguir converter
     
 def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None) -> bool:
     """
