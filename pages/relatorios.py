@@ -114,8 +114,8 @@ with tab1:
                     st.text(f"Plus Code: {row['plus_code_cliente']}")
                     st.text(f"Tipo: {row['tipo_instalacao']}")
                     st.text(f"Solicitado: {format_time_br_supa(row['data_solicitacao'])}")
-                    st.text(f"Auditado: {format_time_br_supa(row['data_auditoria'])}")
-                    st.text(f"Finalizado: {format_time_br_supa(row['data_finalizacao'])}")
+                    st.text(f"Auditado: {format_datetime_resultados(row['data_auditoria'])}")
+                    st.text(f"Finalizado: {format_datetime_resultados(row['data_finalizacao'])}")
                     st.text(f"Auditado por: {row['auditado_por']}")
                 
                 with col2:
@@ -168,7 +168,7 @@ with tab2:
             tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
             
             with st.expander(
-                f"❌ {tipo_icon} {row['plus_code_cliente']} - {row['usuario']} - {format_time_br_supa(row['data_auditoria'])}"
+                f"❌ {tipo_icon} {row['plus_code_cliente']} - {row['usuario']} - {format_datetime_resultados(row['data_auditoria'])}"
             ):
                 col1, col2 = st.columns(2)
                 
@@ -178,7 +178,7 @@ with tab2:
                     st.text(f"Plus Code: {row['plus_code_cliente']}")
                     st.text(f"Tipo: {row['tipo_instalacao']}")
                     st.text(f"Solicitado: {format_time_br_supa(row['data_solicitacao'])}")
-                    st.text(f"Auditado: {format_time_br_supa(row['data_auditoria'])}")
+                    st.text(f"Auditado: {format_datetime_resultados(row['data_auditoria'])}")
                     st.text(f"Auditado por: {row['auditado_por']}")
                 
                 with col2:
