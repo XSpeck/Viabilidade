@@ -21,15 +21,23 @@ def get_current_time():
     """Retorna data/hora atual no fuso horário do Brasil"""
     return datetime.now(TIMEZONE_BR).isoformat()
 
-def format_time_br(iso_string: str) -> str:
+def format_time_br(iso_string: str, only_time: bool = False) -> str:
     """Converte string ISO em formato legível no fuso horário de Brasília"""
     if not iso_string:
         return "-"
     try:
-        dt = datetime.fromisoformat(iso_string)
-        return dt.astimezone(TIMEZONE_BR).strftime('%d/%m/%Y %H:%M')
-    except Exception:
-        return str(iso_string)[:16]
+        # garante que o valor seja string e converte corretamente
+        if isinstance(iso_string, (int, float)):
+            dt = datetime.fromtimestamp(iso_string, TIMEZONE_BR)
+        else:
+            dt = datetime.fromisoformat(str(iso_string))
+        dt = dt.astimezone(TIMEZONE_BR)
+        fmt = '%H:%M:%S' if only_time else '%d/%m/%Y %H:%M'
+        return dt.strftime(fmt)
+    except Exception as e:
+        import logging
+        logging.warning(f"Erro ao converter horário '{iso_string}': {e}")
+        return "-"
 
 def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None) -> bool:
     """
