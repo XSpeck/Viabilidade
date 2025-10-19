@@ -4,7 +4,7 @@ Salve como: pages/relatorios.py
 """
 
 import streamlit as st
-from viability_functions import format_time_br
+from viability_functions import format_time_br_supa_supa
 from login_system import require_authentication
 from viability_functions import get_archived_viabilities, get_statistics
 import pandas as pd
@@ -114,9 +114,9 @@ with tab1:
                     st.text(f"Usuário: {row['usuario']}")
                     st.text(f"Plus Code: {row['plus_code_cliente']}")
                     st.text(f"Tipo: {row['tipo_instalacao']}")
-                    st.text(f"Solicitado: {format_time_br(row['data_solicitacao'])}")
-                    st.text(f"Auditado: {format_time_br(row['data_auditoria'])}")
-                    st.text(f"Finalizado: {format_time_br(row['data_finalizacao'])}")
+                    st.text(f"Solicitado: {format_time_br_supa(row['data_solicitacao'])}")
+                    st.text(f"Auditado: {format_time_br_supa(row['data_auditoria'])}")
+                    st.text(f"Finalizado: {format_time_br_supa(row['data_finalizacao'])}")
                     st.text(f"Auditado por: {row['auditado_por']}")
                 
                 with col2:
