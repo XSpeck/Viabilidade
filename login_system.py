@@ -7,9 +7,11 @@ import streamlit as st
 import logging
 from datetime import datetime
 from supabase_config import supabase
+import pytz
 
 logger = logging.getLogger(__name__)
 
+TIMEZONE_BR = pytz.timezone('America/Sao_Paulo')
 # ======================
 # Funções de Autenticação
 # ======================
@@ -122,7 +124,7 @@ def show_login_page():
                                 st.session_state.authenticated = True
                                 st.session_state.user_name = user_name
                                 st.session_state.user_login = user_login
-                                st.session_state.login_timestamp = datetime.now()
+                                st.session_state.login_timestamp = datetime.now(TIMEZONE_BR)
                                 st.success(f"✅ Bem-vindo, {user_name}!")
                                 st.rerun()
                             else:
