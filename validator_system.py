@@ -650,7 +650,7 @@ if plus_code_input:
                                             st.session_state.show_viability_modal = False
                                             st.success("✅ Solicitação de viabilização enviada para auditoria técnica!")
                                             st.info("👉 Acesse 'Meus Resultados' no menu lateral para acompanhar.")
-                                            st.balloons()
+                                            st.rerun()
                                         else:
                                             st.error("❌ Erro ao criar solicitação. Tente novamente.")
                                 
@@ -686,7 +686,7 @@ if plus_code_input:
                                                 st.session_state.show_viability_modal = False
                                                 st.success("✅ Solicitação de viabilização enviada para auditoria técnica!")
                                                 st.info("👉 Acesse 'Meus Resultados' no menu lateral para acompanhar.")
-                                                st.balloons()
+                                                st.rerun()
                                             else:
                                                 st.error("❌ Erro ao criar solicitação. Tente novamente.")
                                 
