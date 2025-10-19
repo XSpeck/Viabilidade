@@ -900,25 +900,8 @@ if st.session_state.search_history:
     for i, entry in enumerate(st.session_state.search_history[:5]):
         company_info = f" - {entry['company']}" if entry.get('company') else ""
         timestamp_value = entry.get('timestamp')
-
-        try:
-            if isinstance(timestamp_value, str):
-                formatted_time = format_time_br(timestamp_value, only_time=True)
-            elif isinstance(timestamp_value, (int, float)):
-                # caso timestamp seja um número (epoch)
-                from datetime import datetime
-                from viability_functions import TIMEZONE_BR
-                formatted_time = datetime.fromtimestamp(timestamp_value, TIMEZONE_BR).strftime('%H:%M:%S')
-            elif hasattr(timestamp_value, 'strftime'):
-                # caso seja datetime já
-                formatted_time = timestamp_value.astimezone(TIMEZONE_BR).strftime('%H:%M:%S')
-            else:
-                formatted_time = "-"
-        except Exception as e:
-            formatted_time = "-"
-            import logging
-            logging.warning(f"Erro ao formatar timestamp: {timestamp_value} ({e})")
-        st.write("🧩 DEBUG entry:", entry)
+        formatted_time = format_time_br(timestamp_value)
+        
         with st.expander(f"🕐 {entry.get('plus_code', '')}{company_info} - {formatted_time}"):
             col1, col2, col3, col4 = st.columns(4)
             with col1:
