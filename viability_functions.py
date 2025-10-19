@@ -121,7 +121,7 @@ def update_viability_ftth(viability_id: str, status: str, dados: Dict) -> bool:
     try:
         update_data = {
             'status': status,
-            'data_auditoria': get_current_time(),
+            'data_auditoria': get_current_time().isoformat(),
             'auditado_por': 'leo'
         }
         
@@ -160,7 +160,7 @@ def update_viability_ftta(viability_id: str, status: str, dados: Dict) -> bool:
     try:
         update_data = {
             'status': status,
-            'data_auditoria': get_current_time(),
+            'data_auditoria': get_current_time().isoformat(),
             'auditado_por': 'leo'
         }
         
@@ -190,7 +190,7 @@ def finalize_viability(viability_id: str) -> bool:
     try:
         update_data = {
             
-            'data_finalizacao': get_current_time()
+            'data_finalizacao': get_current_time().isoformat()
         }
         
         response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
@@ -209,7 +209,7 @@ def finalize_viability_approved(viability_id: str) -> bool:
     try:
         update_data = {
             'status': 'finalizado',
-            'data_finalizacao': get_current_time()
+            'data_finalizacao': get_current_time().isoformat()
         }
         
         response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
