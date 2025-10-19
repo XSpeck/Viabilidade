@@ -46,6 +46,22 @@ def format_time_br_supa(utc_time_str: str) -> str:
     """
     if not utc_time_str:
         return "-"
+    
+    # Converte string para datetime
+    try:
+        utc_dt = datetime.fromisoformat(utc_time_str)
+    except ValueError:
+        return utc_time_str  # Retorna original se não conseguir converter
+
+    # Define fuso UTC
+    utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
+
+    # Converte para horário de Brasília
+    br_dt = utc_dt.astimezone(pytz.timezone("America/Sao_Paulo"))
+
+    # Formata dd/mm/aaaa hh:mm
+    return br_dt.strftime("%d/%m/%Y %H:%M")
+
  def format_datetime_resultados(iso_datetime: str) -> str:
     """
     Converte datetime ISO para formato brasileiro
@@ -64,16 +80,7 @@ def format_time_br_supa(utc_time_str: str) -> str:
         utc_dt = datetime.fromisoformat(utc_time_str)
     except ValueError:
         return utc_time_str  # Retorna original se não conseguir converter
-
-    # Define fuso UTC
-    utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
-
-    # Converte para horário de Brasília
-    br_dt = utc_dt.astimezone(pytz.timezone("America/Sao_Paulo"))
-
-    # Formata dd/mm/aaaa hh:mm
-    return br_dt.strftime("%d/%m/%Y %H:%M")
-
+    
 def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None) -> bool:
     """
     Cria nova solicitação de viabilização no Supabase
