@@ -5,6 +5,7 @@ Salve como: pages/resultados.py
 
 import streamlit as st
 from login_system import require_authentication
+from streamlit_autorefresh import st_autorefresh
 from viability_functions import get_user_results, finalize_viability, finalize_viability_approved, format_datetime_resultados
 import logging
 
