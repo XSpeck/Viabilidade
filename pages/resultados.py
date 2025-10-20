@@ -146,14 +146,24 @@ if rejected:
     st.subheader("❌ Solicitações Sem Viabilidade")
     
     for row in rejected:
-        with st.expander(f"⚠️ {row['plus_code_cliente']} - {format_datetime_resultados(row['data_auditoria'])}"):
+        tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
+        with st.expander(f"⚠️ {tipo_icon} {row['plus_code_cliente']} - {format_datetime_resultados(row['data_auditoria'])}"):
+            # Verificar se é rejeição de prédio
+            if row.get('status_predio') == 'rejeitado':
+                st.error("### 🏢 Edifício Sem Viabilidade")
+                st.markdown(f"**Edifício:** {row.get('predio_ftta', 'N/A')}")
+                st.markdown(f"**Localização:** {row['plus_code_cliente']}")
+                
+                if row.get('motivo_rejeicao'):
+                    st.markdown("**Motivo:**")
+                    st.warning(row['motivo_rejeicao'].replace('Edifício sem viabilidade: ', ''))
+            else:
+                # Mensagem padrão
+                st.error("### 📝 Não temos projeto neste ponto")
             
-            # Mensagem padrão
-            st.error("### 📝 Não temos projeto neste ponto")
-            
-            # Motivo
-            if row.get('motivo_rejeicao'):
-                st.markdown(f"**Motivo:** {row['motivo_rejeicao']}")
+                # Motivo
+                if row.get('motivo_rejeicao'):
+                    st.markdown(f"**Motivo:** {row['motivo_rejeicao']}")
             
             # Informações adicionais
             st.text(f"Tipo: {row['tipo_instalacao']}")
