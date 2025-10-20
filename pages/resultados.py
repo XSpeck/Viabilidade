@@ -83,8 +83,44 @@ approved = [r for r in results if r['status'] == 'aprovado']
 rejected = [r for r in results if r['status'] == 'rejeitado']
 utp = [r for r in results if r['status'] == 'utp']
 building_pending = [r for r in results if r.get('status_predio') == 'aguardando_dados']
+pending_analysis = [r for r in results if r['status'] == 'pendente' and not r.get('status_predio')]
 
 st.markdown("---")
+
+# ======================
+# Mostrar Em Andamento
+# ======================
+if pending_analysis:
+    st.subheader("⏳ Em Análise Técnica")
+    st.info("🔍 Suas solicitações estão sendo analisadas pela equipe técnica")
+    
+    for row in pending_analysis:
+        tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
+        tipo_nome = "Casa (FTTH)" if row['tipo_instalacao'] == 'FTTH' else "Edifício (FTTA)"
+        urgente_badge = " 🔥 **URGENTE**" if row.get('urgente', False) else ""
+        
+        with st.expander(f"⏳ {tipo_icon} {row['plus_code_cliente']} - {tipo_nome}{urgente_badge}"):
+            
+            col_pend1, col_pend2 = st.columns(2)
+            
+            with col_pend1:
+                st.markdown("### 📋 Informações")
+                st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
+                st.text(f"🏷️ Tipo: {tipo_nome}")
+                if row.get('predio_ftta'):
+                    st.text(f"🏢 Edifício: {row['predio_ftta']}")
+                st.text(f"📅 Solicitado: {format_datetime_resultados(row['data_solicitacao'])}")
+                
+                if row.get('urgente', False):
+                    st.error("🔥 **Solicitação Urgente - Cliente Presencial**")
+            
+            with col_pend2:
+                st.markdown("### ⏱️ Status")
+                st.warning("🔍 **Em análise pela equipe técnica**")
+                st.info("⏳ Aguarde a auditoria do Leo")
+                st.caption("💡 Você será notificado quando a análise for concluída")
+    
+    st.markdown("---")
 
 # ======================
 # Mostrar Aprovadas
@@ -292,8 +328,9 @@ if building_pending:
                         
                         if submit_building_data(row['id'], dados):
                             st.success("✅ Dados enviados com sucesso!")
-                            st.balloons()
-                            st.info("🔍 A auditoria técnica irá analisar a viabilização do prédio.")
+                            st.info("📋 **Status atualizado:** Aguardando agendamento da visita técnica")
+                            st.info("🔍 A equipe técnica irá analisar e agendar a visita ao prédio.")
+                            st.caption("💡 Você será notificado quando o agendamento for confirmado")
                             st.rerun()
                         else:
                             st.error("❌ Erro ao enviar dados. Tente novamente.")                    
