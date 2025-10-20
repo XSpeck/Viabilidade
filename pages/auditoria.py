@@ -4,15 +4,17 @@ Salve como: pages/auditoria.py
 """
 
 import streamlit as st
-from viability_functions import format_time_br_supa
 from login_system import require_authentication
 from streamlit_autorefresh import st_autorefresh
 from viability_functions import (
+    format_time_br_supa,
     get_pending_viabilities,
     update_viability_ftth,
     update_viability_ftta,
     delete_viability,
-    get_statistics
+    get_statistics,
+    request_building_viability,
+    reject_building_viability 
 )
 import logging
 
@@ -231,7 +233,6 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 use_container_width=True,
                                 key=f"viab_predio_{row['id']}"
                             ):
-                                from viability_functions import request_building_viability
                                 if request_building_viability(row['id'], {}):
                                     st.success("✅ Solicitação enviada! Aguardando dados do usuário.")
                                     st.info("👤 O usuário receberá um formulário para preencher.")
@@ -280,6 +281,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                             "📅 Data da Visita",
                             key=f"data_visita_{row['id']}",
                             help="Selecione a data para visita técnica"
+                            format="DD/MM/YYYY"
                         )
                     
                     with col_ag2:
@@ -361,9 +363,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                             if confirmar_rejeicao:
                                 if not motivo_rejeicao or motivo_rejeicao.strip() == "":
                                     st.error("❌ Descreva o motivo da não viabilidade!")
-                                else:
-                                    from viability_functions import reject_building_viability
-                                    
+                                else:                                                                        
                                     if reject_building_viability(
                                         row['id'],
                                         row.get('predio_ftta', 'Prédio'),
