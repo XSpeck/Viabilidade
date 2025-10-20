@@ -20,6 +20,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# ======================
+# Atualização automática
+# ======================
+st_autorefresh(interval=20000, key="resultados_refresh")  # 20000 ms = 20 segundos
+
 # Verificar autenticação
 if not require_authentication():
     st.stop()
