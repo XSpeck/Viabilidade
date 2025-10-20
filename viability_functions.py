@@ -148,7 +148,7 @@ def get_user_results(username: str) -> List[Dict]:
         response = supabase.table('viabilizacoes')\
             .select('*')\
             .eq('usuario', username)\
-            .or_('status.in.(aprovado,rejeitado,utp),status_predio.eq.aguardando_dados')\
+            .or_('status.in.(aprovado,rejeitado,utp,pendente),status_predio.eq.aguardando_dados')\
             .is_('data_finalizacao', None)\
             .order('data_auditoria', desc=True)\
             .execute()
