@@ -666,7 +666,8 @@ if plus_code_input:
                                                 nome_predio=nome_predio.strip()
                                             ):
                                                 st.session_state.show_viability_modal = False
-                                                st.success("✅ Solicitação de viabilização enviada para auditoria técnica!")
+                                                st.success("✅ Solicitação de viabilização enviada!")
+                                                st.info("📋 Status: **Em análise técnica**")
                                                 st.info("👉 Acesse 'Meus Resultados' no menu lateral para acompanhar.")
                                                 st.rerun()
                                             else:
