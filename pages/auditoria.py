@@ -423,7 +423,7 @@ if not pending:
     st.success("👏 Parabéns! Todas as solicitações foram processadas.")
 else:
     st.subheader(f"📋 {len(pending)} Solicitações Pendentes")
-    
+st.markdown("---")
     # Separar urgentes e normais
     urgentes = [p for p in pending if p.get('urgente', False)]
     normais = [p for p in pending if not p.get('urgente', False)]
