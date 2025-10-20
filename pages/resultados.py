@@ -42,6 +42,25 @@ with col_header2:
 # ======================
 results = get_user_results(st.session_state.user_name)
 
+# ======================
+# Notificação de novos resultados
+# ======================
+if "resultados_anteriores" not in st.session_state:
+    st.session_state.resultados_anteriores = len(results)
+
+# Se há novos resultados desde a última atualização
+if len(results) > st.session_state.resultados_anteriores:
+    novos = len(results) - st.session_state.resultados_anteriores
+    st.toast(f"🎉 {novos} novo(s) resultado(s) disponível(is)!", icon="✅")
+    st.markdown("""
+    <audio autoplay>
+        <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" type="audio/ogg">
+    </audio>
+    """, unsafe_allow_html=True)
+
+# Atualiza contador
+st.session_state.resultados_anteriores = len(results)
+
 if not results:
     st.info("📭 Você não possui resultados no momento.")
     st.markdown("""
