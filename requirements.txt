@@ -1,5 +1,6 @@
 # Core Streamlit
 streamlit>=1.28.0
+streamlit-autorefresh
 supabase
 # Processamento de arquivos KML/XML
 lxml>=4.9.0
@@ -23,5 +24,6 @@ pytz
 beautifulsoup4>=4.12.0
 certifi>=2023.0.0
 charset-normalizer>=3.0.0
+
 
 
