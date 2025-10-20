@@ -148,7 +148,7 @@ def get_user_results(username: str) -> List[Dict]:
         response = supabase.table('viabilizacoes')\
             .select('*')\
             .eq('usuario', username)\
-            .in_('status', ['aprovado', 'rejeitado', 'utp'])\
+            .or_('status.in.(aprovado,rejeitado,utp),status_predio.eq.aguardando_dados')\
             .is_('data_finalizacao', None)\
             .order('data_auditoria', desc=True)\
             .execute()
@@ -306,6 +306,71 @@ def delete_viability(viability_id: str) -> bool:
     except Exception as e:
         logger.error(f"Erro ao deletar viabilização: {e}")
         st.error(f"❌ Erro ao deletar: {e}")
+        return False
+
+def request_building_viability(viability_id: str, dados: Dict) -> bool:
+    """
+    Marca viabilização FTTA como 'aguardando dados do prédio'
+    E solicita preenchimento de formulário ao usuário
+    
+    Args:
+        viability_id: ID da viabilização
+        dados: Dicionário vazio (por enquanto)
+    """
+    try:
+        update_data = {
+            'status_predio': 'aguardando_dados',
+            'data_solicitacao_predio': get_current_time()
+        }
+        
+        response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
+        
+        if response.data:
+            logger.info(f"Viabilização de prédio solicitada: {viability_id}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Erro ao solicitar viabilização de prédio: {e}")
+        st.error(f"❌ Erro ao solicitar: {e}")
+        return False
+
+
+def submit_building_data(viability_id: str, dados: Dict) -> bool:
+    """
+    Submete dados do prédio preenchidos pelo usuário
+    E retorna para auditoria técnica
+    
+    Args:
+        viability_id: ID da viabilização
+        dados: {
+            'nome_sindico': str,
+            'contato_sindico': str,
+            'nome_cliente_predio': str,
+            'contato_cliente_predio': str,
+            'apartamento': str,
+            'obs_agendamento': str
+        }
+    """
+    try:
+        update_data = {
+            'status_predio': 'pronto_auditoria',
+            'nome_sindico': dados.get('nome_sindico'),
+            'contato_sindico': dados.get('contato_sindico'),
+            'nome_cliente_predio': dados.get('nome_cliente_predio'),
+            'contato_cliente_predio': dados.get('contato_cliente_predio'),
+            'apartamento': dados.get('apartamento'),
+            'obs_agendamento': dados.get('obs_agendamento', '')
+        }
+        
+        response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
+        
+        if response.data:
+            logger.info(f"Dados do prédio submetidos: {viability_id}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Erro ao submeter dados do prédio: {e}")
+        st.error(f"❌ Erro ao submeter: {e}")
         return False
 
 def get_statistics() -> Dict:
