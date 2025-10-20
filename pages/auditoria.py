@@ -99,7 +99,8 @@ def show_viability_form(row: dict, urgente: bool = False):
             st.text(f"👤 Usuário: {row['usuario']}")
             st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
             st.text(f"🔍 Tipo: {row['tipo_instalacao']}")
-            st.text(f"🏨 Nome: {row['predio_ftta']}")            
+            if row.get('predio_ftta'):
+                st.text(f"🏨 Nome: {row['predio_ftta']}")            
             st.text(f"📅 Solicitado em: {format_time_br_supa(row['data_solicitacao'])}")
             if urgente:
                 st.error("🔥 **URGENTE - Cliente Presencial**")
@@ -280,7 +281,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                         data_visita = st.date_input(
                             "📅 Data da Visita",
                             key=f"data_visita_{row['id']}",
-                            help="Selecione a data para visita técnica"
+                            help="Selecione a data para visita técnica",
                             format="DD/MM/YYYY"
                         )
                     
