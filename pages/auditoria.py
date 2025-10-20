@@ -27,6 +27,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# ======================
+# Atualização automática
+# ======================
+from streamlit_autorefresh import st_autorefresh  # opcional se quiser externalizar
+st_autorefresh(interval=15000, key="auditoria_refresh")  # 15000 ms = 15 segundos
+
 # Verificar autenticação
 if not require_authentication():
     st.stop()
