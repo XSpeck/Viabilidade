@@ -161,104 +161,225 @@ def show_viability_form(row: dict, urgente: bool = False):
                         if update_viability_ftth(row['id'], 'utp', dados):
                             st.success("📡 Marcado como Atendemos UTP")
                             st.rerun()
+            
             else:  # FTTA
-                st.markdown("#### 🏢 Dados FTTA (Edifício)")
-                
-                with st.form(key=f"form_ftta_{row['id']}"):
-                    predio = st.text_input("Prédio FTTA", key=f"predio_{row['id']}")
-                    
-                    col_f1, col_f2 = st.columns(2)
-                    with col_f1:
-                        portas = st.number_input("Portas Disponíveis", min_value=0, max_value=50, value=0, key=f"portas_ftta_{row['id']}")
-                    with col_f2:
-                        media_rx = st.text_input("Média RX (dBm)", placeholder="-20.5", key=f"media_rx_{row['id']}")
-                    
-                    obs = st.text_area("Observações", key=f"obs_ftta_{row['id']}", height=80)
-                    
-                    # Botões
-                    col_btn1, col_btn2, col_btn3 = st.columns(3)
-                    
-                    with col_btn1:
-                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
-                    with col_btn2:
-                        utp = st.form_submit_button("📡 Atendemos UTP", use_container_width=True)                    
-                    with col_btn3:
-                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
-                    
-                    if aprovado:
-                        if predio and portas > 0 and media_rx:
-                            dados = {
-                                'predio_ftta': predio,
-                                'portas_disponiveis': portas,
-                                'media_rx': media_rx,
-                                'observacoes': obs
-                            }
-                            if update_viability_ftta(row['id'], 'aprovado', dados):
-                                st.success("✅ Viabilização aprovada!")
-                                st.balloons()
-                                st.rerun()
-                        else:
-                            st.error("❌ Preencha todos os campos obrigatórios!")
-                    
-                    if rejeitado:
-                        dados = {'motivo_rejeicao': 'Não temos projeto neste ponto'}
-                        if update_viability_ftta(row['id'], 'rejeitado', dados):
-                            st.success("❌ Solicitação rejeitada")
-                            st.rerun()
-                    if utp:
-                        dados = {'motivo_rejeicao': 'Atendemos UTP'}
-                        if update_viability_ftta(row['id'], 'utp', dados):
-                            st.success("📡 Marcado como Atendemos UTP")
-                            st.rerun()
-                
-                # ===== NOVO BOTÃO VIABILIZAR PRÉDIO =====
-                st.markdown("---")
-                st.markdown("#### 🏗️ Viabilização de Estrutura no Prédio")
-                
-                # Verificar se já foi solicitado
+                # Verificar se já foi solicitada viabilização de prédio
                 status_predio = row.get('status_predio')
                 
-                if status_predio == 'aguardando_dados':
-                    # Já foi solicitado - mostrar aviso
+                # Se ainda não foi solicitado OU se foi rejeitado, mostrar formulário normal
+                if status_predio is None or status_predio == 'rejeitado':
+                    st.markdown("#### 🏢 Dados FTTA (Edifício)")
+                    
+                    with st.form(key=f"form_ftta_{row['id']}"):
+                        predio = st.text_input("Prédio FTTA", value=row.get('predio_ftta', ''), key=f"predio_{row['id']}")
+                        
+                        col_f1, col_f2 = st.columns(2)
+                        with col_f1:
+                            portas = st.number_input("Portas Disponíveis", min_value=0, max_value=50, value=0, key=f"portas_ftta_{row['id']}")
+                        with col_f2:
+                            media_rx = st.text_input("Média RX (dBm)", placeholder="-20.5", key=f"media_rx_{row['id']}")
+                        
+                        obs = st.text_area("Observações", key=f"obs_ftta_{row['id']}", height=80)
+                        
+                        # Botões
+                        col_btn1, col_btn2, col_btn3 = st.columns(3)
+                        
+                        with col_btn1:
+                            aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
+                        with col_btn2:
+                            utp = st.form_submit_button("📡 Atendemos UTP", use_container_width=True)                    
+                        with col_btn3:
+                            rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
+                        
+                        if aprovado:
+                            if predio and portas > 0 and media_rx:
+                                dados = {
+                                    'predio_ftta': predio,
+                                    'portas_disponiveis': portas,
+                                    'media_rx': media_rx,
+                                    'observacoes': obs
+                                }
+                                if update_viability_ftta(row['id'], 'aprovado', dados):
+                                    st.success("✅ Viabilização aprovada!")
+                                    st.balloons()
+                                    st.rerun()
+                            else:
+                                st.error("❌ Preencha todos os campos obrigatórios!")
+                        
+                        if rejeitado:
+                            dados = {'motivo_rejeicao': 'Não temos projeto neste ponto'}
+                            if update_viability_ftta(row['id'], 'rejeitado', dados):
+                                st.success("❌ Solicitação rejeitada")
+                                st.rerun()
+                        if utp:
+                            dados = {'motivo_rejeicao': 'Atendemos UTP'}
+                            if update_viability_ftta(row['id'], 'utp', dados):
+                                st.success("📡 Marcado como Atendemos UTP")
+                                st.rerun()
+                    
+                    # ===== BOTÃO VIABILIZAR PRÉDIO (apenas se ainda não foi solicitado) =====
+                    if status_predio is None:
+                        st.markdown("---")
+                        st.markdown("#### 🏗️ Viabilização de Estrutura no Prédio")
+                        st.info("🔧 Temos projeto na rua, mas não temos estrutura pronta no prédio")
+                        
+                        col_viab_pred = st.columns([1, 2, 1])[1]
+                        with col_viab_pred:
+                            if st.button(
+                                "🏢 Solicitar Viabilização do Prédio", 
+                                type="primary", 
+                                use_container_width=True,
+                                key=f"viab_predio_{row['id']}"
+                            ):
+                                from viability_functions import request_building_viability
+                                if request_building_viability(row['id'], {}):
+                                    st.success("✅ Solicitação enviada! Aguardando dados do usuário.")
+                                    st.info("👤 O usuário receberá um formulário para preencher.")
+                                    st.rerun()
+                
+                # Se está aguardando dados do usuário
+                elif status_predio == 'aguardando_dados':
+                    st.markdown("#### 🏗️ Viabilização de Estrutura no Prédio")
                     st.warning("⏳ **Aguardando dados do usuário**")
                     st.caption(f"📅 Solicitado em: {format_time_br_supa(row.get('data_solicitacao_predio', ''))}")
                     st.info("👤 O usuário está preenchendo o formulário com os dados do prédio.")
                 
+                # Se os dados foram recebidos e está pronto para análise
                 elif status_predio == 'pronto_auditoria':
-                    # Usuário já preencheu - mostrar sucesso
+                    st.markdown("#### 🏗️ Viabilização de Estrutura no Prédio")
                     st.success("✅ **Dados recebidos! Pronto para análise**")
-                    st.caption(f"📅 Dados enviados em: {format_time_br_supa(row.get('data_solicitacao_predio', ''))}")
                     
-                    # Mostrar dados recebidos em expander
-                    with st.expander("👁️ Ver Dados Enviados"):
+                    # Mostrar dados recebidos
+                    with st.expander("👁️ Ver Dados do Cliente", expanded=True):
                         col_dados1, col_dados2 = st.columns(2)
                         with col_dados1:
-                            st.text(f"👤 Síndico: {row.get('nome_sindico', 'N/A')}")
-                            st.text(f"📞 Contato: {row.get('contato_sindico', 'N/A')}")
+                            st.markdown("**👤 Síndico**")
+                            st.text(f"Nome: {row.get('nome_sindico', 'N/A')}")
+                            st.text(f"Contato: {row.get('contato_sindico', 'N/A')}")
                         with col_dados2:
-                            st.text(f"🏠 Cliente: {row.get('nome_cliente_predio', 'N/A')}")
-                            st.text(f"📞 Contato: {row.get('contato_cliente_predio', 'N/A')}")
+                            st.markdown("**🏠 Cliente**")
+                            st.text(f"Nome: {row.get('nome_cliente_predio', 'N/A')}")
+                            st.text(f"Contato: {row.get('contato_cliente_predio', 'N/A')}")
+                        
                         st.text(f"🚪 Apartamento: {row.get('apartamento', 'N/A')}")
+                        st.text(f"🏢 Edifício: {row.get('predio_ftta', 'N/A')}")
+                        st.text(f"📍 Localização: {row['plus_code_cliente']}")
+                        
                         if row.get('obs_agendamento'):
-                            st.text(f"📝 Obs: {row['obs_agendamento']}")
-                
-                else:
-                    # Ainda não foi solicitado - mostrar botão
-                    st.info("🔧 Temos projeto na rua, mas não temos estrutura pronta no prédio")
+                            st.markdown("**📝 Melhores horários:**")
+                            st.info(row['obs_agendamento'])
                     
-                    col_viab_pred = st.columns([1, 2, 1])[1]
-                    with col_viab_pred:
+                    st.markdown("---")
+                    st.markdown("### 📅 Agendar Visita Técnica")
+                    
+                    # Formulário de agendamento
+                    col_ag1, col_ag2, col_ag3 = st.columns(3)
+                    
+                    with col_ag1:
+                        data_visita = st.date_input(
+                            "📅 Data da Visita",
+                            key=f"data_visita_{row['id']}",
+                            help="Selecione a data para visita técnica"
+                        )
+                    
+                    with col_ag2:
+                        periodo = st.selectbox(
+                            "🕐 Período",
+                            options=["Manhã", "Tarde"],
+                            key=f"periodo_{row['id']}"
+                        )
+                    
+                    with col_ag3:
+                        tecnico = st.text_input(
+                            "👷 Técnico Responsável",
+                            placeholder="Nome do técnico",
+                            key=f"tecnico_{row['id']}"
+                        )
+                    
+                    st.markdown("---")
+                    
+                    # Botões de ação
+                    col_action1, col_action2 = st.columns(2)
+                    
+                    with col_action1:
                         if st.button(
-                            "🏢 Solicitar Viabilização do Prédio", 
-                            type="primary", 
+                            "📋 Agendar Visita Técnica",
+                            type="primary",
                             use_container_width=True,
-                            key=f"viab_predio_{row['id']}"
+                            key=f"agendar_{row['id']}"
                         ):
-                            from viability_functions import request_building_viability
-                            if request_building_viability(row['id'], {}):
-                                st.success("✅ Solicitação enviada! Aguardando dados do usuário.")
-                                st.info("👤 O usuário receberá um formulário para preencher com os dados do prédio.")
-                                st.rerun()
+                            if not tecnico or not data_visita:
+                                st.error("❌ Preencha todos os campos de agendamento!")
+                            else:
+                                st.info("🚧 Funcionalidade será implementada no Passo 3")
+                                # Aqui vai a função do Passo 3
+                    
+                    with col_action2:
+                        if st.button(
+                            "❌ Edifício Sem Viabilidade",
+                            type="secondary",
+                            use_container_width=True,
+                            key=f"sem_viab_{row['id']}"
+                        ):
+                            st.session_state[f'show_reject_form_{row["id"]}'] = True
+                    
+                    # Formulário de rejeição (aparece ao clicar no botão)
+                    if st.session_state.get(f'show_reject_form_{row["id"]}', False):
+                        st.markdown("---")
+                        st.error("### ❌ Registrar Edifício Sem Viabilidade")
+                        
+                        with st.form(key=f"form_reject_building_{row['id']}"):
+                            st.markdown("**Os seguintes dados serão registrados para consulta futura:**")
+                            
+                            col_rej1, col_rej2 = st.columns(2)
+                            with col_rej1:
+                                st.text_input("🏢 Condomínio", value=row.get('predio_ftta', ''), disabled=True)
+                            with col_rej2:
+                                st.text_input("📍 Localização", value=row['plus_code_cliente'], disabled=True)
+                            
+                            motivo_rejeicao = st.text_area(
+                                "📝 Motivo da Não Viabilidade *",
+                                placeholder="Descreva o motivo: estrutura inadequada, recusa do síndico, etc.",
+                                height=100
+                            )
+                            
+                            col_btn_rej1, col_btn_rej2 = st.columns(2)
+                            
+                            with col_btn_rej1:
+                                confirmar_rejeicao = st.form_submit_button(
+                                    "✅ Confirmar Rejeição",
+                                    type="primary",
+                                    use_container_width=True
+                                )
+                            
+                            with col_btn_rej2:
+                                cancelar = st.form_submit_button(
+                                    "🔙 Cancelar",
+                                    use_container_width=True
+                                )
+                            
+                            if confirmar_rejeicao:
+                                if not motivo_rejeicao or motivo_rejeicao.strip() == "":
+                                    st.error("❌ Descreva o motivo da não viabilidade!")
+                                else:
+                                    from viability_functions import reject_building_viability
+                                    
+                                    if reject_building_viability(
+                                        row['id'],
+                                        row.get('predio_ftta', 'Prédio'),
+                                        row['plus_code_cliente'],
+                                        motivo_rejeicao.strip()
+                                    ):
+                                        st.success("✅ Edifício registrado como sem viabilidade!")
+                                        st.info("📝 Registro salvo para consulta futura")
+                                        del st.session_state[f'show_reject_form_{row["id"]}']
+                                        st.rerun()
+                                    else:
+                                        st.error("❌ Erro ao registrar. Tente novamente.")
+                            
+                            if cancelar:
+                                del st.session_state[f'show_reject_form_{row["id"]}']
+                                st.rerun()   
                             
         st.markdown("---")
 
