@@ -334,6 +334,69 @@ def request_building_viability(viability_id: str, dados: Dict) -> bool:
         st.error(f"❌ Erro ao solicitar: {e}")
         return False
 
+def register_building_without_viability(condominio: str, localizacao: str, observacao: str) -> bool:
+    """
+    Registra prédio sem viabilidade na tabela de consulta
+    
+    Args:
+        condominio: Nome do prédio
+        localizacao: Plus Code ou endereço
+        observacao: Motivo da não viabilidade
+    """
+    try:
+        new_record = {
+            'condominio': condominio,
+            'localizacao': localizacao,
+            'observacao': observacao,
+            'registrado_por': 'leo'
+        }
+        
+        response = supabase.table('predios_sem_viabilidade').insert(new_record).execute()
+        
+        if response.data:
+            logger.info(f"Prédio sem viabilidade registrado: {condominio}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Erro ao registrar prédio sem viabilidade: {e}")
+        st.error(f"❌ Erro ao registrar: {e}")
+        return False
+
+
+def reject_building_viability(viability_id: str, condominio: str, localizacao: str, observacao: str) -> bool:
+    """
+    Rejeita viabilização de prédio e registra na tabela de consulta
+    
+    Args:
+        viability_id: ID da viabilização
+        condominio: Nome do prédio
+        localizacao: Plus Code
+        observacao: Motivo da rejeição
+    """
+    try:
+        # 1. Registrar na tabela de prédios sem viabilidade
+        if not register_building_without_viability(condominio, localizacao, observacao):
+            return False
+        
+        # 2. Atualizar status da viabilização
+        update_data = {
+            'status': 'rejeitado',
+            'status_predio': 'rejeitado',
+            'motivo_rejeicao': f'Edifício sem viabilidade: {observacao}',
+            'data_auditoria': get_current_time(),
+            'auditado_por': 'leo'
+        }
+        
+        response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
+        
+        if response.data:
+            logger.info(f"Viabilização de prédio rejeitada: {viability_id}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Erro ao rejeitar viabilização de prédio: {e}")
+        st.error(f"❌ Erro ao rejeitar: {e}")
+        return False
 
 def submit_building_data(viability_id: str, dados: Dict) -> bool:
     """
