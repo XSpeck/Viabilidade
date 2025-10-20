@@ -57,6 +57,7 @@ if not results:
 approved = [r for r in results if r['status'] == 'aprovado']
 rejected = [r for r in results if r['status'] == 'rejeitado']
 utp = [r for r in results if r['status'] == 'utp']
+building_pending = [r for r in results if r.get('status_predio') == 'aguardando_dados']
 
 st.markdown("---")
 
@@ -162,6 +163,105 @@ if utp:
                 if finalize_viability(row['id']):
                     st.success("✅ Finalizado!")
                     st.rerun()
+                    
+# ======================
+# Mostrar Viabilizações de Prédio Pendentes
+# ======================
+if building_pending:
+    st.markdown("---")
+    st.subheader("🏢 Viabilização de Prédio - Preencher Dados")
+    st.warning("⚠️ Temos projeto na rua, mas precisamos viabilizar a estrutura no prédio. Preencha os dados abaixo:")
+    
+    for row in building_pending:
+        with st.expander(f"🏗️ {row.get('predio_ftta', 'Prédio')} - {row['plus_code_cliente']}", expanded=True):
+            
+            st.markdown("### 📋 Informações da Solicitação Original")
+            col_info1, col_info2 = st.columns(2)
+            with col_info1:
+                st.text(f"Nome do Edifício: {row.get('predio_ftta', 'N/A')}")
+                st.text(f"Plus Code: {row['plus_code_cliente']}")
+            with col_info2:
+                st.text(f"Tipo: {row['tipo_instalacao']}")
+                st.text(f"Solicitado em: {format_datetime_resultados(row['data_solicitacao'])}")
+            
+            st.markdown("---")
+            st.markdown("### 🔧 Preencha os Dados para Viabilização")
+            
+            with st.form(key=f"form_building_{row['id']}"):
+                
+                col_form1, col_form2 = st.columns(2)
+                
+                with col_form1:
+                    st.markdown("#### 👤 Dados do Síndico")
+                    nome_sindico = st.text_input(
+                        "Nome do Síndico *",
+                        placeholder="Nome completo",
+                        key=f"sindico_nome_{row['id']}"
+                    )
+                    contato_sindico = st.text_input(
+                        "Contato do Síndico *",
+                        placeholder="(48) 99999-9999",
+                        key=f"sindico_contato_{row['id']}"
+                    )
+                
+                with col_form2:
+                    st.markdown("#### 🏠 Dados do Cliente")
+                    nome_cliente = st.text_input(
+                        "Nome do Cliente *",
+                        placeholder="Nome completo",
+                        key=f"cliente_nome_{row['id']}"
+                    )
+                    contato_cliente = st.text_input(
+                        "Contato do Cliente *",
+                        placeholder="(48) 99999-9999",
+                        key=f"cliente_contato_{row['id']}"
+                    )
+                    apartamento = st.text_input(
+                        "Apartamento *",
+                        placeholder="Ex: 301, Bloco A",
+                        key=f"apartamento_{row['id']}"
+                    )
+                
+                st.markdown("#### 📝 Observações")
+                obs_agendamento = st.text_area(
+                    "Melhores datas e horários para visita técnica",
+                    placeholder="Ex: Segunda ou Quarta, manhã (9h-12h)",
+                    height=100,
+                    key=f"obs_agend_{row['id']}"
+                )
+                
+                st.markdown("---")
+                col_submit = st.columns([1, 2, 1])[1]
+                with col_submit:
+                    submit_building = st.form_submit_button(
+                        "📤 Enviar para Auditoria Técnica",
+                        type="primary",
+                        use_container_width=True
+                    )
+                
+                if submit_building:
+                    # Validar campos obrigatórios
+                    if not all([nome_sindico, contato_sindico, nome_cliente, contato_cliente, apartamento]):
+                        st.error("❌ Preencha todos os campos obrigatórios (*)")
+                    else:
+                        from viability_functions import submit_building_data
+                        
+                        dados = {
+                            'nome_sindico': nome_sindico.strip(),
+                            'contato_sindico': contato_sindico.strip(),
+                            'nome_cliente_predio': nome_cliente.strip(),
+                            'contato_cliente_predio': contato_cliente.strip(),
+                            'apartamento': apartamento.strip(),
+                            'obs_agendamento': obs_agendamento.strip()
+                        }
+                        
+                        if submit_building_data(row['id'], dados):
+                            st.success("✅ Dados enviados com sucesso!")
+                            st.balloons()
+                            st.info("🔍 A auditoria técnica irá analisar a viabilização do prédio.")
+                            st.rerun()
+                        else:
+                            st.error("❌ Erro ao enviar dados. Tente novamente.")                    
                     
 # ======================
 # Footer
