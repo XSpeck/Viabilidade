@@ -78,7 +78,20 @@ def format_time_br_supa(utc_time_str: str) -> str:
         logger.warning(f"Erro ao formatar data Supabase '{utc_time_str}': {e}")
         return str(utc_time_str)[:16]  # Retorna string truncada como fallback   
 
-    
+def format_datetime_resultados(iso_datetime: str) -> str:
+    """
+    Converte datetime ISO para formato brasileiro
+    Ex: 2025-10-19T20:19:15.374522 -> 19/10/2025 20:19
+    """
+    try:
+        if not iso_datetime:
+            return "N/A"
+        dt = datetime.fromisoformat(iso_datetime.replace('Z', '+00:00'))
+        return dt.strftime('%d/%m/%Y %H:%M')
+    except Exception as e:
+        logger.error(f"Erro ao formatar data: {e}")
+        return iso_datetime[:16]  # Fallback
+
 def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None) -> bool:
     """
     Cria nova solicitação de viabilização no Supabase
