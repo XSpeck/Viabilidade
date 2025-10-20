@@ -203,6 +203,24 @@ def show_viability_form(row: dict, urgente: bool = False):
                         if update_viability_ftta(row['id'], 'utp', dados):
                             st.success("📡 Marcado como Atendemos UTP")
                             st.rerun()
+                # ===== NOVO BOTÃO VIABILIZAR PRÉDIO =====
+                st.markdown("---")
+                st.markdown("#### 🏗️ Viabilização de Estrutura no Prédio")
+                st.info("🔧 Temos projeto na rua, mas não temos estrutura pronta no prédio")
+                
+                col_viab_pred = st.columns([1, 2, 1])[1]
+                with col_viab_pred:
+                    if st.button(
+                        "🏢 Solicitar Viabilização do Prédio", 
+                        type="primary", 
+                        use_container_width=True,
+                        key=f"viab_predio_{row['id']}"
+                    ):
+                        from viability_functions import request_building_viability
+                        if request_building_viability(row['id'], {}):
+                            st.success("✅ Solicitação enviada! Aguardando dados do usuário.")
+                            st.info("👤 O usuário receberá um formulário para preencher com os dados do prédio.")
+                            st.rerun()
                             
         st.markdown("---")
 
