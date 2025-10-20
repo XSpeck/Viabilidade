@@ -6,6 +6,7 @@ Salve como: pages/auditoria.py
 import streamlit as st
 from viability_functions import format_time_br_supa
 from login_system import require_authentication
+from streamlit_autorefresh import st_autorefresh
 from viability_functions import (
     get_pending_viabilities,
     update_viability_ftth,
