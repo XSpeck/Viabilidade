@@ -203,24 +203,55 @@ def show_viability_form(row: dict, urgente: bool = False):
                         if update_viability_ftta(row['id'], 'utp', dados):
                             st.success("📡 Marcado como Atendemos UTP")
                             st.rerun()
+                
                 # ===== NOVO BOTÃO VIABILIZAR PRÉDIO =====
                 st.markdown("---")
                 st.markdown("#### 🏗️ Viabilização de Estrutura no Prédio")
-                st.info("🔧 Temos projeto na rua, mas não temos estrutura pronta no prédio")
                 
-                col_viab_pred = st.columns([1, 2, 1])[1]
-                with col_viab_pred:
-                    if st.button(
-                        "🏢 Solicitar Viabilização do Prédio", 
-                        type="primary", 
-                        use_container_width=True,
-                        key=f"viab_predio_{row['id']}"
-                    ):
-                        from viability_functions import request_building_viability
-                        if request_building_viability(row['id'], {}):
-                            st.success("✅ Solicitação enviada! Aguardando dados do usuário.")
-                            st.info("👤 O usuário receberá um formulário para preencher com os dados do prédio.")
-                            st.rerun()
+                # Verificar se já foi solicitado
+                status_predio = row.get('status_predio')
+                
+                if status_predio == 'aguardando_dados':
+                    # Já foi solicitado - mostrar aviso
+                    st.warning("⏳ **Aguardando dados do usuário**")
+                    st.caption(f"📅 Solicitado em: {format_time_br_supa(row.get('data_solicitacao_predio', ''))}")
+                    st.info("👤 O usuário está preenchendo o formulário com os dados do prédio.")
+                
+                elif status_predio == 'pronto_auditoria':
+                    # Usuário já preencheu - mostrar sucesso
+                    st.success("✅ **Dados recebidos! Pronto para análise**")
+                    st.caption(f"📅 Dados enviados em: {format_time_br_supa(row.get('data_solicitacao_predio', ''))}")
+                    
+                    # Mostrar dados recebidos em expander
+                    with st.expander("👁️ Ver Dados Enviados"):
+                        col_dados1, col_dados2 = st.columns(2)
+                        with col_dados1:
+                            st.text(f"👤 Síndico: {row.get('nome_sindico', 'N/A')}")
+                            st.text(f"📞 Contato: {row.get('contato_sindico', 'N/A')}")
+                        with col_dados2:
+                            st.text(f"🏠 Cliente: {row.get('nome_cliente_predio', 'N/A')}")
+                            st.text(f"📞 Contato: {row.get('contato_cliente_predio', 'N/A')}")
+                        st.text(f"🚪 Apartamento: {row.get('apartamento', 'N/A')}")
+                        if row.get('obs_agendamento'):
+                            st.text(f"📝 Obs: {row['obs_agendamento']}")
+                
+                else:
+                    # Ainda não foi solicitado - mostrar botão
+                    st.info("🔧 Temos projeto na rua, mas não temos estrutura pronta no prédio")
+                    
+                    col_viab_pred = st.columns([1, 2, 1])[1]
+                    with col_viab_pred:
+                        if st.button(
+                            "🏢 Solicitar Viabilização do Prédio", 
+                            type="primary", 
+                            use_container_width=True,
+                            key=f"viab_predio_{row['id']}"
+                        ):
+                            from viability_functions import request_building_viability
+                            if request_building_viability(row['id'], {}):
+                                st.success("✅ Solicitação enviada! Aguardando dados do usuário.")
+                                st.info("👤 O usuário receberá um formulário para preencher com os dados do prédio.")
+                                st.rerun()
                             
         st.markdown("---")
 
