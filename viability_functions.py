@@ -26,23 +26,23 @@ def format_time_br(iso_string: str, only_time: bool = False) -> str:
     if not iso_string:
         return "-"
     try:
-        # garante que o valor seja string e converte corretamente
+        # Se for timestamp (número), converter direto
         if isinstance(iso_string, (int, float)):
             dt = datetime.fromtimestamp(iso_string, TIMEZONE_BR)
         else:
-            dt = datetime.fromisoformat(str(iso_string))
-        dt = dt.astimezone(TIMEZONE_BR)
+            # Se for string ISO, converter para datetime
+            dt = datetime.fromisoformat(str(iso_string).replace('Z', '+00:00'))
+            # Converter para fuso de Brasília
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=pytz.UTC)
+            dt = dt.astimezone(TIMEZONE_BR)
+        
+        # Formatar conforme solicitado
         fmt = '%H:%M:%S' if only_time else '%d/%m/%Y %H:%M'
         return dt.strftime(fmt)
     except Exception as e:
-        import logging
-        logging.warning(f"Erro ao converter horário '{iso_string}': {e}")
+        logger.warning(f"Erro ao converter horário '{iso_string}': {e}")
         return "-"
-    # Converte string para datetime
-        try:
-            utc_dt = datetime.fromisoformat(utc_time_str)
-        except ValueError:
-            return utc_time_str  # Retorna original se não conseguir converter
     
 def format_time_br_supa(utc_time_str: str) -> str:
     """
@@ -52,34 +52,31 @@ def format_time_br_supa(utc_time_str: str) -> str:
     if not utc_time_str:
         return "-"
     
-    # Converte string para datetime
     try:
+        # Se for string vazia ou None
+        if isinstance(utc_time_str, str):
+            utc_time_str = utc_time_str.strip()
+            if not utc_time_str:
+                return "-"
+        
+        # Remover 'Z' final se existir (ISO 8601 UTC indicator)
+        utc_time_str = str(utc_time_str).replace('Z', '+00:00')
+        
+        # Converter para datetime
         utc_dt = datetime.fromisoformat(utc_time_str)
-    except ValueError:
-        return utc_time_str  # Retorna original se não conseguir converter
-
-    # Define fuso UTC
-    utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
-
-    # Converte para horário de Brasília
-    br_dt = utc_dt.astimezone(pytz.timezone("America/Sao_Paulo"))
-
-    # Formata dd/mm/aaaa hh:mm
-    return br_dt.strftime("%d/%m/%Y %H:%M")
-
-def format_datetime_resultados(iso_datetime: str) -> str:
-    """
-    Converte datetime ISO para formato brasileiro
-    Ex: 2025-10-19T20:19:15.374522 -> 19/10/2025 20:19
-    """
-    try:
-        if not iso_datetime:
-            return "N/A"
-        dt = datetime.fromisoformat(iso_datetime.replace('Z', '+00:00'))
-        return dt.strftime('%d/%m/%Y %H:%M')
+        
+        # Se não tiver timezone, adicionar UTC
+        if utc_dt.tzinfo is None:
+            utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
+        
+        # Converter para Brasília
+        br_dt = utc_dt.astimezone(TIMEZONE_BR)
+        
+        # Formatar
+        return br_dt.strftime("%d/%m/%Y %H:%M")
     except Exception as e:
-        logger.error(f"Erro ao formatar data: {e}")
-        return iso_datetime[:16]  # Fallback   
+        logger.warning(f"Erro ao formatar data Supabase '{utc_time_str}': {e}")
+        return str(utc_time_str)[:16]  # Retorna string truncada como fallback   
 
     
 def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None) -> bool:
