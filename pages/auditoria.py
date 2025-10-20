@@ -275,7 +275,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                     st.markdown("### 📅 Agendar Visita Técnica")
                     
                     # Formulário de agendamento
-                    col_ag1, col_ag2, col_ag3 = st.columns(3)
+                    col_ag1, col_ag2 = st.columns(2)
                     
                     with col_ag1:
                         data_visita = st.date_input(
@@ -291,12 +291,22 @@ def show_viability_form(row: dict, urgente: bool = False):
                             options=["Manhã", "Tarde"],
                             key=f"periodo_{row['id']}"
                         )
+                        
+                    # Segunda linha com Técnico e Tecnologia
+                    col_ag3, col_ag4 = st.columns(2)
                     
                     with col_ag3:
                         tecnico = st.text_input(
                             "👷 Técnico Responsável",
                             placeholder="Nome do técnico",
                             key=f"tecnico_{row['id']}"
+                        )
+                    with col_ag4:
+                        tecnologia = st.selectbox(
+                            "🔧 Tecnologia",
+                            options=["FTTA", "UTP"],
+                            key=f"tecnologia_{row['id']}",
+                            help="Tipo de tecnologia a ser instalada"
                         )
                     
                     st.markdown("---")
@@ -311,7 +321,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                             use_container_width=True,
                             key=f"agendar_{row['id']}"
                         ):
-                            if not tecnico or not data_visita:
+                            if not tecnico or not data_visita or not tecnologia:
                                 st.error("❌ Preencha todos os campos de agendamento!")
                             else:
                                 st.info("🚧 Funcionalidade será implementada no Passo 3")
