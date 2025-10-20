@@ -260,6 +260,25 @@ def show_viability_form(row: dict, urgente: bool = False):
 # ======================
 pending = get_pending_viabilities()
 
+# ======================
+# Notificação de novas solicitações
+# ======================
+if "pendentes_anteriores" not in st.session_state:
+    st.session_state.pendentes_anteriores = len(pending)
+
+# Se há novas solicitações desde a última atualização
+if len(pending) > st.session_state.pendentes_anteriores:
+    novas = len(pending) - st.session_state.pendentes_anteriores
+    st.toast(f"🔔 {novas} nova(s) solicitação(ões) aguardando auditoria!", icon="📬")
+    st.markdown("""
+    <audio autoplay>
+        <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+    </audio>
+    """, unsafe_allow_html=True)
+
+# Atualiza contador
+st.session_state.pendentes_anteriores = len(pending)
+
 if not pending:
     st.info("✅ Não há solicitações pendentes de auditoria no momento.")
     st.success("👏 Parabéns! Todas as solicitações foram processadas.")
