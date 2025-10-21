@@ -438,15 +438,14 @@ def submit_building_data(viability_id: str, dados: Dict) -> bool:
         st.error(f"❌ Erro ao submeter: {e}")
         return False
 
-def schedule_building_visit(viability_id: str, data_visita: str, periodo: str, tecnico: str, tecnologia: str) -> bool:
+def schedule_building_visit(viability_id: str, data_visita: str, periodo: str, tecnologia: str) -> bool:
     """
     Agenda visita técnica para prédio
     
     Args:
         viability_id: ID da viabilização
         data_visita: Data da visita (formato: YYYY-MM-DD)
-        periodo: "Manhã" ou "Tarde"
-        tecnico: Nome do técnico responsável
+        periodo: "Manhã" ou "Tarde"        
         tecnologia: "FTTA" ou "UTP"
     """
     try:
