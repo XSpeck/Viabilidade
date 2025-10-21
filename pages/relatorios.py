@@ -101,7 +101,12 @@ with tab1:
         
         # Exibir dados
         for _, row in df_finalizadas.iterrows():
-            tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
+            if row['tipo_instalacao'] == 'FTTH':
+                tipo_icon = "🏠"
+            elif row['tipo_instalacao'] == 'Prédio':
+                tipo_icon = "🏢"
+            else:
+                tipo_icon = "📋"
             
             with st.expander(
                 f"{tipo_icon} {row['plus_code_cliente']} - {row['usuario']} - {format_datetime_resultados(row['data_finalizacao'])}"
