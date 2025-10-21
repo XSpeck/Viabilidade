@@ -143,6 +143,7 @@ else:
                         st.text_input("📍 Localização", value=row['plus_code_cliente'], disabled=True)
                     with col_est2:
                         st.text_input("🔧 Tecnologia", value=row.get('tecnologia_predio', ''), disabled=True)
+                        st.text_input("👷 Técnico", value=row.get('tecnico', ''), disabled=True)
                     
                     observacao_estrut = st.text_area(
                         "📝 Observações da Estruturação *",
