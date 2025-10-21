@@ -654,7 +654,7 @@ if plus_code_input:
                                     
                                     urgente_edificio = st.checkbox("🔥 Cliente Presencial (Urgente)", key="urgente_edificio")
                                     
-                                    if st.button("Confirmar - Edifício", type="primary", use_container_width=True, key="confirm_ftta"):
+                                    if st.button("Confirmar - Edifício", type="primary", use_container_width=True, key="confirm_ftta"):                                        
                                         if not nome_predio or nome_predio.strip() == "":
                                             st.error("❌ Por favor, informe o nome do prédio!")
                                         else:
