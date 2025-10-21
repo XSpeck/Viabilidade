@@ -113,7 +113,7 @@ def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente:
         }
 
         # Adicionar nome do prédio se for FTTA
-        if tipo == 'FTTA' and nome_predio:
+        if tipo == 'Prédio' and nome_predio:
             new_request['predio_ftta'] = nome_predio
             
         response = supabase.table('viabilizacoes').insert(new_request).execute()
