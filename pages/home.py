@@ -236,7 +236,7 @@ if st.session_state.get('validated_pluscode'):
             <div style='text-align: center; padding: 20px; background: white; 
                         border-radius: 10px; border: 2px solid #2196F3;'>
                 <h2 style='margin: 0;'>🏢</h2>                                       
-                <p style='color: #666; margin: 0;'>FTTA - Fibra até o prédio</p>
+                <p style='color: #666; margin: 0;'>Prédio/Edifício</p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -248,14 +248,14 @@ if st.session_state.get('validated_pluscode'):
             
             urgente_edificio = st.checkbox("🔥 Cliente Presencial (Urgente)", key="urgente_edificio")
             
-            if st.button("Confirmar - Edifício (FTTA)", type="primary", use_container_width=True, key="confirm_ftta"):
+            if st.button("Confirmar - Edifício", type="primary", use_container_width=True, key="confirm_ftta"):
                 if not nome_predio or nome_predio.strip() == "":
                     st.error("❌ Por favor, informe o nome do prédio!")
                 else:
                     if create_viability_request(
                         st.session_state.user_name, 
                         st.session_state.validated_pluscode, 
-                        'FTTA',
+                        'Prédio',
                         urgente_edificio,
                         nome_predio=nome_predio.strip()
                     ):
