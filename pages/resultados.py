@@ -96,8 +96,18 @@ if pending_analysis:
     
     for row in pending_analysis:
         tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
-        tipo_nome = "Casa (FTTH)" if row['tipo_instalacao'] == 'FTTH' else "Edifício (FTTA)"
-        urgente_badge = " 🔥 **URGENTE**" if row.get('urgente', False) else ""
+        
+        if row['tipo_instalacao'] == 'FTTH':
+            tipo_nome = "Casa (FTTH)"
+        elif row['tipo_instalacao'] == 'Prédio':
+            if row.get('tecnologia_predio'):
+                tipo_nome = f"Prédio ({row['tecnologia_predio']})"
+            else:
+                tipo_nome = "Prédio"
+        else:
+            tipo_nome = row['tipo_instalacao']
+        
+        urgente_badge = " 🔥 **URGENTE**" if row.get('urgente', False) else ""        
         
         with st.expander(f"⏳ {tipo_icon} {row['plus_code_cliente']} - {tipo_nome}{urgente_badge}"):
             
