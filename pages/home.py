@@ -287,6 +287,85 @@ else:
     st.info("👆 Insira uma localização válida acima para solicitar viabilização")
 
 # ======================
+# Tabelas de Consulta
+# ======================
+st.markdown("---")
+st.markdown("## 📊 Consulta de Prédios")
+
+tab1, tab2 = st.tabs(["✅ Prédios Atendidos", "❌ Prédios Sem Viabilidade"])
+
+# ===== TAB 1: Prédios Atendidos =====
+with tab1:
+    st.markdown("### 🏢 Prédios com Estrutura Instalada")
+    
+    from viability_functions import get_structured_buildings
+    predios_atendidos = get_structured_buildings()
+    
+    if not predios_atendidos:
+        st.info("📭 Nenhum prédio estruturado ainda.")
+    else:
+        # Busca
+        search_atendidos = st.text_input(
+            "🔍 Buscar Prédio Atendido",
+            placeholder="Digite o nome do condomínio...",
+            key="search_atendidos"
+        )
+        
+        # Converter para DataFrame
+        import pandas as pd
+        df_atendidos = pd.DataFrame(predios_atendidos)
+        
+        # Filtrar
+        if search_atendidos:
+            mask = df_atendidos.astype(str).apply(
+                lambda x: x.str.lower().str.contains(search_atendidos.lower(), na=False)
+            ).any(axis=1)
+            df_atendidos = df_atendidos[mask]
+        
+        # Selecionar e renomear colunas
+        df_display = df_atendidos[['condominio', 'tecnologia', 'localizacao', 'observacao']].copy()
+        df_display.columns = ['Condomínio', 'Tecnologia', 'Localização', 'Observação']
+        
+        st.dataframe(df_display, use_container_width=True, height=400)
+        st.caption(f"Mostrando {len(df_display)} de {len(predios_atendidos)} registros")
+
+# ===== TAB 2: Prédios Sem Viabilidade =====
+with tab2:
+    st.markdown("### 🚫 Prédios Sem Viabilidade")
+    
+    from viability_functions import get_buildings_without_viability
+    predios_sem_viab = get_buildings_without_viability()
+    
+    if not predios_sem_viab:
+        st.info("📭 Nenhum prédio registrado como sem viabilidade.")
+    else:
+        # Busca
+        search_sem_viab = st.text_input(
+            "🔍 Buscar Prédio Sem Viabilidade",
+            placeholder="Digite o nome do condomínio...",
+            key="search_sem_viab"
+        )
+        
+        # Converter para DataFrame
+        import pandas as pd
+        df_sem_viab = pd.DataFrame(predios_sem_viab)
+        
+        # Filtrar
+        if search_sem_viab:
+            mask = df_sem_viab.astype(str).apply(
+                lambda x: x.str.lower().str.contains(search_sem_viab.lower(), na=False)
+            ).any(axis=1)
+            df_sem_viab = df_sem_viab[mask]
+        
+        # Selecionar e renomear colunas
+        df_display = df_sem_viab[['condominio', 'localizacao', 'observacao']].copy()
+        df_display.columns = ['Condomínio', 'Localização', 'Observação']
+        
+        st.dataframe(df_display, use_container_width=True, height=400)
+        st.caption(f"Mostrando {len(df_display)} de {len(predios_sem_viab)} registros")
+
+st.markdown("---")
+# ======================
 # Footer
 # ======================
 st.markdown("---")
