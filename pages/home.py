@@ -189,7 +189,6 @@ if st.session_state.get('validated_pluscode'):
     if st.session_state.get('show_success_message', False):
         tipo = st.session_state.get('success_message_type', '')
         st.success(f"✅ Solicitação de {tipo} enviada com sucesso!")
-        st.balloons()
         st.info("📋 **Acompanhe o andamento em 'Meus Resultados' no menu lateral**")
         
         # Limpar mensagem após exibir
