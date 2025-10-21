@@ -124,20 +124,47 @@ def show_viability_form(row: dict, urgente: bool = False):
             if row['tipo_instalacao'] == 'FTTH':
                 st.markdown("#### 🏠 Dados FTTH (Casa)")
                 
+                # Verificar se CTO já foi escolhida
+                cto_escolhida = row.get('cto_numero')
+                
+                if cto_escolhida:
+                    st.success(f"✅ CTO Escolhida: **{cto_escolhida}**")
+                    st.caption(f"📏 Distância: {row.get('distancia_cliente', 'N/A')} | 📍 Localização: {row.get('localizacao_caixa', 'N/A')}")
+                    st.markdown("---")
+                
                 with st.form(key=f"form_ftth_{row['id']}"):
-                    cto = st.text_input("N° Caixa (CTO)", key=f"cto_{row['id']}")
+                    # CTO, Distância e Localização já preenchidos (disabled)
+                    cto = st.text_input(
+                        "N° Caixa (CTO)", 
+                        value=row.get('cto_numero', ''),
+                        disabled=True,
+                        key=f"cto_{row['id']}"
+                    )
                     
                     col_f1, col_f2 = st.columns(2)
                     with col_f1:
-                        portas = st.number_input("Portas Disponíveis", min_value=0, max_value=50, value=0, key=f"portas_{row['id']}")
+                        distancia = st.text_input(
+                            "Distância até Cliente",
+                            value=row.get('distancia_cliente', ''),
+                            disabled=True,
+                            key=f"dist_{row['id']}"
+                        )
                     with col_f2:
-                        rx = st.text_input("Menor RX (dBm)", placeholder="-18.67", key=f"rx_{row['id']}")
+                        localizacao = st.text_input(
+                            "Localização da Caixa",
+                            value=row.get('localizacao_caixa', ''),
+                            disabled=True,
+                            key=f"loc_{row['id']}"
+                        )
+                    
+                    st.markdown("---")
+                    st.markdown("**Preencha os dados técnicos:**")
                     
                     col_f3, col_f4 = st.columns(2)
                     with col_f3:
-                        distancia = st.text_input("Distância até Cliente", placeholder="64.3m", key=f"dist_{row['id']}")
+                        portas = st.number_input("Portas Disponíveis *", min_value=0, max_value=50, value=0, key=f"portas_{row['id']}")
                     with col_f4:
-                        localizacao = st.text_input("Localização da Caixa", key=f"loc_{row['id']}")
+                        rx = st.text_input("Menor RX (dBm) *", placeholder="-18.67", key=f"rx_{row['id']}")                    
                     
                     obs = st.text_area("Observações", key=f"obs_{row['id']}", height=80)
                     
@@ -152,21 +179,20 @@ def show_viability_form(row: dict, urgente: bool = False):
                         rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
                     
                     if aprovado:
-                        if cto and portas > 0 and rx and distancia and localizacao:
+                        if portas > 0 and rx:
                             dados = {
-                                'cto_numero': cto,
+                                'cto_numero': row.get('cto_numero'),
                                 'portas_disponiveis': portas,
                                 'menor_rx': rx,
-                                'distancia_cliente': distancia,
-                                'localizacao_caixa': localizacao,
+                                'distancia_cliente': row.get('distancia_cliente'),
+                                'localizacao_caixa': row.get('localizacao_caixa'),
                                 'observacoes': obs
                             }
                             if update_viability_ftth(row['id'], 'aprovado', dados):
-                                st.success("✅ Viabilização aprovada!")
-                                st.balloons()
+                                st.success("✅ Viabilização aprovada!")                               
                                 st.rerun()
                         else:
-                            st.error("❌ Preencha todos os campos obrigatórios!")
+                            st.error("❌ Preencha Portas e RX!")
                     
                     if rejeitado:
                         dados = {'motivo_rejeicao': 'Não temos projeto neste ponto'}
