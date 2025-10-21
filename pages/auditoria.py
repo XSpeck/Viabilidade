@@ -334,7 +334,6 @@ def show_viability_form(row: dict, urgente: bool = False):
                                     tecnologia
                                 ):
                                     st.success("✅ Visita agendada com sucesso!")
-                                    st.balloons()
                                     st.info("📅 Agendamento registrado na Agenda FTTA/UTP")
                                     st.rerun()
                                 else:
