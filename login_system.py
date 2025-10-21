@@ -184,13 +184,14 @@ def show_navigation_menu():
             if st.button("🔍 Auditoria", width='stretch', key="nav_audit"):
                 st.switch_page("pages/auditoria.py")
         
+        # Página de Agenda (apenas Leo)
+        if st.session_state.user_login.lower() == "leo":
+            if st.button("📅 Agenda FTTA/UTP", width='stretch', key="nav_agenda"):
+                st.switch_page("pages/agenda_ftta_utp.py")
+        
         # Página de Relatórios (todos)
         if st.button("📈 Relatórios", width='stretch', key="nav_reports"):
-            st.switch_page("pages/relatorios.py")
-
-        # Página de Agenda (todos)
-        if st.button("📅 Agenda FTTA/UTP", width='stretch', key="nav_agenda"):
-            st.switch_page("pages/agenda_ftta_utp.py")
+            st.switch_page("pages/relatorios.py")        
 
 # ======================
 # Função Principal de Integração
