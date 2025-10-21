@@ -98,7 +98,21 @@ def show_viability_form(row: dict, urgente: bool = False):
             st.markdown("#### 📍 Informações")
             st.text(f"👤 Usuário: {row['usuario']}")
             st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
-            st.text(f"🔍 Tipo: {row['tipo_instalacao']}")
+            
+            # Determinar tipo real
+            if row['tipo_instalacao'] == 'FTTH':
+                tipo_exibir = 'FTTH (Casa)'
+            elif row['tipo_instalacao'] == 'Prédio':
+                # Se já foi definido pelo Leo
+                if row.get('tecnologia_predio'):
+                    tipo_exibir = f"{row['tecnologia_predio']} (Prédio)"
+                else:
+                    tipo_exibir = 'Prédio (a definir)'
+            else:
+                tipo_exibir = row['tipo_instalacao']
+            
+            st.text(f"🏷️ Tipo: {tipo_exibir}")
+            
             if row.get('predio_ftta'):
                 st.text(f"🏨 Nome: {row['predio_ftta']}")            
             st.text(f"📅 Solicitado em: {format_time_br_supa(row['data_solicitacao'])}")
