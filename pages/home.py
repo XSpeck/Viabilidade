@@ -185,6 +185,16 @@ if st.session_state.get('validated_pluscode'):
         if st.button("🎯 Viabilizar Esta Localização", type="primary", use_container_width=True):
             st.session_state.show_viability_modal = True
 
+    # ===== MENSAGEM DE SUCESSO APÓS CONFIRMAR ===== ← ADICIONAR AQUI
+    if st.session_state.get('show_success_message', False):
+        tipo = st.session_state.get('success_message_type', '')
+        st.success(f"✅ Solicitação de {tipo} enviada com sucesso!")
+        st.balloons()
+        st.info("📋 **Acompanhe o andamento em 'Meus Resultados' no menu lateral**")
+        
+        # Limpar mensagem após exibir
+        st.session_state.show_success_message = False
+
     # ======================
     # Modal de Seleção
     # ======================
@@ -221,9 +231,8 @@ if st.session_state.get('validated_pluscode'):
                     urgente_casa
                 ):
                     st.session_state.show_viability_modal = False
-                    st.success("✅ Solicitação enviada para auditoria técnica!")
-                    st.balloons()
-                    st.info("👉 Acesse 'Meus Resultados' no menu lateral para acompanhar.")
+                    st.session_state.show_success_message = True  # ← ADICIONAR
+                    st.session_state.success_message_type = 'FTTH'  # ← ADICIONAR
                     # Limpar dados
                     st.session_state.validated_pluscode = None
                     st.rerun()
@@ -260,9 +269,8 @@ if st.session_state.get('validated_pluscode'):
                         nome_predio=nome_predio.strip()
                     ):
                         st.session_state.show_viability_modal = False
-                        st.success("✅ Solicitação enviada para auditoria técnica!")
-                        st.balloons()
-                        st.info("👉 Acesse 'Meus Resultados' no menu lateral para acompanhar.")
+                        st.session_state.show_success_message = True
+                        st.session_state.success_message_type = 'Prédio' 
                         # Limpar dados
                         st.session_state.validated_pluscode = None
                         st.rerun()
