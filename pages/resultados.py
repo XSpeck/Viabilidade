@@ -82,7 +82,7 @@ if not results:
 approved = [r for r in results if r['status'] == 'aprovado']
 rejected = [r for r in results if r['status'] == 'rejeitado']
 utp = [r for r in results if r['status'] == 'utp']
-building_pending = [r for r in results if r.get('status_predio') in ['aguardando_dados', 'pronto_auditoria']]
+building_pending = [r for r in results if r.get('status_predio') in ['aguardando_dados', 'pronto_auditoria', 'agendado']]
 pending_analysis = [r for r in results if r['status'] == 'pendente' and not r.get('status_predio')]
 
 st.markdown("---")
@@ -247,7 +247,10 @@ if building_pending:
         status_atual = row.get('status_predio')
         
         # Título diferente baseado no status
-        if status_atual == 'pronto_auditoria':
+        if status_atual == 'agendado':
+            titulo = f"📅 {row.get('predio_ftta', 'Prédio')} - Viabilidade Agendada"
+            expandido = False
+        elif status_atual == 'pronto_auditoria':
             titulo = f"⏳ {row.get('predio_ftta', 'Prédio')} - Aguardando Agendamento"
             expandido = False  # Não expandir automaticamente
         else:
@@ -255,9 +258,40 @@ if building_pending:
             expandido = True  # Expandir para preencher
         
         with st.expander(titulo, expanded=expandido):
-            
+            # Se está agendado, mostrar informações e botão para consultar agenda
+            if status_atual == 'agendado':
+                st.success("✅ **Visita Técnica Agendada!**")
+                
+                col_agend1, col_agend2 = st.columns(2)
+                
+                with col_agend1:
+                    st.markdown("### 📅 Dados do Agendamento")
+                    st.text(f"🏢 Edifício: {row.get('predio_ftta', 'N/A')}")
+                    st.text(f"📍 Localização: {row['plus_code_cliente']}")
+                    st.text(f"📅 Data: {row.get('data_visita', 'N/A')}")
+                    st.text(f"🕐 Período: {row.get('periodo_visita', 'N/A')}")
+                
+                with col_agend2:
+                    st.markdown("### 👷 Informações Técnicas")
+                    st.text(f"👤 Técnico: {row.get('tecnico_responsavel', 'N/A')}")
+                    st.text(f"🔧 Tecnologia: {row.get('tecnologia_predio', 'N/A')}")
+                    st.text(f"📆 Agendado em: {format_datetime_resultados(row.get('data_agendamento', ''))}")
+                
+                st.markdown("---")
+                st.info("📋 **Para acompanhar o andamento, consulte a Agenda FTTA/UTP no menu lateral**")
+                
+                col_btn_agenda = st.columns([1, 2, 1])[1]
+                with col_btn_agenda:
+                    if st.button(
+                        "📅 Ir para Agenda FTTA/UTP",
+                        type="primary",
+                        use_container_width=True,
+                        key=f"goto_agenda_{row['id']}"
+                    ):
+                        st.switch_page("pages/agenda_ftta_utp.py")
+                    
             # Se já foi enviado, mostrar mensagem de aguardando
-            if status_atual == 'pronto_auditoria':
+            elif status_atual == 'pronto_auditoria':
                 st.success("✅ **Dados enviados com sucesso!**")
                 st.info("⏳ **Aguardando agendamento da visita técnica pelo Leo**")
                 
