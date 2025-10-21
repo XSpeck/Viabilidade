@@ -179,13 +179,13 @@ def show_viability_form(row: dict, urgente: bool = False):
                             st.success("📡 Marcado como Atendemos UTP")
                             st.rerun()
             
-            else:  # FTTA
+            else:  # Prédio (FTTA ou UTP a definir)
                 # Verificar se já foi solicitada viabilização de prédio
                 status_predio = row.get('status_predio')
                 
                 # Se ainda não foi solicitado OU se foi rejeitado, mostrar formulário normal
                 if status_predio is None or status_predio == 'rejeitado':
-                    st.markdown("#### 🏢 Dados FTTA (Edifício)")
+                    st.markdown("#### 🏢 Dados do Prédio")
                     
                     with st.form(key=f"form_ftta_{row['id']}"):
                         predio = st.text_input("Prédio FTTA", value=row.get('predio_ftta', ''), key=f"predio_{row['id']}")
