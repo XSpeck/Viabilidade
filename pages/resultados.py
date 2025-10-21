@@ -240,8 +240,8 @@ if utp:
 # ======================
 if building_pending:
     st.markdown("---")
-    st.subheader("🏢 Viabilização de Prédio - Preencher Dados")
-    st.warning("⚠️ Temos projeto na rua, mas precisamos viabilizar a estrutura no prédio. Preencha os dados abaixo:")    
+    st.subheader("🏢 Viabilização de Prédio")
+    st.warning("⚠️ Temos projeto na rua, mas precisamos viabilizar a estrutura no prédio.")    
     
     for row in building_pending:
         status_atual = row.get('status_predio')
