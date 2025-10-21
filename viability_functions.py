@@ -158,17 +158,19 @@ def get_user_results(username: str) -> List[Dict]:
         return []
 
 def get_archived_viabilities() -> Dict[str, List[Dict]]:
-    """Busca viabilizações finalizadas e rejeitadas para o arquivo"""
+    """Busca viabilizações finalizadas e rejeitadas para o arquivo (exceto estruturados)"""
     try:
         finalizadas = supabase.table('viabilizacoes')\
             .select('*')\
             .eq('status', 'finalizado')\
+            .neq('status_predio', 'estruturado')\
             .order('data_finalizacao', desc=True)\
             .execute()
         
         rejeitadas = supabase.table('viabilizacoes')\
             .select('*')\
             .eq('status', 'rejeitado')\
+            .or_('status_predio.is.null,status_predio.neq.rejeitado')\
             .order('data_auditoria', desc=True)\
             .execute()
         
