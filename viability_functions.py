@@ -92,7 +92,7 @@ def format_datetime_resultados(iso_datetime: str) -> str:
         logger.error(f"Erro ao formatar data: {e}")
         return iso_datetime[:16]  # Fallback
 
-def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None) -> bool:
+def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None) -> bool:    
     """
     Cria nova solicitação de viabilização no Supabase
     
@@ -113,7 +113,7 @@ def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente:
         }
 
         # Adicionar nome do prédio se for FTTA
-        if tipo == 'UTP/FTTA' and nome_predio:
+        if tipo == 'FTTA' and nome_predio:
             new_request['predio_ftta'] = nome_predio
             
         response = supabase.table('viabilizacoes').insert(new_request).execute()
