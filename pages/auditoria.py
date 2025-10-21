@@ -324,8 +324,21 @@ def show_viability_form(row: dict, urgente: bool = False):
                             if not tecnico or not data_visita or not tecnologia:
                                 st.error("❌ Preencha todos os campos de agendamento!")
                             else:
-                                st.info("🚧 Funcionalidade será implementada no Passo 3")
-                                # Aqui vai a função do Passo 3
+                                from viability_functions import schedule_building_visit
+            
+                                if schedule_building_visit(
+                                    row['id'],
+                                    data_visita,
+                                    periodo,
+                                    tecnico,
+                                    tecnologia
+                                ):
+                                    st.success("✅ Visita agendada com sucesso!")
+                                    st.balloons()
+                                    st.info("📅 Agendamento registrado na Agenda FTTA/UTP")
+                                    st.rerun()
+                                else:
+                                    st.error("❌ Erro ao agendar. Tente novamente.")
                     
                     with col_action2:
                         if st.button(
