@@ -172,9 +172,14 @@ def show_navigation_menu():
         st.markdown("---")
         st.markdown("### 📋 Menu de Navegação")
         
-        # Página Principal
-        if st.button("🏠 Busca", width='stretch', key="nav_home"):
-            st.switch_page("validator_system.py")
+        # Página Home (todos)
+        if st.button("🏠 Solicitar Viabilização", width='stretch', key="nav_home"):
+            st.switch_page("pages/home.py")
+        
+        # Página de Busca (apenas Leo)
+        if st.session_state.user_login.lower() == "leo":
+            if st.button("🔍 Busca Detalhada", width='stretch', key="nav_busca"):
+                st.switch_page("validator_system.py")
         
         # Página de Resultados (todos)
         if st.button("📊 Meus Resultados", width='stretch', key="nav_results"):
