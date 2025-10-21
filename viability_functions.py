@@ -487,7 +487,7 @@ def get_scheduled_visits() -> List[Dict]:
         return []
 
 
-def finalize_building_structured(viability_id: str, condominio: str, tecnologia: str, localizacao: str, observacao: str) -> bool:
+def finalize_building_structured(viability_id: str, condominio: str, tecnologia: str, localizacao: str, estruturado_por: str, observacao: str) -> bool:
     """
     Finaliza agendamento como estruturado e registra na tabela de atendidos
     
