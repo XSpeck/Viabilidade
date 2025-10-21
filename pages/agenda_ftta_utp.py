@@ -175,6 +175,7 @@ else:
                                 row.get('tecnologia_predio', 'N/A'),
                                 row['plus_code_cliente'],
                                 observacao_estrut.strip()
+                                row.get('tecnico_responsavel', 'Técnico')
                             ):
                                 st.success("✅ Prédio registrado como estruturado!")
                                 st.balloons()
