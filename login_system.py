@@ -185,8 +185,12 @@ def show_navigation_menu():
                 st.switch_page("pages/auditoria.py")
         
         # Página de Relatórios (todos)
-        if st.button("📁 Relatórios", width='stretch', key="nav_reports"):
+        if st.button("📈 Relatórios", width='stretch', key="nav_reports"):
             st.switch_page("pages/relatorios.py")
+
+        # Página de Agenda (todos)
+        if st.button("📅 Agenda FTTA/UTP", width='stretch', key="nav_agenda"):
+            st.switch_page("pages/agenda_ftta_utp.py")
 
 # ======================
 # Função Principal de Integração
