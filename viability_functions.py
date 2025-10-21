@@ -496,6 +496,7 @@ def finalize_building_structured(viability_id: str, condominio: str, tecnologia:
         condominio: Nome do prédio
         tecnologia: "FTTA" ou "UTP"
         localizacao: Plus Code
+        estruturado_por: tecnico
         observacao: Observações sobre a estruturação
     """
     try:
