@@ -277,18 +277,17 @@ if building_pending:
                     st.text(f"🔧 Tecnologia: {row.get('tecnologia_predio', 'N/A')}")
                     st.text(f"📆 Agendado em: {format_datetime_resultados(row.get('data_agendamento', ''))}")
                 
-                st.markdown("---")
-                st.info("📋 **Para acompanhar o andamento, consulte a Agenda FTTA/UTP no menu lateral**")
+               
                 
-                col_btn_agenda = st.columns([1, 2, 1])[1]
-                with col_btn_agenda:
-                    if st.button(
-                        "📅 Ir para Agenda FTTA/UTP",
-                        type="primary",
-                        use_container_width=True,
-                        key=f"goto_agenda_{row['id']}"
-                    ):
-                        st.switch_page("pages/agenda_ftta_utp.py")
+                #col_btn_agenda = st.columns([1, 2, 1])[1]
+                #with col_btn_agenda:
+                   # if st.button(
+                  #      "📅 Ir para Agenda FTTA/UTP",
+                   #     type="primary",
+                   #     use_container_width=True,
+                   #     key=f"goto_agenda_{row['id']}"
+                 #   ):
+                    #    st.switch_page("pages/agenda_ftta_utp.py")
                     
             # Se já foi enviado, mostrar mensagem de aguardando
             elif status_atual == 'pronto_auditoria':
