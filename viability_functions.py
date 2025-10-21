@@ -503,7 +503,7 @@ def finalize_building_structured(viability_id: str, condominio: str, tecnologia:
             'tecnologia': tecnologia,
             'localizacao': localizacao,
             'observacao': observacao,
-            'estruturado_por': 'leo',
+            'estruturado_por': tecnico,
             'viabilizacao_id': viability_id
         }
         
@@ -523,7 +523,7 @@ def finalize_building_structured(viability_id: str, condominio: str, tecnologia:
         response_update = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
         
         if response_update.data:
-            logger.info(f"Prédio estruturado: {condominio} - {tecnologia}")
+            logger.info(f"Prédio estruturado: {condominio} - {tecnologia} - por {tecnico}")
             return True
         return False
     except Exception as e:
