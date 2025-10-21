@@ -486,8 +486,7 @@ def get_scheduled_visits() -> List[Dict]:
         logger.error(f"Erro ao buscar agendamentos: {e}")
         return []
 
-def finalize_building_structured(viability_id: str, condominio: str, tecnologia: str, localizacao: str, estruturado_por: str, observacao: str) -> bool:
-    
+def finalize_building_structured(viability_id: str, condominio: str, tecnologia: str, localizacao: str, observacao: str, tecnico: str) -> bool:    
     """
     Finaliza agendamento como estruturado e registra na tabela de atendidos
     
@@ -496,8 +495,8 @@ def finalize_building_structured(viability_id: str, condominio: str, tecnologia:
         condominio: Nome do prédio
         tecnologia: "FTTA" ou "UTP"
         localizacao: Plus Code
-        estruturado_por: tecnico
         observacao: Observações sobre a estruturação
+        tecnico: Nome do técnico que estruturou
     """
     try:
         # 1. Registrar na tabela de atendidos
@@ -526,7 +525,7 @@ def finalize_building_structured(viability_id: str, condominio: str, tecnologia:
         response_update = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
         
         if response_update.data:
-            logger.info(f"Prédio estruturado: {condominio} - {tecnologia} - por {tecnico}")
+            logger.info(f"Prédio estruturado: {condominio} - {tecnologia} - por {tecnico}")            
             return True
         return False
     except Exception as e:
