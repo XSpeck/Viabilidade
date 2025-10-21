@@ -126,6 +126,7 @@ def show_login_page():
                                 st.session_state.user_login = user_login
                                 st.session_state.login_timestamp = datetime.now(TIMEZONE_BR)
                                 st.success(f"✅ Bem-vindo, {user_name}!")
+                                st.switch_page("pages/home.py")
                                 st.rerun()
                             else:
                                 st.error("❌ Login ou senha incorretos!")
