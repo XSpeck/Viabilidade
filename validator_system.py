@@ -642,7 +642,7 @@ if plus_code_input:
                                     <div style='text-align: center; padding: 20px; background: white; 
                                                 border-radius: 10px; border: 2px solid #2196F3;'>
                                         <h2 style='margin: 0;'>🏢</h2>                                       
-                                        <p style='color: #666; margin: 0;'>FTTA - Fibra até o prédio</p>
+                                        <p style='color: #666; margin: 0;'>UTP/FTTA - Atendimento em prédio</p>
                                     </div>
                                     """, unsafe_allow_html=True)
 
