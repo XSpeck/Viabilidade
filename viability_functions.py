@@ -563,6 +563,31 @@ def reject_scheduled_building(viability_id: str, condominio: str, localizacao: s
         st.error(f"❌ Erro ao rejeitar: {e}")
         return False
 
+def get_structured_buildings() -> List[Dict]:
+    """Busca prédios estruturados (UTPs/FTTAs atendidos)"""
+    try:
+        response = supabase.table('utps_fttas_atendidos')\
+            .select('*')\
+            .order('data_estruturacao', desc=True)\
+            .execute()
+        return response.data if response.data else []
+    except Exception as e:
+        logger.error(f"Erro ao buscar prédios estruturados: {e}")
+        return []
+
+
+def get_buildings_without_viability() -> List[Dict]:
+    """Busca prédios sem viabilidade"""
+    try:
+        response = supabase.table('predios_sem_viabilidade')\
+            .select('*')\
+            .order('data_registro', desc=True)\
+            .execute()
+        return response.data if response.data else []
+    except Exception as e:
+        logger.error(f"Erro ao buscar prédios sem viabilidade: {e}")
+        return []
+
 def get_statistics() -> Dict:
     """Retorna estatísticas gerais do sistema"""
     try:
