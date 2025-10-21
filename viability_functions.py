@@ -436,6 +436,131 @@ def submit_building_data(viability_id: str, dados: Dict) -> bool:
         st.error(f"❌ Erro ao submeter: {e}")
         return False
 
+def schedule_building_visit(viability_id: str, data_visita: str, periodo: str, tecnico: str, tecnologia: str) -> bool:
+    """
+    Agenda visita técnica para prédio
+    
+    Args:
+        viability_id: ID da viabilização
+        data_visita: Data da visita (formato: YYYY-MM-DD)
+        periodo: "Manhã" ou "Tarde"
+        tecnico: Nome do técnico responsável
+        tecnologia: "FTTA" ou "UTP"
+    """
+    try:
+        update_data = {
+            'status_predio': 'agendado',
+            'status_agendamento': 'pendente',
+            'data_visita': str(data_visita),
+            'periodo_visita': periodo,
+            'tecnico_responsavel': tecnico,
+            'tecnologia_predio': tecnologia,
+            'data_agendamento': get_current_time()
+        }
+        
+        response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
+        
+        if response.data:
+            logger.info(f"Visita agendada: {viability_id} - {data_visita} {periodo} - {tecnico}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Erro ao agendar visita: {e}")
+        st.error(f"❌ Erro ao agendar: {e}")
+        return False
+
+
+def get_scheduled_visits() -> List[Dict]:
+    """Busca agendamentos pendentes"""
+    try:
+        response = supabase.table('viabilizacoes')\
+            .select('*')\
+            .eq('status_predio', 'agendado')\
+            .eq('status_agendamento', 'pendente')\
+            .order('data_visita', desc=False)\
+            .execute()
+        return response.data if response.data else []
+    except Exception as e:
+        logger.error(f"Erro ao buscar agendamentos: {e}")
+        return []
+
+
+def finalize_building_structured(viability_id: str, condominio: str, tecnologia: str, localizacao: str, observacao: str) -> bool:
+    """
+    Finaliza agendamento como estruturado e registra na tabela de atendidos
+    
+    Args:
+        viability_id: ID da viabilização
+        condominio: Nome do prédio
+        tecnologia: "FTTA" ou "UTP"
+        localizacao: Plus Code
+        observacao: Observações sobre a estruturação
+    """
+    try:
+        # 1. Registrar na tabela de atendidos
+        new_record = {
+            'condominio': condominio,
+            'tecnologia': tecnologia,
+            'localizacao': localizacao,
+            'observacao': observacao,
+            'estruturado_por': 'leo',
+            'viabilizacao_id': viability_id
+        }
+        
+        response_insert = supabase.table('utps_fttas_atendidos').insert(new_record).execute()
+        
+        if not response_insert.data:
+            return False
+        
+        # 2. Atualizar viabilização como finalizada
+        update_data = {
+            'status': 'finalizado',
+            'status_predio': 'estruturado',
+            'status_agendamento': 'concluido',
+            'data_finalizacao': get_current_time()
+        }
+        
+        response_update = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
+        
+        if response_update.data:
+            logger.info(f"Prédio estruturado: {condominio} - {tecnologia}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Erro ao finalizar estruturação: {e}")
+        st.error(f"❌ Erro ao finalizar: {e}")
+        return False
+
+
+def reject_scheduled_building(viability_id: str, condominio: str, localizacao: str, observacao: str) -> bool:
+    """
+    Rejeita agendamento e registra prédio sem viabilidade
+    """
+    try:
+        # 1. Registrar na tabela de sem viabilidade
+        if not register_building_without_viability(condominio, localizacao, observacao):
+            return False
+        
+        # 2. Atualizar status
+        update_data = {
+            'status': 'rejeitado',
+            'status_predio': 'rejeitado',
+            'status_agendamento': 'cancelado',
+            'motivo_rejeicao': f'Edifício sem viabilidade: {observacao}',
+            'data_finalizacao': get_current_time()
+        }
+        
+        response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
+        
+        if response.data:
+            logger.info(f"Agendamento rejeitado: {viability_id}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Erro ao rejeitar agendamento: {e}")
+        st.error(f"❌ Erro ao rejeitar: {e}")
+        return False
+
 def get_statistics() -> Dict:
     """Retorna estatísticas gerais do sistema"""
     try:
