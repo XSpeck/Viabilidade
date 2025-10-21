@@ -99,9 +99,9 @@ def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente:
     Args:
         user_name: Nome do usuário solicitante
         plus_code: Plus Code do cliente
-        tipo: 'FTTH' ou 'FTTA'
+        tipo: 'FTTH' ou 'Prédio'
         urgente: Se é cliente presencial (urgente)
-        nome_predio: Nome do prédio (apenas para FTTA)
+        nome_predio: Nome do prédio (apenas para Prédio)
     """
     try:
         new_request = {
