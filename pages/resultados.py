@@ -6,7 +6,7 @@ Salve como: pages/resultados.py
 import streamlit as st
 from login_system import require_authentication
 from streamlit_autorefresh import st_autorefresh
-from viability_functions import get_user_results, finalize_viability, finalize_viability_approved, format_datetime_resultados
+from viability_functions import get_user_results, finalize_viability, finalize_viability_approved, format_datetime_resultados, format_time_br_supa
 import logging
 
 logger = logging.getLogger(__name__)
@@ -119,7 +119,7 @@ if pending_analysis:
                 st.text(f"🏷️ Tipo: {tipo_nome}")
                 if row.get('predio_ftta'):
                     st.text(f"🏢 Edifício: {row['predio_ftta']}")
-                st.text(f"📅 Solicitado: {format_datetime_resultados(row['data_solicitacao'])}")
+                st.text(f"📅 Solicitado: {format_time_br_supa(row['data_solicitacao'])}")
                 
                 if row.get('urgente', False):
                     st.error("🔥 **Solicitação Urgente - Cliente Presencial**")
