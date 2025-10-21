@@ -588,6 +588,54 @@ def get_buildings_without_viability() -> List[Dict]:
         logger.error(f"Erro ao buscar prédios sem viabilidade: {e}")
         return []
 
+def save_selected_cto(viability_id: str, cto_data: Dict) -> bool:
+    """
+    Salva a CTO escolhida pelo Leo na busca detalhada
+    
+    Args:
+        viability_id: ID da viabilização
+        cto_data: {
+            'cto_numero': str,
+            'distancia_cliente': str,
+            'localizacao_caixa': str
+        }
+    """
+    try:
+        update_data = {
+            'status_busca': 'cto_escolhida',
+            'cto_numero': cto_data.get('cto_numero'),
+            'distancia_cliente': cto_data.get('distancia_cliente'),
+            'localizacao_caixa': cto_data.get('localizacao_caixa')
+        }
+        
+        response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
+        
+        if response.data:
+            logger.info(f"CTO escolhida salva: {viability_id} - {cto_data.get('cto_numero')}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Erro ao salvar CTO escolhida: {e}")
+        st.error(f"❌ Erro ao salvar: {e}")
+        return False
+
+
+def get_ftth_pending_search() -> List[Dict]:
+    """Busca solicitações FTTH aguardando busca detalhada (Leo escolher CTO)"""
+    try:
+        response = supabase.table('viabilizacoes')\
+            .select('*')\
+            .eq('tipo_instalacao', 'FTTH')\
+            .eq('status', 'pendente')\
+            .is_('status_busca', None)\
+            .order('urgente', desc=True)\
+            .order('data_solicitacao', desc=False)\
+            .execute()
+        return response.data if response.data else []
+    except Exception as e:
+        logger.error(f"Erro ao buscar FTTH pendentes: {e}")
+        return []
+
 def get_statistics() -> Dict:
     """Retorna estatísticas gerais do sistema"""
     try:
