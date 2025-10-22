@@ -142,7 +142,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                         "N° Caixa (CTO)", 
                         value=row.get('cto_numero', ''),
                         disabled=False,
-                        key=f"cto_{row['id']}"
+                        key=f"cto_{row['id']}",
                         help="⚠️ Você pode editar este campo se necessário"
                     )
                     
@@ -152,7 +152,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                             "Distância até Cliente",
                             value=row.get('distancia_cliente', ''),
                             disabled=False,
-                            key=f"dist_{row['id']}"
+                            key=f"dist_{row['id']}",
                             help="⚠️ Editável - ex: 150m, 1.2km"
                         )
                     with col_f2:
@@ -160,7 +160,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                             "Localização da Caixa",
                             value=row.get('localizacao_caixa', ''),
                             disabled=False,
-                            key=f"loc_{row['id']}"
+                            key=f"loc_{row['id']}",
                             help="⚠️ Editável - Plus Code da caixa"
                         )
                     
