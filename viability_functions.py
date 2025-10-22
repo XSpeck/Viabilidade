@@ -128,13 +128,12 @@ def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente:
         return False
 
 def get_pending_viabilities() -> List[Dict]:
-    """Busca viabilizações pendentes ordenadas por urgência"""
+    """Busca viabilizações pendentes (exceto FTTH aguardando busca)"""
     try:
-        # Buscar pendentes ordenados por urgência (urgentes primeiro) e depois por data
         response = supabase.table('viabilizacoes')\
             .select('*')\
             .eq('status', 'pendente')\
-            .or_('tipo_instalacao.neq.FTTH,status_busca.eq.cto_escolhida')\            
+            .or_('tipo_instalacao.neq.FTTH,status_busca.eq.cto_escolhida')\
             .order('urgente', desc=True)\
             .order('data_solicitacao', desc=False)\
             .execute()
