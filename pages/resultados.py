@@ -34,6 +34,88 @@ if not require_authentication():
 # Header
 # ======================
 st.title("📊 Meus Resultados")
+
+# ========== DEBUG - REMOVER DEPOIS ==========
+st.warning("🔧 MODO DEBUG ATIVO")
+
+# 1. Buscar TODOS os registros do usuário (sem filtros)
+try:
+    all_records = supabase.table('viabilizacoes')\
+        .select('*')\
+        .eq('usuario', st.session_state.user_name)\
+        .execute()
+    
+    st.write(f"**Total de registros no banco:** {len(all_records.data)}")
+    
+    # Filtrar estruturados manualmente
+    estruturados_raw = [r for r in all_records.data if r.get('status_predio') == 'estruturado']
+    st.write(f"**Estruturados encontrados:** {len(estruturados_raw)}")
+    
+    if estruturados_raw:
+        st.write("**Detalhes dos estruturados:**")
+        for r in estruturados_raw:
+            st.json({
+                'id': r['id'],
+                'plus_code': r['plus_code_cliente'],
+                'predio': r.get('predio_ftta'),
+                'status': r['status'],
+                'status_predio': r.get('status_predio'),
+                'status_agendamento': r.get('status_agendamento'),
+                'data_finalizacao': r.get('data_finalizacao'),
+                'tecnico': r.get('tecnico_responsavel')
+            })
+    
+    # 2. Testar a função get_user_results()
+    st.write("---")
+    st.write("**Resultado de get_user_results():**")
+    results = get_user_results(st.session_state.user_name)
+    st.write(f"Total retornado: {len(results)}")
+    
+    structured = [r for r in results if r.get('status_predio') == 'estruturado']
+    st.write(f"Estruturados após filtro: {len(structured)}")
+    
+    if structured:
+        st.success("✅ Estruturados ENCONTRADOS em get_user_results()")
+    else:
+        st.error("❌ Estruturados NÃO retornados por get_user_results()")
+    
+    # 3. Verificar filtros
+    st.write("---")
+    st.write("**Análise de Filtros:**")
+    
+    for r in estruturados_raw:
+        checks = {
+            'status': r['status'],
+            'status_predio': r.get('status_predio'),
+            'data_finalizacao': r.get('data_finalizacao'),
+            'data_finalizacao_is_null': r.get('data_finalizacao') is None
+        }
+        
+        st.write(f"**Registro {r['id'][:8]}...**")
+        st.json(checks)
+        
+        # Verificar se passa no filtro
+        passa_filtro = (
+            r.get('status_predio') in ['aguardando_dados', 'agendado', 'estruturado']
+            and r.get('data_finalizacao') is None
+        )
+        
+        if passa_filtro:
+            st.success("✅ Este registro DEVERIA aparecer")
+        else:
+            st.error("❌ Este registro está sendo FILTRADO FORA")
+            if r.get('data_finalizacao'):
+                st.warning(f"⚠️ Motivo: data_finalizacao = {r.get('data_finalizacao')}")
+
+except Exception as e:
+    st.error(f"Erro no debug: {e}")
+
+st.write("=" * 50)
+st.write("**FIM DO DEBUG**")
+st.write("=" * 50)
+# ========== FIM DEBUG ==========
+
+
 st.markdown(f"Viabilizações de **{st.session_state.user_name}**")
 
 # Botão de atualizar
