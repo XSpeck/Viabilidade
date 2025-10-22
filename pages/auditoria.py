@@ -79,10 +79,7 @@ def show_viability_form(row: dict, urgente: bool = False):
         <div style='border-left: 5px solid {border_color}; padding: 15px; 
                     background-color: {bg_color}; border-radius: 5px; margin-bottom: 20px;'>
         </div>
-        """, unsafe_allow_html=True)
-        
-        # Cabeçalho        
-       # st.markdown(f"### {icon} Solicitação #{row['id'][:8]}")
+        """, unsafe_allow_html=True)        
                 
         # Informações da solicitação
         col1, col2 = st.columns([2, 3])
@@ -109,7 +106,7 @@ def show_viability_form(row: dict, urgente: bool = False):
             if row.get('predio_ftta'):
                 st.text(f"🏨 Nome: {row['predio_ftta']}")            
             st.text(f"📅 Solicitado em: {format_time_br_supa(row['data_solicitacao'])}")
-
+            
             # ===== BOTÃO EXCLUIR =====
             st.markdown("---")
             if st.button(
