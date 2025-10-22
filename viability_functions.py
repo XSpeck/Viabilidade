@@ -134,8 +134,7 @@ def get_pending_viabilities() -> List[Dict]:
         response = supabase.table('viabilizacoes')\
             .select('*')\
             .eq('status', 'pendente')\
-            .or_('tipo_instalacao.neq.FTTH,status_busca.eq.cto_escolhida')\
-            .neq('status_predio', 'agendado')\
+            .or_('tipo_instalacao.neq.FTTH,status_busca.eq.cto_escolhida')\            
             .order('urgente', desc=True)\
             .order('data_solicitacao', desc=False)\
             .execute()
