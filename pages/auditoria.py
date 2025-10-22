@@ -133,6 +133,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                 if cto_escolhida:
                     st.success(f"✅ CTO Escolhida: **{cto_escolhida}**")
                     st.caption(f"📏 Distância: {row.get('distancia_cliente', 'N/A')} | 📍 Localização: {row.get('localizacao_caixa', 'N/A')}")
+                    st.warning("⚠️ Os campos abaixo são EDITÁVEIS caso precise corrigir")
                     st.markdown("---")
                 
                 with st.form(key=f"form_ftth_{row['id']}"):
@@ -140,8 +141,9 @@ def show_viability_form(row: dict, urgente: bool = False):
                     cto = st.text_input(
                         "N° Caixa (CTO)", 
                         value=row.get('cto_numero', ''),
-                        disabled=True,
+                        disabled=False,
                         key=f"cto_{row['id']}"
+                        help="⚠️ Você pode editar este campo se necessário"
                     )
                     
                     col_f1, col_f2 = st.columns(2)
@@ -149,15 +151,17 @@ def show_viability_form(row: dict, urgente: bool = False):
                         distancia = st.text_input(
                             "Distância até Cliente",
                             value=row.get('distancia_cliente', ''),
-                            disabled=True,
+                            disabled=False,
                             key=f"dist_{row['id']}"
+                            help="⚠️ Editável - ex: 150m, 1.2km"
                         )
                     with col_f2:
                         localizacao = st.text_input(
                             "Localização da Caixa",
                             value=row.get('localizacao_caixa', ''),
-                            disabled=True,
+                            disabled=False,
                             key=f"loc_{row['id']}"
+                            help="⚠️ Editável - Plus Code da caixa"
                         )
                     
                     st.markdown("---")
@@ -176,32 +180,42 @@ def show_viability_form(row: dict, urgente: bool = False):
                     
                     with col_btn1:
                         aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
-                    with col_btn2:  # ← NOVO BOTÃO AQUI
+                    with col_btn2:  
                         utp = st.form_submit_button("📡 Atendemos UTP", use_container_width=True)
                     with col_btn3:
                         rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
                     
                     if aprovado:
-                        if portas > 0 and rx:
-                            dados = {
-                                'cto_numero': row.get('cto_numero'),
-                                'portas_disponiveis': portas,
-                                'menor_rx': rx,
-                                'distancia_cliente': row.get('distancia_cliente'),
-                                'localizacao_caixa': row.get('localizacao_caixa'),
-                                'observacoes': obs
-                            }
-                            if update_viability_ftth(row['id'], 'aprovado', dados):
-                                st.success("✅ Viabilização aprovada!")                               
-                                st.rerun()
+
+                        if not cto or not cto.strip():
+                            st.error("❌ Preencha o N° da Caixa (CTO)!")
+                        elif not distancia or not distancia.strip():
+                            st.error("❌ Preencha a Distância!")
+                        elif not localizacao or not localizacao.strip():
+                            st.error("❌ Preencha a Localização da Caixa!")
+                        elif portas <= 0:
+                            st.error("❌ Preencha as Portas Disponíveis!")
+                        elif not rx or not rx.strip():
+                            st.error("❌ Preencha o Menor RX!")
                         else:
-                            st.error("❌ Preencha Portas e RX!")
+                            dados = {
+                                'cto_numero': cto.strip(),  # ← Usa o valor do form
+                                'portas_disponiveis': portas,
+                                'menor_rx': rx.strip(),
+                                'distancia_cliente': distancia.strip(),  # ← Usa o valor do form
+                                'localizacao_caixa': localizacao.strip(),  # ← Usa o valor do form
+                                'observacoes': obs
+                            }                                                
+                            if update_viability_ftth(row['id'], 'aprovado', dados):
+                                st.success("✅ Viabilização aprovada!")
+                                st.rerun()                       
                     
                     if rejeitado:
                         dados = {'motivo_rejeicao': 'Não temos projeto neste ponto'}
                         if update_viability_ftth(row['id'], 'rejeitado', dados):
                             st.success("❌ Solicitação rejeitada")
                             st.rerun()
+                            
                     if utp:
                         dados = {'motivo_rejeicao': 'Atendemos UTP'}
                         if update_viability_ftth(row['id'], 'utp', dados):
