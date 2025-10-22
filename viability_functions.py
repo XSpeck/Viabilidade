@@ -161,15 +161,17 @@ def get_pending_viabilities() -> List[Dict]:
         return []
 
 def get_user_results(username: str) -> List[Dict]:
-    """Busca resultados do usuário (aprovados e rejeitados e UTPs que ainda não foram finalizados)"""
+    """Busca resultados do usuário (aprovados, rejeitados, UTPs, estruturados pendentes)"""
     try:
-        response = supabase.table('viabilizacoes')\
-            .select('*')\
-            .eq('usuario', username)\            
-            .or_('status.in.(aprovado,rejeitado,utp,pendente,finalizado),status_predio.in.(aguardando_dados,agendado)')\
-            .is_('data_finalizacao', None)\
-            .order('data_auditoria', desc=True)\
+        response = (
+            supabase.table('viabilizacoes')
+            .select('*')
+            .eq('usuario', username)
+            .or_('status.in.(aprovado,rejeitado,utp,pendente,finalizado),status_predio.in.(aguardando_dados,agendado)')
+            .is_('data_finalizacao', None)
+            .order('data_auditoria', desc=True)
             .execute()
+        )
         return response.data if response.data else []
     except Exception as e:
         logger.error(f"Erro ao buscar resultados: {e}")
