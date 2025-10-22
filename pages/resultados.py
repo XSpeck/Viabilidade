@@ -82,6 +82,7 @@ if not results:
 approved = [r for r in results if r['status'] == 'aprovado']
 rejected = [r for r in results if r['status'] == 'rejeitado']
 utp = [r for r in results if r['status'] == 'utp']
+structured = [r for r in results if r.get('status_predio') == 'estruturado']
 building_pending = [r for r in results if r.get('status_predio') in ['aguardando_dados', 'pronto_auditoria', 'agendado']]
 pending_analysis = [r for r in results if r['status'] == 'pendente' and not r.get('status_predio')]
 
@@ -183,6 +184,58 @@ Média RX: {row['media_rx']} dBm"""
                         st.rerun()
             
             st.caption(f"🕐 Auditado por: {row['auditado_por']} em {format_datetime_resultados(row['data_auditoria'])}")
+
+# ======================
+# Mostrar Estruturados
+# ======================
+if structured:
+    st.markdown("---")
+    st.subheader("✅ Prédio Estruturado")
+    st.success("🎉 Parabéns! A estrutura foi instalada no prédio!")
+    
+    for row in structured:
+        with st.expander(f"🏢 {row.get('predio_ftta', 'Prédio')} - Estruturado", expanded=True):
+            
+            st.markdown("### 🏗️ Estrutura Instalada")
+            
+            col_struct1, col_struct2 = st.columns(2)
+            
+            with col_struct1:
+                st.markdown("#### 📋 Informações")
+                st.text(f"🏢 Edifício: {row.get('predio_ftta', 'N/A')}")
+                st.text(f"📍 Localização: {row['plus_code_cliente']}")
+                st.text(f"🔧 Tecnologia: {row.get('tecnologia_predio', 'N/A')}")
+            
+            with col_struct2:
+                st.markdown("#### 👷 Execução")
+                st.text(f"👤 Técnico: {row.get('tecnico_responsavel', 'N/A')}")
+                st.text(f"📅 Data Visita: {row.get('data_visita', 'N/A')}")
+                st.text(f"🕐 Período: {row.get('periodo_visita', 'N/A')}")
+            
+            st.markdown("---")
+            
+            # Dados para copiar
+            dados_estruturados = f"""Condomínio: {row.get('predio_ftta', 'N/A')}
+Tecnologia: {row.get('tecnologia_predio', 'N/A')}
+Localização: {row['plus_code_cliente']}
+Técnico: {row.get('tecnico_responsavel', 'N/A')}
+Data Estruturação: {format_datetime_resultados(row.get('data_finalizacao', ''))}"""
+            
+            st.code(dados_estruturados, language="text")
+            
+            col_btn1, col_btn2 = st.columns([3, 1])
+            
+            with col_btn1:
+                st.markdown("💡 **Dica:** Estrutura concluída! Clique em Finalizar para arquivar.")
+            
+            with col_btn2:
+                if st.button("✅ Finalizar", key=f"finish_struct_{row['id']}", type="primary", use_container_width=True):
+                    if finalize_viability_approved(row['id']):
+                        st.success("✅ Estruturação arquivada!")
+                        st.balloons()
+                        st.rerun()
+            
+            st.caption(f"🕐 Estruturado em: {format_datetime_resultados(row.get('data_finalizacao', ''))}")
 
 # ======================
 # Mostrar Rejeitadas
