@@ -128,16 +128,34 @@ def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente:
         return False
 
 def get_pending_viabilities() -> List[Dict]:
-    """Busca viabilizações pendentes (exceto FTTH aguardando busca)"""
+    """Busca viabilizações pendentes ordenadas por urgência"""
     try:
+        # Buscar pendentes ordenados por urgência (urgentes primeiro) e depois por data
         response = supabase.table('viabilizacoes')\
             .select('*')\
             .eq('status', 'pendente')\
-            .or_('tipo_instalacao.neq.FTTH,status_busca.eq.cto_escolhida')\
             .order('urgente', desc=True)\
             .order('data_solicitacao', desc=False)\
             .execute()
-        return response.data if response.data else []
+        
+        # Filtrar manualmente os que NÃO devem aparecer
+        if response.data:
+            filtered = []
+            for r in response.data:
+                # Excluir FTTH que ainda não passou pela busca (sem CTO escolhida)
+                if r['tipo_instalacao'] == 'FTTH' and not r.get('cto_numero'):
+                    continue
+                
+                # Excluir Prédios que já foram agendados
+                if r.get('status_predio') == 'agendado':
+                    continue
+                
+                # Todos os outros devem aparecer
+                filtered.append(r)
+            
+            return filtered
+        
+        return []
     except Exception as e:
         logger.error(f"Erro ao buscar pendentes: {e}")
         return []
