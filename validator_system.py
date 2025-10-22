@@ -531,6 +531,53 @@ else:
                                 st.rerun()
                     
                     st.markdown("---")
+                
+                # ===== BOTÃO SEM VIABILIDADE (NOVO) =====
+                st.markdown("---")
+                st.error("### ❌ Não encontrou CTO viável?")
+                
+                col_sem_viab = st.columns([1, 2, 1])[1]
+                with col_sem_viab:
+                    if st.button(
+                        "❌ Sem Viabilidade",
+                        type="secondary",
+                        use_container_width=True,
+                        key=f"sem_viab_{request['id']}"
+                    ):
+                        st.session_state[f'show_reject_form_{request["id"]}'] = True
+                
+                # Formulário de rejeição (NOVO)
+                if st.session_state.get(f'show_reject_form_{request["id"]}', False):
+                    with st.form(key=f"form_reject_{request['id']}"):
+                        st.markdown("### 📝 Confirmar Sem Viabilidade")
+                        
+                        motivo = st.text_area(
+                            "Motivo da não viabilidade",
+                            value="Não temos projeto neste ponto",
+                            height=100
+                        )
+                        
+                        col_confirm1, col_confirm2 = st.columns(2)
+                        
+                        with col_confirm1:
+                            confirmar = st.form_submit_button("✅ Confirmar Rejeição", type="primary", use_container_width=True)
+                        
+                        with col_confirm2:
+                            cancelar = st.form_submit_button("🔙 Cancelar", use_container_width=True)
+                        
+                        if confirmar:
+                            dados = {'motivo_rejeicao': motivo.strip() if motivo.strip() else 'Não temos projeto neste ponto'}
+                            
+                            if update_viability_ftth(request['id'], 'rejeitado', dados):
+                                st.success("✅ Solicitação rejeitada!")
+                                st.info("📋 Usuário será notificado")
+                                del st.session_state[f'show_reject_form_{request["id"]}']
+                                st.rerun()
+                        
+                        if cancelar:
+                            del st.session_state[f'show_reject_form_{request["id"]}']
+                            st.rerun()
+                    
             else:
                 st.warning("⚠️ Nenhuma CTO encontrada próxima.")
         
