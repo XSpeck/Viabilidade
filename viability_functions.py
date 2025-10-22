@@ -135,6 +135,7 @@ def get_pending_viabilities() -> List[Dict]:
             .select('*')\
             .eq('status', 'pendente')\
             .or_('tipo_instalacao.neq.FTTH,status_busca.eq.cto_escolhida')\
+            .neq('status_predio', 'agendado')\
             .order('urgente', desc=True)\
             .order('data_solicitacao', desc=False)\
             .execute()
