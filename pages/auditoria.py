@@ -198,10 +198,63 @@ def show_viability_form(row: dict, urgente: bool = False):
                             st.error("❌ Preencha Portas e RX!")
                     
                     if rejeitado:
-                        dados = {'motivo_rejeicao': 'Não temos projeto neste ponto'}
-                        if update_viability_ftth(row['id'], 'rejeitado', dados):
-                            st.success("❌ Solicitação rejeitada")
-                            st.rerun()
+                        # Mostrar formulário para coletar motivo
+                        st.session_state[f'show_reject_predio_form_{row["id"]}'] = True
+                    
+                    if st.session_state.get(f'show_reject_predio_form_{row["id"]}', False):
+                        st.markdown("---")
+                        st.error("### ❌ Registrar Prédio Sem Viabilidade")
+                        
+                        with st.form(key=f"form_reject_predio_inicial_{row['id']}"):
+                            st.markdown("**Os seguintes dados serão registrados para consulta futura:**")
+                            
+                            col_rej1, col_rej2 = st.columns(2)
+                            with col_rej1:
+                                st.text_input("🏢 Condomínio", value=row.get('predio_ftta', ''), disabled=True)
+                            with col_rej2:
+                                st.text_input("📍 Localização", value=row['plus_code_cliente'], disabled=True)
+                            
+                            motivo_rejeicao_predio = st.text_area(
+                                "📝 Motivo da Não Viabilidade *",
+                                placeholder="Descreva o motivo: não temos projeto nesta rua, distância muito grande, etc.",
+                                height=100
+                            )
+                            
+                            col_btn_rej1, col_btn_rej2 = st.columns(2)
+                            
+                            with col_btn_rej1:
+                                confirmar_rej_predio = st.form_submit_button(
+                                    "✅ Confirmar Rejeição",
+                                    type="primary",
+                                    use_container_width=True
+                                )
+                            
+                            with col_btn_rej2:
+                                cancelar_rej_predio = st.form_submit_button(
+                                    "🔙 Cancelar",
+                                    use_container_width=True
+                                )
+                            
+                            if confirmar_rej_predio:
+                                if not motivo_rejeicao_predio or motivo_rejeicao_predio.strip() == "":
+                                    st.error("❌ Descreva o motivo da não viabilidade!")
+                                else:
+                                    if reject_building_viability(
+                                        row['id'],
+                                        row.get('predio_ftta', 'Prédio'),
+                                        row['plus_code_cliente'],
+                                        motivo_rejeicao_predio.strip()
+                                    ):
+                                        st.success("✅ Prédio registrado como sem viabilidade!")
+                                        st.info("📋 Registro salvo para consulta futura")
+                                        del st.session_state[f'show_reject_predio_form_{row["id"]}']
+                                        st.rerun()
+                                    else:
+                                        st.error("❌ Erro ao registrar. Tente novamente.")
+                            
+                            if cancelar_rej_predio:
+                                del st.session_state[f'show_reject_predio_form_{row["id"]}']
+                                st.rerun()
                     if utp:
                         dados = {'motivo_rejeicao': 'Atendemos UTP'}
                         if update_viability_ftth(row['id'], 'utp', dados):
