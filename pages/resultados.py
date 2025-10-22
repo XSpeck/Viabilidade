@@ -315,9 +315,7 @@ Data Estruturação: {format_datetime_resultados(row.get('data_finalizacao', '')
                     if finalize_viability_approved(row['id']):
                         st.success("✅ Estruturação arquivada!")
                         st.balloons()
-                        st.rerun()
-            
-            st.caption(f"🕐 Estruturado em: {format_datetime_resultados(row.get('data_finalizacao', ''))}")
+                        st.rerun()            
 
 # ======================
 # Mostrar Rejeitadas
