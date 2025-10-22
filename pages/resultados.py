@@ -375,7 +375,7 @@ if building_pending:
                     st.text(f"Plus Code: {row['plus_code_cliente']}")
                 with col_info2:
                     st.text(f"Tipo: {row['tipo_instalacao']}")
-                    st.text(f"Solicitado em: {format_datetime_resultados(row['data_solicitacao'])}")
+                    st.text(f"Solicitado em: {format_time_br_supa(row['data_solicitacao'])}")
                 
                 st.markdown("---")
                 st.markdown("### 🔧 Preencha os Dados para Viabilização")
