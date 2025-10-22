@@ -539,7 +539,7 @@ def finalize_building_structured(viability_id: str, condominio: str, tecnologia:
             'status': 'finalizado',
             'status_predio': 'estruturado',
             'status_agendamento': 'concluido',
-            'data_finalizacao': get_current_time()
+            #'data_finalizacao': get_current_time()
         }
         
         response_update = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
