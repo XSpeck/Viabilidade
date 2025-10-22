@@ -502,10 +502,25 @@ else:
                             type="primary",
                             use_container_width=True
                         ):
+                            # ========================================
+                            # MUDANÇA: Calcular distância COM SOBRA
+                            # ========================================
+                            
+                            if route:
+                                # Se tem rota calculada
+                                dist_real = route["distance"]
+                                dist_com_sobra = dist_real + 50  # Adiciona 50m de sobra
+                                distancia_final = format_distance(dist_com_sobra)  # ← USA A DISTÂNCIA COM SOBRA
+                            else:
+                                # Se não tem rota (linha reta)
+                                dist_linha_reta = cto["distance"]
+                                dist_com_sobra = dist_linha_reta + 50
+                                distancia_final = format_distance(dist_com_sobra)
+                            
                             # Salvar CTO escolhida
                             cto_data = {
                                 'cto_numero': cto["name"],
-                                'distancia_cliente': format_distance(route["distance"]) if route else format_distance(cto["distance"]),
+                                'distancia_cliente': distancia_final,  # ← DISTÂNCIA COM SOBRA
                                 'localizacao_caixa': pluscode_cto
                             }
                             
