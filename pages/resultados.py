@@ -338,7 +338,7 @@ if building_pending:
                     st.markdown("### 👷 Informações Técnicas")
                     st.text(f"👤 Técnico: {row.get('tecnico_responsavel', 'N/A')}")
                     st.text(f"🔧 Tecnologia: {row.get('tecnologia_predio', 'N/A')}")
-                    st.text(f"📆 Agendado em: {format_datetime_resultados(row.get('data_agendamento', ''))}")                
+                    st.text(f"📆 Agendado em: {format_time_br_supa(row.get('data_agendamento', ''))}")                
                     
             # Se já foi enviado, mostrar mensagem de aguardando
             elif status_atual == 'pronto_auditoria':
