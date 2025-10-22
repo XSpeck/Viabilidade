@@ -82,7 +82,7 @@ def show_viability_form(row: dict, urgente: bool = False):
         """, unsafe_allow_html=True)
         
         # Cabeçalho        
-        st.markdown(f"### {icon} Solicitação #{row['id'][:8]}")
+       # st.markdown(f"### {icon} Solicitação #{row['id'][:8]}")
                 
         # Informações da solicitação
         col1, col2 = st.columns([2, 3])
