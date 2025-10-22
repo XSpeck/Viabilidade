@@ -81,21 +81,14 @@ def show_viability_form(row: dict, urgente: bool = False):
         </div>
         """, unsafe_allow_html=True)
         
-        # Cabeçalho
-        col_title, col_delete = st.columns([5, 1])
-        with col_title:
-            st.markdown(f"### {icon} Solicitação #{row['id'][:8]}")
-        with col_delete:
-            if st.button("🗑️", key=f"delete_{row['id']}", help="Excluir solicitação"):
-                if delete_viability(row['id']):
-                    st.success("✅ Solicitação excluída!")
-                    st.rerun()
-        
+        # Cabeçalho        
+        st.markdown(f"### {icon} Solicitação #{row['id'][:8]}")
+                
         # Informações da solicitação
         col1, col2 = st.columns([2, 3])
         
         with col1:
-            st.markdown("#### 📍 Informações")
+            st.markdown("#### 📋 Informações")
             st.text(f"👤 Usuário: {row['usuario']}")
             st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
             
@@ -116,6 +109,19 @@ def show_viability_form(row: dict, urgente: bool = False):
             if row.get('predio_ftta'):
                 st.text(f"🏨 Nome: {row['predio_ftta']}")            
             st.text(f"📅 Solicitado em: {format_time_br_supa(row['data_solicitacao'])}")
+
+            # ===== BOTÃO EXCLUIR =====
+            st.markdown("---")
+            if st.button(
+                "🗑️ Excluir Solicitação",
+                key=f"delete_{row['id']}",
+                type="secondary",
+                use_container_width=True,
+                help="Excluir esta solicitação permanentemente"
+            ):
+                if delete_viability(row['id']):
+                    st.success("✅ Solicitação excluída!")
+                    st.rerun()            
             if urgente:
                 st.error("🔥 **URGENTE - Cliente Presencial**")
         
