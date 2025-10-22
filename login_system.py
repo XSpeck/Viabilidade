@@ -8,10 +8,14 @@ import logging
 from datetime import datetime
 from supabase_config import supabase
 import pytz
-from viability_functions import get_current_time
+
+
 logger = logging.getLogger(__name__)
 
 TIMEZONE_BR = pytz.timezone('America/Sao_Paulo')
+def get_current_time():
+    """Retorna data/hora atual no fuso horário do Brasil"""
+    return datetime.now(TIMEZONE_BR).isoformat()
 # ======================
 # Funções de Autenticação
 # ======================
@@ -45,7 +49,7 @@ def init_login_state():
     if 'user_login' not in st.session_state:
         st.session_state.user_login = ""
     if 'login_timestamp' not in st.session_state:
-        st.session_state.login_timestamp = get_current_time()
+    st.session_state.login_timestamp = datetime.now(TIMEZONE_BR)
 
 def logout():
     """Faz logout do usuário"""
