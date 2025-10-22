@@ -184,12 +184,12 @@ def show_navigation_menu():
             
         # Página de Busca (apenas Leo)
         if st.session_state.user_login.lower() == "leo":
-            if st.button("🔍 Busca Detalhada", width='stretch', key="nav_busca"):
+            if st.button("🔍 Busca FTTH", width='stretch', key="nav_busca"):
                 st.switch_page("validator_system.py")
                 
         # Página de Auditoria (só Leo)
         if st.session_state.user_login.lower() == "leo":
-            if st.button("🔍 Auditoria", width='stretch', key="nav_audit"):
+            if st.button("👁️ Auditoria", width='stretch', key="nav_audit"):
                 st.switch_page("pages/auditoria.py")
         
         # Página de Agenda (apenas Leo)
