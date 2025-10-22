@@ -16,7 +16,14 @@ import re
 import supabase_config
 
 # Importar depois para evitar problemas de dependência circular
-from viability_functions import get_current_time, TIMEZONE_BR, format_time_br
+from viability_functions import (
+    get_current_time, 
+    TIMEZONE_BR, 
+    format_time_br,
+    get_ftth_pending_search,
+    save_selected_cto,
+    update_viability_ftth
+)
 from login_system import require_authentication
 
 # ======================
@@ -376,7 +383,7 @@ except Exception as e:
 # ======================
 # Buscar Solicitações FTTH Pendentes
 # ======================
-from viability_functions import get_ftth_pending_search, save_selected_cto
+#from viability_functions import get_ftth_pending_search, save_selected_cto
 
 ftth_pending = get_ftth_pending_search()
 
