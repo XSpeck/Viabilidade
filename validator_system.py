@@ -5,7 +5,6 @@ from openlocationcode import openlocationcode as olc
 from geopy.distance import geodesic
 import folium
 from streamlit_folium import st_folium
-from login_system import require_authentication
 import gdown
 import pandas as pd
 import requests
@@ -14,8 +13,11 @@ from datetime import datetime
 import time
 from typing import Optional, Tuple, List, Dict
 import re
-from viability_functions import get_current_time, TIMEZONE_BR, format_time_br
 import supabase_config
+
+# Importar depois para evitar problemas de dependência circular
+from viability_functions import get_current_time, TIMEZONE_BR, format_time_br
+from login_system import require_authentication
 
 # ======================
 # Configurações
