@@ -183,9 +183,9 @@ def show_navigation_menu():
             st.switch_page("pages/resultados.py")
             
         # Página de Busca (apenas Leo)
-        if st.session_state.user_login.lower() == "leo":
-            if st.button("🔍 Busca FTTH", width='stretch', key="nav_busca"):
-                st.switch_page("validator_system.py")
+        #if st.session_state.user_login.lower() == "leo":
+         #   if st.button("🔍 Busca FTTH", width='stretch', key="nav_busca"):
+          #      st.switch_page("validator_system.py")
                 
         # Página de Auditoria (só Leo)
         if st.session_state.user_login.lower() == "leo":
