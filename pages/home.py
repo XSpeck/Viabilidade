@@ -94,20 +94,19 @@ st.markdown("---")
 # ======================
 # Instruções
 # ======================
-st.markdown("""
-### 📍 Como solicitar uma viabilização?
-
-1. **Insira a localização** usando:
-   - Plus Code (ex: `8J3G+WGV`)
-   - Coordenadas (ex: `-28.695133, -49.373710`)
-
-2. **Clique em Viabilizar**
-
-3. **Escolha o tipo** de instalação (FTTH ou FTTA/UTP)
-
-4. **Aguarde** a análise técnica
-""")
-
+with st.expander("📘📍Como solicitar uma viabilização? (clique para ver)", expanded=False):
+    st.markdown("""
+    1. **Insira a localização** usando:
+       - Plus Code (ex: `8J3G+WGV`)
+       - Coordenadas (ex: `-28.695133, -49.373710`)
+    
+    2. **Clique em Viabilizar**
+    
+    3. **Escolha o tipo** de instalação (FTTH ou FTTA/UTP)
+    
+    4. **Aguarde** a análise técnica
+    """)
+    
 st.markdown("---")
 
 # ======================
