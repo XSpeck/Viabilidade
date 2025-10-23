@@ -791,10 +791,7 @@ if len(pending) > st.session_state.pendentes_anteriores:
     <audio autoplay>
         <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
     </audio>
-    """, unsafe_allow_html=True)
-    # Enviar notificação via Telegram
-    from notifier import notify_new_viability
-    notify_new_viability()
+    """, unsafe_allow_html=True)    
 
 # Atualiza contador
 st.session_state.pendentes_anteriores = len(pending)
