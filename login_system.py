@@ -180,12 +180,7 @@ def show_navigation_menu():
         
         # Página de Resultados (todos)
         if st.button("📊 Meus Resultados", width='stretch', key="nav_results"):
-            st.switch_page("pages/resultados.py")
-            
-        # Página de Busca (apenas Leo)
-        if st.session_state.user_login.lower() == "leo":
-            if st.button("🔍 Busca FTTH", width='stretch', key="nav_busca"):
-                st.switch_page("validator_system.py")
+            st.switch_page("pages/resultados.py") 
                 
         # Página de Auditoria (só Leo)
         if st.session_state.user_login.lower() == "leo":
