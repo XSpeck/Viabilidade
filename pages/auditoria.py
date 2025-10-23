@@ -24,6 +24,7 @@ from openlocationcode import openlocationcode as olc
 from geopy.distance import geodesic
 import gdown
 import requests
+from typing import List, Tuple
 
 logger = logging.getLogger(__name__)
 
