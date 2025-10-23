@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 # =======================================================
 # CONFIGURAÇÕES — defina via variáveis de ambiente ou fixo
 # =======================================================
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "SEU_TOKEN_AQUI")
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "SEU_CHAT_ID_AQUI")
+BOT_TOKEN = "8216679407:AAFuNR3KzYYxAoX8DmJOCYVhCPd8prFK2-U"
+CHAT_ID = "8406526660"
 
 def send_telegram_message(message: str):
     """Função genérica para enviar mensagem ao Telegram."""
