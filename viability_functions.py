@@ -142,9 +142,6 @@ def get_pending_viabilities() -> List[Dict]:
         if response.data:
             filtered = []
             for r in response.data:
-                # Excluir FTTH que ainda não passou pela busca (sem CTO escolhida)
-                if r['tipo_instalacao'] == 'FTTH' and not r.get('cto_numero'):
-                    continue
                 
                 # Excluir Prédios que já foram agendados
                 if r.get('status_predio') == 'agendado':
