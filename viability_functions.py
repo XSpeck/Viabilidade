@@ -92,6 +92,11 @@ def format_datetime_resultados(iso_datetime: str) -> str:
         logger.error(f"Erro ao formatar data: {e}")
         return iso_datetime[:16]  # Fallback
 
+def coords_to_pluscode(lat, lon):
+    """Converte coordenadas para Plus Code"""
+    import openlocationcode as olc
+    return olc.encode(lat, lon)
+
 def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None) -> bool:    
     """
     Cria nova solicitação de viabilização no Supabase
