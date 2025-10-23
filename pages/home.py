@@ -89,7 +89,7 @@ def pluscode_to_coords(pluscode: str) -> tuple:
 # ======================
 st.title("🏠 Solicitar Viabilização")
 st.markdown(f"Bem-vindo, **{st.session_state.user_name}**!")
-st.markdown("---")
+
 
 # ======================
 # Instruções
@@ -107,7 +107,7 @@ with st.expander("📘📍Como solicitar uma viabilização? (clique para ver)",
     4. **Aguarde** a análise técnica
     """)
     
-st.markdown("---")
+
 
 # ======================
 # Input de Localização
