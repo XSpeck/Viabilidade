@@ -120,6 +120,13 @@ def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente:
         
         if response.data:
             logger.info(f"Viabilização criada: {user_name} - {plus_code} - Tipo: {tipo} - Urgente: {urgente}")
+            # 🚀 Enviar notificação via Telegram ao criar nova solicitação
+            try:
+                from notifier import notify_new_viability
+                notify_new_viability()
+            except Exception as e:
+                logger.warning(f"Não foi possível enviar notificação Telegram: {e}")
+            
             return True
         return False
     except Exception as e:
