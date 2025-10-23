@@ -17,6 +17,13 @@ from viability_functions import (
     reject_building_viability 
 )
 import logging
+# Imports adicionais para busca de CTOs
+import xml.etree.ElementTree as ET
+from shapely.geometry import LineString, Point
+from openlocationcode import openlocationcode as olc
+from geopy.distance import geodesic
+import gdown
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +40,7 @@ st.set_page_config(
 # ======================
 # Atualização automática
 # ======================
-from streamlit_autorefresh import st_autorefresh  # opcional se quiser externalizar
+
 st_autorefresh(interval=15000, key="auditoria_refresh")  # 15000 ms = 15 segundos
 
 # Verificar autenticação
@@ -51,6 +58,110 @@ if st.session_state.user_login.lower() != "leo":
 # ======================
 st.title("🔍 Auditoria de Viabilizações")
 st.markdown("Análise técnica das solicitações de viabilidade")
+
+# Configurações para busca
+LOCATIONIQ_KEY = "pk.66f355328aaad40fe69b57c293f66815"
+reference_lat = -28.6775
+reference_lon = -49.3696
+file_id_ctos = "1EcKNk2yqHDEMMXJZ17fT0flPV19HDhKJ"
+ctos_kml_path = "ctos.kml"
+
+# ============================================
+# FUNÇÕES DE BUSCA (copiar do validator_system.py)
+# ============================================
+
+def validate_coordinates(lat: float, lon: float) -> bool:
+    return -90 <= lat <= 90 and -180 <= lon <= 180
+
+def format_distance(distance_m: float) -> str:
+    if distance_m < 1000:
+        return f"{distance_m:.1f}m"
+    else:
+        return f"{distance_m/1000:.2f}km"
+
+def coords_to_pluscode(lat, lon):
+    return olc.encode(lat, lon)
+
+@st.cache_data(ttl=3600)
+def download_ctos_file(file_id: str, output: str) -> str:
+    try:
+        url = f"https://drive.google.com/uc?id={file_id}"
+        gdown.download(url, output, quiet=True, fuzzy=True)
+        return output
+    except Exception as e:
+        logger.error(f"Erro ao baixar CTOs: {e}")
+        raise
+
+@st.cache_data(ttl=3600)
+def load_ctos_from_kml(path: str) -> List[dict]:
+    try:
+        namespaces = {'kml': 'http://www.opengis.net/kml/2.2'}
+        tree = ET.parse(path)
+        root = tree.getroot()
+        ctos = []
+        for placemark in root.findall(".//kml:Placemark", namespaces):
+            name_elem = placemark.find("kml:name", namespaces)
+            coords_elem = placemark.find(".//kml:coordinates", namespaces)
+            if coords_elem is not None and coords_elem.text:
+                parts = coords_elem.text.strip().split(",")
+                if len(parts) >= 2:
+                    lon, lat = float(parts[0]), float(parts[1])
+                    if validate_coordinates(lat, lon):
+                        ctos.append({
+                            "name": name_elem.text.strip() if name_elem is not None else "CTO",
+                            "lat": lat,
+                            "lon": lon
+                        })
+        return ctos
+    except Exception as e:
+        logger.error(f"Erro ao carregar CTOs: {e}")
+        return []
+
+def pluscode_to_coords(pluscode: str) -> Tuple[float, float]:
+    try:
+        pluscode = pluscode.strip().upper()
+        if not olc.isFull(pluscode):
+            pluscode = olc.recoverNearest(pluscode, reference_lat, reference_lon)
+        decoded = olc.decode(pluscode)
+        lat = (decoded.latitudeLo + decoded.latitudeHi) / 2
+        lon = (decoded.longitudeLo + decoded.longitudeHi) / 2
+        return lat, lon
+    except Exception as e:
+        logger.error(f"Erro ao converter Plus Code: {e}")
+        return None, None
+
+def find_nearest_ctos(lat: float, lon: float, ctos: List[dict], max_radius: float = 400.0) -> List[dict]:
+    if not ctos:
+        return []
+    dists = []
+    for cto in ctos:
+        if cto["name"].upper().startswith("CDOI"):
+            continue
+        dist = geodesic((lat, lon), (cto["lat"], cto["lon"])).meters
+        if dist <= max_radius:
+            dists.append({**cto, "distance": dist})
+    dists.sort(key=lambda x: x["distance"])
+    return dists
+
+@st.cache_data(ttl=3600)
+def get_walking_route(start_lat: float, start_lon: float, end_lat: float, end_lon: float):
+    try:
+        url = f"http://router.project-osrm.org/route/v1/foot/{start_lon},{start_lat};{end_lon},{end_lat}"
+        params = {"overview": "full", "geometries": "geojson", "steps": "false"}
+        response = requests.get(url, params=params, timeout=15)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("code") == "Ok" and data.get("routes"):
+                route = data["routes"][0]
+                return {
+                    "distance": route["distance"],
+                    "duration": route["duration"],
+                    "geometry": route["geometry"]
+                }
+        return None
+    except Exception as e:
+        logger.error(f"Erro ao calcular rota: {e}")
+        return None
 
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
@@ -134,12 +245,156 @@ def show_viability_form(row: dict, urgente: bool = False):
                     st.success(f"✅ CTO Escolhida: **{cto_escolhida}**")
                     st.caption(f"📏 Distância: {row.get('distancia_cliente', 'N/A')} | 📍 Localização: {row.get('localizacao_caixa', 'N/A')}")
                     st.warning("⚠️ Os campos abaixo são EDITÁVEIS caso precise corrigir")
+                
+                # ========================================
+                # BOTÃO BUSCAR CTOs (se ainda não escolheu)
+                # ========================================
+                if not cto_escolhida or st.session_state.get(f'mostrar_busca_{row["id"]}', False):
+                    col_busca = st.columns([1, 2, 1])[1]
+                    with col_busca:
+                        if st.button(
+                            "🔍 Buscar CTOs Próximas",
+                            type="secondary",
+                            use_container_width=True,
+                            key=f"btn_buscar_{row['id']}"
+                        ):
+                            st.session_state[f'mostrar_busca_{row["id"]}'] = True
+                            st.rerun()
+                
+                # ========================================
+                # MOSTRAR BUSCA DE CTOs
+                # ========================================
+                if st.session_state.get(f'mostrar_busca_{row["id"]}', False):
+                    st.markdown("---")
+                    st.info("🔍 **Buscando CTOs próximas...**")
+                    
+                    try:
+                        # Converter Plus Code para coordenadas
+                        lat, lon = pluscode_to_coords(row['plus_code_cliente'])
+                        
+                        if lat and lon:
+                            # Carregar CTOs
+                            with st.spinner("Carregando CTOs..."):
+                                download_ctos_file(file_id_ctos, ctos_kml_path)
+                                ctos = load_ctos_from_kml(ctos_kml_path)
+                            
+                            # Buscar CTOs próximas
+                            candidate_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=3500.0)
+                            
+                            if candidate_ctos:
+                                cto_routes = []
+                                
+                                with st.spinner("📍 Calculando rotas..."):
+                                    for cto in candidate_ctos[:10]:
+                                        route = get_walking_route(lat, lon, cto["lat"], cto["lon"])
+                                        
+                                        if route:
+                                            linha_reta = geodesic((lat, lon), (cto["lat"], cto["lon"])).meters
+                                            if route["distance"] > linha_reta * 5:
+                                                route["distance"] = linha_reta
+                                            
+                                            cto_routes.append({
+                                                "cto": cto,
+                                                "route": route,
+                                                "distance": route["distance"]
+                                            })
+                                        else:
+                                            cto_routes.append({
+                                                "cto": cto,
+                                                "route": None,
+                                                "distance": cto["distance"]
+                                            })
+                                    
+                                    cto_routes.sort(key=lambda x: x["distance"])
+                                    cto_routes = cto_routes[:5]
+                                
+                                st.success(f"✅ {len(cto_routes)} CTOs encontradas")
+                                
+                                # Exibir CTOs
+                                for idx, item in enumerate(cto_routes):
+                                    cto = item["cto"]
+                                    route = item["route"]
+                                    pluscode_cto = coords_to_pluscode(cto["lat"], cto["lon"])
+                                    
+                                    icons = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+                                    icon = icons[idx] if idx < len(icons) else "📍"
+                                    
+                                    col_cto1, col_cto2 = st.columns([4, 1])
+                                    
+                                    with col_cto1:
+                                        if route:
+                                            dist_real = route["distance"]
+                                            dist_com_sobra = dist_real + 50
+                                            
+                                            st.markdown(f"""
+                                            **{icon} CTO: {cto["name"]}**  
+                                            📍 Localização: `{pluscode_cto}`  
+                                            🚶 Distância real: {format_distance(route["distance"])}  
+                                            🏃‍♂️ Com sobra (+50m): {format_distance(dist_com_sobra)}
+                                            """)
+                                        else:
+                                            dist_com_sobra = cto["distance"] + 50
+                                            st.markdown(f"""
+                                            **{icon} CTO: {cto["name"]}**  
+                                            📍 Localização: `{pluscode_cto}`  
+                                            📏 Distância em linha reta: {format_distance(cto["distance"])}
+                                            🏃‍♂️ Com sobra (+50m): {format_distance(dist_com_sobra)}
+                                            """)
+                                    
+                                    with col_cto2:
+                                        if st.button(
+                                            "✅ Escolher",
+                                            key=f"escolher_cto_{row['id']}_{idx}",
+                                            type="primary",
+                                            use_container_width=True
+                                        ):
+                                            # Calcular distância com sobra
+                                            if route:
+                                                dist_final = route["distance"] + 50
+                                            else:
+                                                dist_final = cto["distance"] + 50
+                                            
+                                            # Salvar CTO escolhida
+                                            from viability_functions import save_selected_cto
+                                            
+                                            cto_data = {
+                                                'cto_numero': cto["name"],
+                                                'distancia_cliente': format_distance(dist_final),
+                                                'localizacao_caixa': pluscode_cto
+                                            }
+                                            
+                                            if save_selected_cto(row['id'], cto_data):
+                                                st.success(f"✅ CTO {cto['name']} escolhida!")
+                                                del st.session_state[f'mostrar_busca_{row["id"]}']
+                                                st.rerun()
+                                    
+                                    st.markdown("---")
+                            else:
+                                st.warning("⚠️ Nenhuma CTO encontrada próxima (raio de 3.5km)")
+                        else:
+                            st.error("❌ Erro ao converter Plus Code para coordenadas")
+                    
+                    except Exception as e:
+                        st.error(f"❌ Erro na busca: {e}")
+                        logger.error(f"Erro ao buscar CTOs: {e}")
+                    
+                    # Botão para fechar busca
+                    col_fechar = st.columns([1, 2, 1])[1]
+                    with col_fechar:
+                        if st.button("❌ Fechar Busca", use_container_width=True, key=f"fechar_busca_{row['id']}"):
+                            del st.session_state[f'mostrar_busca_{row["id"]}']
+                            st.rerun()
+                    
                     st.markdown("---")
                 
+                # ========================================
+                # FORMULÁRIO DE AUDITORIA
+                # ========================================
+                st.markdown("---")
+                
                 with st.form(key=f"form_ftth_{row['id']}"):
-                    # CTO, Distância e Localização já preenchidos (disabled)
                     cto = st.text_input(
-                        "N° Caixa (CTO)", 
+                        "N° Caixa (CTO) *", 
                         value=row.get('cto_numero', ''),
                         disabled=False,
                         key=f"cto_{row['id']}",
@@ -149,7 +404,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                     col_f1, col_f2 = st.columns(2)
                     with col_f1:
                         distancia = st.text_input(
-                            "Distância até Cliente",
+                            "Distância até Cliente *",
                             value=row.get('distancia_cliente', ''),
                             disabled=False,
                             key=f"dist_{row['id']}",
@@ -157,7 +412,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                         )
                     with col_f2:
                         localizacao = st.text_input(
-                            "Localização da Caixa",
+                            "Localização da Caixa *",
                             value=row.get('localizacao_caixa', ''),
                             disabled=False,
                             key=f"loc_{row['id']}",
@@ -171,7 +426,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                     with col_f3:
                         portas = st.number_input("Portas Disponíveis *", min_value=0, max_value=50, value=0, key=f"portas_{row['id']}")
                     with col_f4:
-                        rx = st.text_input("Menor RX (dBm) *", placeholder="-18.67", key=f"rx_{row['id']}")                    
+                        rx = st.text_input("Menor RX (dBm) *", placeholder="-18.67", key=f"rx_{row['id']}")
                     
                     obs = st.text_area("Observações", key=f"obs_{row['id']}", height=80)
                     
@@ -180,13 +435,12 @@ def show_viability_form(row: dict, urgente: bool = False):
                     
                     with col_btn1:
                         aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
-                    with col_btn2:  
+                    with col_btn2:
                         utp = st.form_submit_button("📡 Atendemos UTP", use_container_width=True)
                     with col_btn3:
                         rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
                     
                     if aprovado:
-
                         if not cto or not cto.strip():
                             st.error("❌ Preencha o N° da Caixa (CTO)!")
                         elif not distancia or not distancia.strip():
@@ -199,23 +453,23 @@ def show_viability_form(row: dict, urgente: bool = False):
                             st.error("❌ Preencha o Menor RX!")
                         else:
                             dados = {
-                                'cto_numero': cto.strip(),  # ← Usa o valor do form
+                                'cto_numero': cto.strip(),
                                 'portas_disponiveis': portas,
                                 'menor_rx': rx.strip(),
-                                'distancia_cliente': distancia.strip(),  # ← Usa o valor do form
-                                'localizacao_caixa': localizacao.strip(),  # ← Usa o valor do form
+                                'distancia_cliente': distancia.strip(),
+                                'localizacao_caixa': localizacao.strip(),
                                 'observacoes': obs
-                            }                                                
+                            }
                             if update_viability_ftth(row['id'], 'aprovado', dados):
                                 st.success("✅ Viabilização aprovada!")
-                                st.rerun()                       
+                                st.rerun()
                     
                     if rejeitado:
                         dados = {'motivo_rejeicao': 'Não temos projeto neste ponto'}
                         if update_viability_ftth(row['id'], 'rejeitado', dados):
                             st.success("❌ Solicitação rejeitada")
                             st.rerun()
-                            
+                    
                     if utp:
                         dados = {'motivo_rejeicao': 'Atendemos UTP'}
                         if update_viability_ftth(row['id'], 'utp', dados):
