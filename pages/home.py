@@ -94,7 +94,7 @@ st.markdown(f"Bem-vindo, **{st.session_state.user_name}**!")
 # ======================
 # Instruções
 # ======================
-with st.expander("📘📍Como solicitar uma viabilização? (clique para ver)", expanded=False):
+with st.expander("❓Como solicitar uma viabilização?", expanded=False):
     st.markdown("""
     1. **Insira a localização** usando:
        - Plus Code (ex: `8J3G+WGV`)
