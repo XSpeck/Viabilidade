@@ -219,23 +219,38 @@ if st.session_state.get('validated_pluscode'):
             </div>
             """, unsafe_allow_html=True)
             
+            # ========================================
+            # Campo Nome do Cliente (FTTH)
+            # ========================================
+            nome_cliente_ftth = st.text_input(
+                "👤 Nome do Cliente *",
+                placeholder="Nome do cliente",
+                key="nome_cliente_ftth",
+                help="Nome de quem solicitou a viabilização"
+            )
+            
             urgente_casa = st.checkbox("🔥 Cliente Presencial (Urgente)", key="urgente_casa")
             
             if st.button("Confirmar - Casa (FTTH)", type="primary", use_container_width=True, key="confirm_ftth"):
-                if create_viability_request(
-                    st.session_state.user_name, 
-                    st.session_state.validated_pluscode, 
-                    'FTTH',
-                    urgente_casa
-                ):
-                    st.session_state.show_viability_modal = False
-                    st.session_state.show_success_message = True  # ← ADICIONAR
-                    st.session_state.success_message_type = 'FTTH'  # ← ADICIONAR
-                    # Limpar dados
-                    st.session_state.validated_pluscode = None
-                    st.rerun()
+                # Validar nome do cliente
+                if not nome_cliente_ftth or not nome_cliente_ftth.strip():
+                    st.error("❌ Por favor, informe o nome do cliente!")
                 else:
-                    st.error("❌ Erro ao criar solicitação. Tente novamente.")
+                    if create_viability_request(
+                        st.session_state.user_name, 
+                        st.session_state.validated_pluscode, 
+                        'FTTH',
+                        urgente_casa,
+                        nome_cliente=nome_cliente_ftth.strip()
+                    ):
+                        st.session_state.show_viability_modal = False
+                        st.session_state.show_success_message = True  
+                        st.session_state.success_message_type = 'FTTH' 
+                        # Limpar dados
+                        st.session_state.validated_pluscode = None
+                        st.rerun()
+                    else:
+                        st.error("❌ Erro ao criar solicitação. Tente novamente.")
         
         # ===== FTTA (Edifício) =====
         with col_modal2:
@@ -246,6 +261,15 @@ if st.session_state.get('validated_pluscode'):
                 <p style='color: #666; margin: 0;'>Prédio/Edifício</p>
             </div>
             """, unsafe_allow_html=True)
+            # ========================================
+            # Campo Nome do Cliente (Prédio)
+            # ========================================
+            nome_cliente_predio = st.text_input(
+                "👤 Nome do Cliente *",
+                placeholder="Nome do cliente",
+                key="nome_cliente_predio_input",
+                help="Nome de quem solicitou a viabilização"
+            )
 
             nome_predio = st.text_input(
                 "🏢 Nome do Prédio *",
@@ -256,7 +280,10 @@ if st.session_state.get('validated_pluscode'):
             urgente_edificio = st.checkbox("🔥 Cliente Presencial (Urgente)", key="urgente_edificio")
             
             if st.button("Confirmar - Edifício", type="primary", use_container_width=True, key="confirm_ftta"):
-                if not nome_predio or nome_predio.strip() == "":
+                # Validar campos
+                if not nome_cliente_predio or not nome_cliente_predio.strip():
+                    st.error("❌ Por favor, informe o nome do cliente!")
+                elif not nome_predio or not nome_predio.strip():
                     st.error("❌ Por favor, informe o nome do prédio!")
                 else:
                     if create_viability_request(
@@ -264,7 +291,8 @@ if st.session_state.get('validated_pluscode'):
                         st.session_state.validated_pluscode, 
                         'Prédio',
                         urgente_edificio,
-                        nome_predio=nome_predio.strip()
+                        nome_predio=nome_predio.strip(),
+                        nome_cliente=nome_cliente_predio.strip()
                     ):
                         st.session_state.show_viability_modal = False
                         st.session_state.show_success_message = True
