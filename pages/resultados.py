@@ -8,6 +8,8 @@ from login_system import require_authentication
 from streamlit_autorefresh import st_autorefresh
 from viability_functions import get_user_results, finalize_viability, finalize_viability_approved, format_datetime_resultados, format_time_br_supa
 import logging
+import pandas as pd
+from supabase_config import supabase
 
 logger = logging.getLogger(__name__)
 
