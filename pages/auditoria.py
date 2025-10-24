@@ -804,24 +804,68 @@ if not pending:
 else:
     st.subheader(f"📋 {len(pending)} Solicitações Pendentes")
     st.markdown("---")
-    # Separar urgentes e normais
+    # ======================
+    # Separar por tipo e urgência
+    # ======================
     urgentes = [p for p in pending if p.get('urgente', False)]
-    normais = [p for p in pending if not p.get('urgente', False)]
+    ftth = [p for p in pending if p['tipo_instalacao'] == 'FTTH' and not p.get('urgente', False)]
+    predios = [p for p in pending if p['tipo_instalacao'] == 'Prédio' and not p.get('urgente', False)]
     
-    # Mostrar urgentes primeiro
+    # ======================
+    # SISTEMA DE ABAS
+    # ======================
+    # Criar nomes das abas com contadores
+    tab_names = []
     if urgentes:
-        st.markdown("### 🔥 URGENTES - Cliente Presencial")
-        for row in urgentes:
-            show_viability_form(row, urgente=True)
+        tab_names.append(f"🔥 URGENTES ({len(urgentes)})")
+    if ftth:
+        tab_names.append(f"🏠 FTTH ({len(ftth)})")
+    if predios:
+        tab_names.append(f"🏢 PRÉDIOS ({len(predios)})")
     
-    # Mostrar normais
-    if normais:
+    # Se não houver abas (nenhuma pendência), não mostrar nada
+    if not tab_names:
+        # Já foi mostrado o st.info antes, não precisa fazer nada
+        pass
+    else:
+        # Criar as abas dinamicamente
+        tabs = st.tabs(tab_names)
+        
+        tab_index = 0
+        
+        # ABA URGENTES
         if urgentes:
-            st.markdown("---")
-        st.markdown("### 📝 Solicitações Normais")
-        for row in normais:
-            show_viability_form(row, urgente=False)
-
+            with tabs[tab_index]:
+                st.warning("⚠️ **Clientes Presenciais - Prioridade Máxima**")
+                st.caption(f"📊 {len(urgentes)} solicitação(ões) urgente(s)")
+                st.markdown("---")
+                
+                for row in urgentes:
+                    show_viability_form(row, urgente=True)
+            
+            tab_index += 1
+        
+        # ABA FTTH
+        if ftth:
+            with tabs[tab_index]:
+                st.info("🏠 **Instalações Residenciais (FTTH)**")
+                st.caption(f"📊 {len(ftth)} solicitação(ões) de casa")
+                st.markdown("---")
+                
+                for row in ftth:
+                    show_viability_form(row, urgente=False)
+            
+            tab_index += 1
+        
+        # ABA PRÉDIOS
+        if predios:
+            with tabs[tab_index]:
+                st.info("🏢 **Instalações em Edifícios**")
+                st.caption(f"📊 {len(predios)} solicitação(ões) de prédio")
+                st.markdown("---")
+                
+                for row in predios:
+                    show_viability_form(row, urgente=False)
 
 
 # ======================
