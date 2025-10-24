@@ -33,11 +33,12 @@ st_autorefresh(interval=30000, key="agenda_refresh")  # 30 segundos
 if not require_authentication():
     st.stop()
     
-# Verificar se é Leo
-if st.session_state.user_login.lower() != "leo":
-    st.error("🚫 Acesso Negado! Esta página é restrita ao usuário Leo.")
-    st.info("👈 Use o menu lateral para navegar para outras páginas.")
+# Verificar se é Admin (nível 1)
+if st.session_state.user_nivel != 1:
+    st.error("🚫 Acesso Negado! Esta página é restrita a administradores.")
+    st.info("👈 Use o menu lateral para navegar.")
     st.stop()
+    
 # ======================
 # Header
 # ======================
