@@ -186,12 +186,35 @@ def show_viability_form(row: dict, urgente: bool = False):
         bg_color = "#F8F9FA"
         icon = "📋"
     
-    with st.container():
-        st.markdown(f"""
-        <div style='border-left: 5px solid {border_color}; padding: 15px; 
-                    background-color: {bg_color}; border-radius: 5px; margin-bottom: 20px;'>
-        </div>
-        """, unsafe_allow_html=True)        
+    # Determinar tipo para exibição
+    if row['tipo_instalacao'] == 'FTTH':
+        tipo_exibir = 'FTTH (Casa)'
+        tipo_icon = "🏠"
+    elif row['tipo_instalacao'] == 'Prédio':
+        if row.get('tecnologia_predio'):
+            tipo_exibir = f"{row['tecnologia_predio']} (Prédio)"
+        else:
+            tipo_exibir = 'Prédio'
+        tipo_icon = "🏢"
+    else:
+        tipo_exibir = row['tipo_instalacao']
+        tipo_icon = "📋"
+    
+    # Criar título do expander (resumo)
+    titulo_expander = f"{icon} {tipo_icon} **{row.get('nome_cliente', 'Cliente')}** | {row['plus_code_cliente']}"
+    
+    if row.get('predio_ftta'):
+        titulo_expander += f" | 🏢 {row['predio_ftta']}"
+    
+    titulo_expander += badge_urgente
+    
+    # Criar subtítulo (informações extras)
+    subtitulo = f"👤 Solicitado por: {row['usuario']} | 📅 {format_time_br_supa(row['data_solicitacao'])}"
+    
+    # EXPANDER (COLAPSADO POR PADRÃO)
+    with st.expander(titulo_expander, expanded=False):
+        st.caption(subtitulo)
+        st.markdown("---")        
                 
         # Informações da solicitação
         col1, col2 = st.columns([2, 3])
