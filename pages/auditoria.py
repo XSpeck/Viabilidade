@@ -176,15 +176,13 @@ with col_header2:
 def show_viability_form(row: dict, urgente: bool = False):
     """Exibe formulário de auditoria para uma viabilização"""
     
-    # Estilo do card baseado na urgência
+     # Estilo do card baseado na urgência
     if urgente:
-        border_color = "#FF4444"
-        bg_color = "#FFF5F5"
         icon = "🔥"
+        badge_urgente = " - **URGENTE**"
     else:
-        border_color = "#667eea"
-        bg_color = "#F8F9FA"
         icon = "📋"
+        badge_urgente = "" 
     
     # Determinar tipo para exibição
     if row['tipo_instalacao'] == 'FTTH':
