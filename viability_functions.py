@@ -8,6 +8,7 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 from supabase_config import supabase
+from notifier import notify_new_viability
 import pytz
 
 logger = logging.getLogger(__name__)
@@ -122,8 +123,7 @@ def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente:
             logger.info(f"Viabilização criada: {user_name} - {plus_code} - Tipo: {tipo} - Urgente: {urgente}")
            
             # 🚀 Enviar notificação via Telegram ao criar nova solicitação
-            try:
-                from notifier import notify_new_viability
+            try:                
                 notify_new_viability()
             except Exception as e:
                 logger.warning(f"Não foi possível enviar notificação Telegram: {e}")
