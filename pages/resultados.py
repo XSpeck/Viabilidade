@@ -49,6 +49,65 @@ with col_header2:
 # ======================
 results = get_user_results(st.session_state.user_name)
 
+st.markdown("---")
+st.subheader("🔍 Filtros")
+
+col_filtro1, col_filtro2, col_filtro3 = st.columns(3)
+
+with col_filtro1:
+    filtro_tipo = st.selectbox(
+        "Tipo de Instalação",
+        options=["Todos", "FTTH", "Prédio"],
+        key="filtro_tipo"
+    )
+
+with col_filtro2:
+    filtro_status = st.selectbox(
+        "Status",
+        options=["Todos", "Em Análise", "Aprovado", "Rejeitado", "UTP", "Prédio Pendente"],
+        key="filtro_status"
+    )
+
+with col_filtro3:
+    busca_texto = st.text_input(
+        "🔎 Buscar",
+        placeholder="Cliente, Plus Code, Prédio...",
+        key="busca_geral"
+    )
+
+# ========== APLICAR FILTROS ==========
+results_filtrados = results.copy()
+
+# Filtro por tipo
+if filtro_tipo != "Todos":
+    results_filtrados = [r for r in results_filtrados if r['tipo_instalacao'] == filtro_tipo]
+
+# Filtro por status
+if filtro_status == "Em Análise":
+    results_filtrados = [r for r in results_filtrados if r['status'] == 'pendente']
+elif filtro_status == "Aprovado":
+    results_filtrados = [r for r in results_filtrados if r['status'] == 'aprovado']
+elif filtro_status == "Rejeitado":
+    results_filtrados = [r for r in results_filtrados if r['status'] == 'rejeitado']
+elif filtro_status == "UTP":
+    results_filtrados = [r for r in results_filtrados if r['status'] == 'utp']
+elif filtro_status == "Prédio Pendente":
+    results_filtrados = [r for r in results_filtrados if r.get('status_predio') in ['aguardando_dados', 'pronto_auditoria', 'agendado']]
+
+# Busca por texto (cliente, plus code, prédio)
+if busca_texto:
+    busca_lower = busca_texto.lower()
+    results_filtrados = [
+        r for r in results_filtrados 
+        if busca_lower in r.get('nome_cliente', '').lower() 
+        or busca_lower in r['plus_code_cliente'].lower()
+        or busca_lower in r.get('predio_ftta', '').lower()
+    ]
+
+# Mostrar contador
+st.info(f"📊 Mostrando **{len(results_filtrados)}** de **{len(results)}** solicitações")
+# ========== FIM DOS FILTROS ==========
+
 # ======================
 # Notificação de novos resultados
 # ======================
@@ -80,12 +139,12 @@ if not results:
     st.stop()
 
 # Separar aprovados e rejeitados
-approved = [r for r in results if r['status'] == 'aprovado']
-rejected = [r for r in results if r['status'] == 'rejeitado']
-utp = [r for r in results if r['status'] == 'utp']
-structured = [r for r in results if r.get('status_predio') == 'estruturado']
-building_pending = [r for r in results if r.get('status_predio') in ['aguardando_dados', 'pronto_auditoria', 'agendado']]
-pending_analysis = [r for r in results if r['status'] == 'pendente' and not r.get('status_predio')]
+approved = [r for r in results_filtrados if r['status'] == 'aprovado']
+rejected = [r for r in results_filtrados if r['status'] == 'rejeitado']
+utp = [r for r in results_filtrados if r['status'] == 'utp']
+structured = [r for r in results_filtrados if r.get('status_predio') == 'estruturado']
+building_pending = [r for r in results_filtrados if r.get('status_predio') in ['aguardando_dados', 'pronto_auditoria', 'agendado']]
+pending_analysis = [r for r in results_filtrados if r['status'] == 'pendente' and not r.get('status_predio')]
 
 st.markdown("---")
 
@@ -458,7 +517,81 @@ if building_pending:
                                 st.balloons()
                                 st.rerun()
                             else:
-                                st.error("❌ Erro ao enviar dados. Tente novamente.")                    
+                                st.error("❌ Erro ao enviar dados. Tente novamente.")  
+
+# ======================
+# ADICIONE AQUI A TABELA DE HISTÓRICO
+# ======================
+st.markdown("---")
+st.markdown("---")
+st.subheader("📋 Histórico Completo de Viabilizações")
+
+# Buscar TODAS as viabilizações do usuário (incluindo finalizadas)
+import pandas as pd
+
+try:
+    response_historico = supabase.table('viabilizacoes')\
+        .select('*')\
+        .eq('usuario', st.session_state.user_name)\
+        .order('data_solicitacao', desc=True)\
+        .execute()
+    
+    historico_completo = response_historico.data if response_data.data else []
+    
+    if historico_completo:
+        # Campo de busca para o histórico
+        busca_historico = st.text_input(
+            "🔍 Buscar no Histórico",
+            placeholder="Cliente, Plus Code, CTO, Prédio...",
+            key="busca_historico"
+        )
+        
+        # Converter para DataFrame
+        df_historico = pd.DataFrame(historico_completo)
+        
+        # Filtrar se houver busca
+        if busca_historico:
+            mask = df_historico.astype(str).apply(
+                lambda x: x.str.lower().str.contains(busca_historico.lower(), na=False)
+            ).any(axis=1)
+            df_historico = df_historico[mask]
+        
+        # Selecionar e renomear colunas importantes
+        colunas_exibir = ['data_solicitacao', 'tipo_instalacao', 'plus_code_cliente', 
+                         'nome_cliente', 'status', 'cto_numero', 'predio_ftta']
+        
+        # Verificar quais colunas existem
+        colunas_disponiveis = [col for col in colunas_exibir if col in df_historico.columns]
+        
+        df_display = df_historico[colunas_disponiveis].copy()
+        
+        # Renomear colunas
+        df_display.columns = [
+            'Data Solicitação', 'Tipo', 'Plus Code', 
+            'Cliente', 'Status', 'CTO', 'Prédio'
+        ][:len(colunas_disponiveis)]
+        
+        # Formatar data
+        if 'Data Solicitação' in df_display.columns:
+            df_display['Data Solicitação'] = df_display['Data Solicitação'].apply(
+                lambda x: format_datetime_resultados(x) if x else '-'
+            )
+        
+        # Exibir tabela
+        st.dataframe(
+            df_display,
+            use_container_width=True,
+            height=400
+        )
+        
+        st.caption(f"📊 Mostrando {len(df_display)} de {len(historico_completo)} registros totais")
+        
+    else:
+        st.info("📭 Nenhuma viabilização no histórico")
+        
+except Exception as e:
+    st.error(f"❌ Erro ao carregar histórico: {e}")
+    logger.error(f"Erro histórico: {e}")
 # ======================
 # Footer
 # ======================
