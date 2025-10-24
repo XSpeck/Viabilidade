@@ -40,7 +40,7 @@ st.markdown(f"Viabilizações de **{st.session_state.user_name}**")
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
 with col_header2:
-    if st.button("🔄 Atualizar", width='stretch'):
+    if st.button("🔄 Atualizar", use_container_width=True):
         st.rerun()
 
 
@@ -117,6 +117,8 @@ if pending_analysis:
             
             with col_pend1:
                 st.markdown("### 📋 Informações")
+                if row.get('nome_cliente'):
+                    st.text(f"🙋 Cliente: {row['nome_cliente']}")
                 st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
                 st.text(f"🏷️ Tipo: {tipo_nome}")
                 if row.get('predio_ftta'):
@@ -147,6 +149,8 @@ if approved:
             # Verificar tipo
             if row['tipo_instalacao'] == 'FTTH':
                 st.markdown("### 🏠 FTTH (Casa)")
+                if row.get('nome_cliente'):
+                    st.info(f"🙋 **Cliente:** {row['nome_cliente']}")
                 
                 # Dados para copiar
                 dados_completos = f"""N°Caixa: {row['cto_numero']}
@@ -160,6 +164,8 @@ Localização da Caixa: {row['localizacao_caixa']}"""
                 
             else:  # FTTA
                 st.markdown("### 🏢 FTTA (Edifício)")
+                if row.get('nome_cliente'):
+                    st.info(f"🙋 **Cliente:** {row['nome_cliente']}")
                 
                 # Dados para copiar
                 dados_completos = f"""Prédio FTTA: {row['predio_ftta']}
@@ -175,10 +181,10 @@ Média RX: {row['media_rx']} dBm"""
             col_btn1, col_btn2, col_btn3 = st.columns([2, 2, 1])
             
             with col_btn1:
-                st.markdown("💡 **Dica:** Selecione o texto acima e use Ctrl+C para copiar")
+                st.caption("📋 **Dica:** selecione o texto acima e use **Ctrl+C** para copiar os dados.")
             
             with col_btn3:
-                if st.button("✅ Finalizar", key=f"finish_{row['id']}", type="primary", width='stretch'):
+                if st.button("✅ Finalizar", key=f"finish_{row['id']}", type="primary", use_container_width=True):
                     if finalize_viability_approved(row['id']):
                         st.success("✅ Viabilização finalizada e arquivada!")
                         st.balloons()
