@@ -195,7 +195,7 @@ with tab2:
 # ======================
 st.markdown("---")
 
-if st.session_state.user_login.lower() == "leo":
+if st.session_state.user_nivel == 1:
     st.subheader("📥 Exportar Dados")
     
     col_exp1, col_exp2 = st.columns(2)
