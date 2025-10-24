@@ -199,6 +199,8 @@ def show_viability_form(row: dict, urgente: bool = False):
         with col1:
             st.markdown("#### 📋 Informações")
             st.text(f"👤 Usuário: {row['usuario']}")
+            if row.get('nome_cliente'):
+                st.text(f"🙋 Cliente: {row['nome_cliente']}")
             st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
             
             # Determinar tipo real
