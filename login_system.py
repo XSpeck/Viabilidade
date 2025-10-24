@@ -18,19 +18,20 @@ TIMEZONE_BR = pytz.timezone('America/Sao_Paulo')
 # Funções de Autenticação
 # ======================
 
-def verify_credentials(login: str, password: str) -> tuple[bool, str, str]:
+def verify_credentials(login: str, password: str) -> tuple[bool, str, str, int]:    
     """
     Verifica credenciais do usuário no Supabase
-    Retorna: (autenticado: bool, nome_usuario: str, login: str)
+    Retorna: (autenticado: bool, nome_usuario: str, login: str, nivel: int)
     """
     try:
         # Buscar usuário pelo login e senha
         response = supabase.table('users').select('*').eq('login', login).eq('senha', password).execute()
-        
+                
         if response.data and len(response.data) > 0:
             user = response.data[0]
-            logger.info(f"Login bem-sucedido: {login}")
-            return True, user['nome'], user['login']
+            nivel = user.get('nivel', 2)
+            logger.info(f"Login bem-sucedido: {login} - Nível: {nivel}")
+            return True, user['nome'], user['login'], nivel
         
         logger.warning(f"Tentativa de login falhou: {login}")
         return False, "", ""
@@ -46,6 +47,8 @@ def init_login_state():
         st.session_state.user_name = ""
     if 'user_login' not in st.session_state:
         st.session_state.user_login = ""
+    if 'user_nivel' not in st.session_state:
+        st.session_state.user_nivel = 2
     if 'login_timestamp' not in st.session_state:
         st.session_state.login_timestamp = get_current_time()
 
@@ -120,12 +123,13 @@ def show_login_page():
                         st.error("❌ Preencha todos os campos!")
                     else:
                         with st.spinner("🔄 Verificando credenciais..."):
-                            authenticated, user_name, user_login = verify_credentials(login, password)
+                            authenticated, user_name, user_login, user_nivel = verify_credentials(login, password)
                             
                             if authenticated:
                                 st.session_state.authenticated = True
                                 st.session_state.user_name = user_name
                                 st.session_state.user_login = user_login
+                                st.session_state.user_nivel = user_nivel
                                 st.session_state.login_timestamp = datetime.now(TIMEZONE_BR)
                                 st.success(f"✅ Bem-vindo, {user_name}!")
                                 st.switch_page("pages/home.py")
@@ -146,6 +150,12 @@ def show_user_info():
     with st.sidebar:        
         st.markdown("### 👤 Usuário Logado")
         st.info(f"**{st.session_state.user_name}**")
+
+        # Badge de nível
+        if st.session_state.user_nivel == 1:
+            st.success("🔑 **Admin**")
+        else:
+            st.caption("👤 Usuário")
         
         if st.session_state.login_timestamp:
             login_time = st.session_state.login_timestamp.strftime('%H:%M:%S')
@@ -183,15 +193,15 @@ def show_navigation_menu():
             st.switch_page("pages/resultados.py") 
                 
         # Página de Auditoria (só Leo)
-        if st.session_state.user_login.lower() == "leo":
+        if st.session_state.user_nivel == 1:
             if st.button("👁️ Auditoria", width='stretch', key="nav_audit"):
                 st.switch_page("pages/auditoria.py")
         
         # Página de Agenda (apenas Leo)
-        if st.session_state.user_login.lower() == "leo":
+        if st.session_state.user_nivel == 1:
             if st.button("📅 Agenda FTTA/UTP", width='stretch', key="nav_agenda"):
                 st.switch_page("pages/agenda_ftta_utp.py")
-        
+                
         # Página de Relatórios (todos)
         if st.button("📈 Relatórios", width='stretch', key="nav_reports"):
             st.switch_page("pages/relatorios.py")        
