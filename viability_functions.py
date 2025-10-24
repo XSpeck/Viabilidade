@@ -8,6 +8,7 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 from supabase_config import supabase
+from notifier import notify_new_agenda_data
 import pytz
 
 logger = logging.getLogger(__name__)
@@ -455,6 +456,11 @@ def submit_building_data(viability_id: str, dados: Dict) -> bool:
         
         if response.data:
             logger.info(f"Dados do prédio submetidos: {viability_id}")
+            try:                
+                notify_new_agenda_data()
+            except Exception as e:
+                logger.warning(f"Não foi possível enviar notificação Telegram: {e}")
+            
             return True
         return False
     except Exception as e:
