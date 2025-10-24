@@ -354,9 +354,9 @@ st.set_page_config(
 if not require_authentication():
     st.stop()
 
-# Verificar se é Leo
-if st.session_state.user_login.lower() != "leo":
-    st.error("🚫 Acesso Negado! Esta página é restrita ao usuário Leo.")
+# Verificar se é Admin (nível 1)
+if st.session_state.user_nivel != 1:
+    st.error("🚫 Acesso Negado! Esta página é restrita a administradores.")
     st.info("👈 Use o menu lateral para navegar.")
     st.stop()
 
