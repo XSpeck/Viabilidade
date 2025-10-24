@@ -181,7 +181,7 @@ Média RX: {row['media_rx']} dBm"""
             col_btn1, col_btn2, col_btn3 = st.columns([2, 2, 1])
             
             with col_btn1:
-                st.caption("📋 **Dica:** selecione o texto acima e use **Ctrl+C** para copiar os dados.")
+                st.caption("📋 **Dica:** selecione o texto acima e use **Ctrl+C** para copiar.")
             
             with col_btn3:
                 if st.button("✅ Finalizar", key=f"finish_{row['id']}", type="primary", use_container_width=True):
