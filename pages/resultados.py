@@ -538,7 +538,7 @@ try:
         .order('data_solicitacao', desc=True)\
         .execute()
     
-    historico_completo = response_historico.data if response_data.data else []
+    historico_completo = response_historico.data if response_historico.data else []
     
     if historico_completo:
         # Campo de busca para o histórico
