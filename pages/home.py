@@ -384,6 +384,10 @@ if st.session_state.get('validated_pluscode'):
                             else:
                                 st.caption(f"🏢 **{dados_predio['nome']}**")
                                 st.info(f"✅ **Prédio estruturado ({tecnologia})**")
+
+                                if dados_predio.get('observacao'):
+                                    with st.expander("📋 Detalhes"):
+                                        st.text(dados_predio['observacao'])
                                 
                         
                         # ===== PRÉDIO SEM VIABILIDADE =====
