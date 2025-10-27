@@ -85,6 +85,79 @@ def pluscode_to_coords(pluscode: str) -> tuple:
         return (None, None)
 
 # ======================
+# Funções de Busca de Prédios
+# ======================
+@st.cache_data(ttl=300)  # Cache de 5 minutos
+def buscar_predios_cadastrados():
+    """Busca todos os prédios cadastrados nas tabelas"""
+    try:
+        from supabase_config import supabase
+        
+        # Buscar prédios atendidos
+        atendidos = supabase.table('utps_fttas_atendidos')\
+            .select('condominio, tecnologia, observacao')\
+            .execute()
+        
+        # Buscar prédios sem viabilidade
+        sem_viab = supabase.table('predios_sem_viabilidade')\
+            .select('condominio, observacao')\
+            .execute()
+        
+        # Organizar dados
+        predios_dict = {}
+        
+        # Adicionar atendidos
+        if atendidos.data:
+            for p in atendidos.data:
+                nome_lower = p['condominio'].lower().strip()
+                predios_dict[nome_lower] = {
+                    'nome': p['condominio'],
+                    'status': 'atendido',
+                    'tecnologia': p.get('tecnologia', 'N/A'),
+                    'observacao': p.get('observacao', '')
+                }
+        
+        # Adicionar sem viabilidade
+        if sem_viab.data:
+            for p in sem_viab.data:
+                nome_lower = p['condominio'].lower().strip()
+                # Só adicionar se não estiver nos atendidos
+                if nome_lower not in predios_dict:
+                    predios_dict[nome_lower] = {
+                        'nome': p['condominio'],
+                        'status': 'sem_viabilidade',
+                        'tecnologia': None,
+                        'observacao': p.get('observacao', '')
+                    }
+        
+        return predios_dict
+    except Exception as e:
+        logger.error(f"Erro ao buscar prédios cadastrados: {e}")
+        return {}
+
+def verificar_predio_existente(nome_digitado: str, predios_dict: dict):
+    """
+    Verifica se o prédio digitado já existe nos cadastros
+    Retorna: (encontrado: bool, dados: dict)
+    """
+    if not nome_digitado or len(nome_digitado) < 3:
+        return False, None
+    
+    nome_lower = nome_digitado.lower().strip()
+    
+    # Busca exata
+    if nome_lower in predios_dict:
+        return True, predios_dict[nome_lower]
+    
+    # Busca parcial (se digitou pelo menos 5 caracteres)
+    if len(nome_digitado) >= 5:
+        for predio_key, predio_data in predios_dict.items():
+            if nome_lower in predio_key or predio_key in nome_lower:
+                return True, predio_data
+    
+    return False, None
+
+# ======================
 # Header
 # ======================
 st.title("🏠 Solicitar Viabilização")
@@ -261,6 +334,7 @@ if st.session_state.get('validated_pluscode'):
                 <p style='color: #666; margin: 0;'>Prédio/Edifício</p>
             </div>
             """, unsafe_allow_html=True)
+            
             # ========================================
             # Campo Nome do Cliente (Prédio)
             # ========================================
@@ -274,8 +348,81 @@ if st.session_state.get('validated_pluscode'):
             nome_predio = st.text_input(
                 "🏢 Nome do Prédio *",
                 placeholder="Ex: Ed. Solar das Flores",
-                key="nome_predio_ftta"
+                key="nome_predio_ftta",
+                help="Digite o nome do prédio - verificaremos se já atendemos"
             )
+
+            # Verificação em tempo real
+         #   if nome_predio and len(nome_predio) >= 3:
+              #  with st.spinner("🔍 Verificando cadastro..."):
+                  #  predios_cadastrados = buscar_predios_cadastrados()
+                   # encontrado, dados_predio = verificar_predio_existente(nome_predio, predios_cadastrados)
+
+            if nome_predio and len(nome_predio) >= 3:
+                predios_cadastrados = buscar_predios_cadastrados()
+                
+                # Buscar sugestões
+                sugestoes = []
+                nome_lower = nome_predio.lower()
+                
+                for predio_key, predio_data in predios_cadastrados.items():
+                    if nome_lower in predio_key:
+                        sugestoes.append(predio_data['nome'])
+                
+                if sugestoes:
+                    st.markdown("**💡 Prédios similares encontrados:**")
+                    for sug in sugestoes[:5]:  # Máximo 5 sugestões
+                        st.caption(f"• {sug}")
+                    
+                    if encontrado:
+                        status = dados_predio['status']
+                        
+                        # ===== PRÉDIO ATENDIDO =====
+                        if status == 'atendido':
+                            tecnologia = dados_predio['tecnologia']
+                            
+                            if tecnologia == 'FTTA':
+                                st.success("✅ **Atendemos FTTA neste prédio!**")
+                                st.info(f"🏢 **{dados_predio['nome']}**")
+                                
+                                if dados_predio.get('observacao'):
+                                    with st.expander("📋 Detalhes da Estrutura"):
+                                        st.text(dados_predio['observacao'])
+                                
+                                st.warning("💡 Você ainda pode prosseguir com a solicitação se necessário")
+                            
+                            elif tecnologia == 'UTP':
+                                st.info("📡 **Atendemos UTP neste prédio**")
+                                st.caption(f"🏢 **{dados_predio['nome']}**")
+                                
+                                if dados_predio.get('observacao'):
+                                    with st.expander("📋 Informações"):
+                                        st.text(dados_predio['observacao'])
+                                
+                                st.warning("💡 Você pode prosseguir caso precise confirmar")
+                            
+                            else:
+                                st.success(f"✅ **Prédio já estruturado ({tecnologia})**")
+                                st.caption(f"🏢 **{dados_predio['nome']}**")
+                        
+                        # ===== PRÉDIO SEM VIABILIDADE =====
+                        else:
+                            st.error("❌ **Prédio Sem Viabilidade**")
+                            st.caption(f"🏢 **{dados_predio['nome']}**")
+                            
+                            if dados_predio.get('observacao'):
+                                with st.expander("📝 Motivo da Não Viabilidade"):
+                                    st.warning(dados_predio['observacao'])
+                            
+                            st.info("💡 Se houver mudanças, você ainda pode solicitar reavaliação")
+                    else:
+                        # Nenhum registro encontrado
+                        if len(nome_predio) >= 5:
+                            st.success("🆕 **Prédio novo** - Prossiga com a solicitação")
+            
+            # ========================================
+            # FIM DA VERIFICAÇÃO
+            # ========================================
             
             urgente_edificio = st.checkbox("🔥 Cliente Presencial (Urgente)", key="urgente_edificio")
             
