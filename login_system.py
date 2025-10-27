@@ -34,10 +34,10 @@ def verify_credentials(login: str, password: str) -> tuple[bool, str, str, int]:
             return True, user['nome'], user['login'], nivel
         
         logger.warning(f"Tentativa de login falhou: {login}")
-        return False, "", ""
+        return False, "", "", 0
     except Exception as e:
         logger.error(f"Erro ao verificar credenciais: {e}")
-        return False, "", ""
+        return False, "", "", 0
 
 def init_login_state():
     """Inicializa estado de sessão do login"""
@@ -124,7 +124,7 @@ def show_login_page():
                     else:
                         with st.spinner("🔄 Verificando credenciais..."):
                             authenticated, user_name, user_login, user_nivel = verify_credentials(login, password)
-                            
+                                                        
                             if authenticated:
                                 st.session_state.authenticated = True
                                 st.session_state.user_name = user_name
