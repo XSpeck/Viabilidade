@@ -589,11 +589,11 @@ def show_viability_form(row: dict, urgente: bool = False):
                             st.success("❌ Solicitação rejeitada")
                             st.rerun()
                     
-                    if utp:
-                        dados = {'motivo_rejeicao': 'Atendemos UTP'}
-                        if update_viability_ftth(row['id'], 'utp', dados):
-                            st.success("📡 Marcado como Atendemos UTP")
-                            st.rerun()
+                    #if utp:
+                      #  dados = {'motivo_rejeicao': 'Atendemos UTP'}
+                      #  if update_viability_ftth(row['id'], 'utp', dados):
+                       #     st.success("📡 Marcado como Atendemos UTP")
+                        #    st.rerun()
             
             else:  # Prédio (FTTA ou UTP a definir)
                 # Verificar se já foi solicitada viabilização de prédio
