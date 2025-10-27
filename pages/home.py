@@ -352,7 +352,7 @@ if st.session_state.get('validated_pluscode'):
                 help="Digite o nome do prédio - verificaremos se já atendemos"
             )
 
-             Verificação em tempo real
+            # Verificação em tempo real
             if nome_predio and len(nome_predio) >= 3:
                 with st.spinner("🔍 Verificando cadastro..."):
                     predios_cadastrados = buscar_predios_cadastrados()
