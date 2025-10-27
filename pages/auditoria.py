@@ -504,9 +504,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                     with col_fechar:
                         if st.button("❌ Fechar Busca", use_container_width=True, key=f"fechar_busca_{row['id']}"):
                             del st.session_state[f'mostrar_busca_{row["id"]}']
-                            st.rerun()
-                    
-                    st.markdown("---")
+                            st.rerun()                    
                 
                 # ========================================
                 # FORMULÁRIO DE AUDITORIA
