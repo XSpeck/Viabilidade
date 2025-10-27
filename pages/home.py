@@ -366,33 +366,34 @@ if st.session_state.get('validated_pluscode'):
                             tecnologia = dados_predio['tecnologia']
                             
                             if tecnologia == 'FTTA':
-                                st.success("✅ **Atendemos FTTA neste prédio!**")
                                 st.info(f"🏢 **{dados_predio['nome']}**")
-                                
+                                st.success("✅ **Atendemos FTTA neste prédio!**")
+                                                                
                                 if dados_predio.get('observacao'):
-                                    with st.expander("📋 Detalhes da Estrutura"):
+                                    with st.expander("📋 Detalhes"):
                                         st.text(dados_predio['observacao'])
                                 
                                 st.warning("💡 Você ainda pode prosseguir com a solicitação se necessário")
                             
                             elif tecnologia == 'UTP':
-                                st.info("📡 **Atendemos UTP neste prédio**")
                                 st.caption(f"🏢 **{dados_predio['nome']}**")
+                                st.info("📡 **Atendemos UTP neste prédio**")                                
                                 
                                 if dados_predio.get('observacao'):
-                                    with st.expander("📋 Informações"):
+                                    with st.expander("📋 Detalhes"):
                                         st.text(dados_predio['observacao'])
                                 
                                 st.warning("💡 Você pode prosseguir caso precise confirmar")
                             
                             else:
-                                st.success(f"✅ **Prédio já estruturado ({tecnologia})**")
                                 st.caption(f"🏢 **{dados_predio['nome']}**")
+                                st.success(f"✅ **Prédio já estruturado ({tecnologia})**")
+                                
                         
                         # ===== PRÉDIO SEM VIABILIDADE =====
                         else:
-                            st.error("❌ **Prédio Sem Viabilidade**")
                             st.caption(f"🏢 **{dados_predio['nome']}**")
+                            st.error("❌ **Prédio Sem Viabilidade**")                            
                             
                             if dados_predio.get('observacao'):
                                 with st.expander("📝 Motivo da Não Viabilidade"):
