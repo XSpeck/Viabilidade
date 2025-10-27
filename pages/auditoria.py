@@ -337,7 +337,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 # ========================================
                                 # MAPA INTERATIVO
                                 # ========================================
-                                st.markdown("---")
+                                
                                 st.markdown("### 🗺️ Visualização no Mapa")                               
                                 
                                 # Criar mapa centrado no cliente
