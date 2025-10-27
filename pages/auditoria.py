@@ -554,8 +554,8 @@ def show_viability_form(row: dict, urgente: bool = False):
                     
                     with col_btn1:
                         aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
-                    with col_btn2:
-                        utp = st.form_submit_button("📡 Atendemos UTP", use_container_width=True)
+                   # with col_btn2:
+                       # utp = st.form_submit_button("📡 Atendemos UTP", use_container_width=True)
                     with col_btn3:
                         rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
                     
