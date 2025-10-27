@@ -366,8 +366,8 @@ if st.session_state.get('validated_pluscode'):
                             tecnologia = dados_predio['tecnologia']
                             
                             if tecnologia == 'FTTA':
-                                st.info(f"🏢 **{dados_predio['nome']}**")
-                                st.success("✅ **Atendemos FTTA neste prédio!**")
+                                st.caption(f"🏢 **{dados_predio['nome']}**")
+                                st.info("⚡ **Atendemos FTTA neste prédio!**")
                                                                 
                                 if dados_predio.get('observacao'):
                                     with st.expander("📋 Detalhes"):
