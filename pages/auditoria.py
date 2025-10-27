@@ -291,9 +291,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                 # MOSTRAR BUSCA DE CTOs
                 # ========================================
                 if st.session_state.get(f'mostrar_busca_{row["id"]}', False):
-                    st.markdown("---")
-                    st.info("🔍 **Buscando CTOs próximas...**")
-                    
+                                        
                     try:
                         # Converter Plus Code para coordenadas
                         lat, lon = pluscode_to_coords(row['plus_code_cliente'])
