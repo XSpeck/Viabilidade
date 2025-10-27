@@ -352,27 +352,13 @@ if st.session_state.get('validated_pluscode'):
                 help="Digite o nome do prédio - verificaremos se já atendemos"
             )
 
-            # Verificação em tempo real
-         #   if nome_predio and len(nome_predio) >= 3:
-              #  with st.spinner("🔍 Verificando cadastro..."):
-                  #  predios_cadastrados = buscar_predios_cadastrados()
-                   # encontrado, dados_predio = verificar_predio_existente(nome_predio, predios_cadastrados)
-
+             Verificação em tempo real
             if nome_predio and len(nome_predio) >= 3:
-                predios_cadastrados = buscar_predios_cadastrados()
-                
-                # Buscar sugestões
-                sugestoes = []
-                nome_lower = nome_predio.lower()
-                
-                for predio_key, predio_data in predios_cadastrados.items():
-                    if nome_lower in predio_key:
-                        sugestoes.append(predio_data['nome'])
-                
-                if sugestoes:
-                    st.markdown("**💡 Prédios similares encontrados:**")
-                    for sug in sugestoes[:5]:  # Máximo 5 sugestões
-                        st.caption(f"• {sug}")
+                with st.spinner("🔍 Verificando cadastro..."):
+                    predios_cadastrados = buscar_predios_cadastrados()
+                    encontrado, dados_predio = verificar_predio_existente(nome_predio, predios_cadastrados)
+
+            
                     
                     if encontrado:
                         status = dados_predio['status']
