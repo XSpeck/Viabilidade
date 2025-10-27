@@ -371,9 +371,7 @@ if st.session_state.get('validated_pluscode'):
                                                                 
                                 if dados_predio.get('observacao'):
                                     with st.expander("📋 Detalhes"):
-                                        st.text(dados_predio['observacao'])
-                                
-                                st.warning("💡 Você ainda pode prosseguir com a solicitação se necessário")
+                                        st.text(dados_predio['observacao'])                                
                             
                             elif tecnologia == 'UTP':
                                 st.caption(f"🏢 **{dados_predio['nome']}**")
@@ -381,13 +379,11 @@ if st.session_state.get('validated_pluscode'):
                                 
                                 if dados_predio.get('observacao'):
                                     with st.expander("📋 Detalhes"):
-                                        st.text(dados_predio['observacao'])
-                                
-                                st.warning("💡 Você pode prosseguir caso precise confirmar")
+                                        st.text(dados_predio['observacao'])                                
                             
                             else:
                                 st.caption(f"🏢 **{dados_predio['nome']}**")
-                                st.success(f"✅ **Prédio já estruturado ({tecnologia})**")
+                                st.info(f"✅ **Prédio estruturado ({tecnologia})**")
                                 
                         
                         # ===== PRÉDIO SEM VIABILIDADE =====
@@ -397,9 +393,8 @@ if st.session_state.get('validated_pluscode'):
                             
                             if dados_predio.get('observacao'):
                                 with st.expander("📝 Motivo da Não Viabilidade"):
-                                    st.warning(dados_predio['observacao'])
+                                    st.warning(dados_predio['observacao'])                            
                             
-                            st.info("💡 Se houver mudanças, você ainda pode solicitar reavaliação")
                     else:
                         # Nenhum registro encontrado
                         if len(nome_predio) >= 5:
