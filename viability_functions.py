@@ -219,14 +219,18 @@ def update_viability_ftth(viability_id: str, status: str, dados: Dict) -> bool:
         viability_id: ID da viabilização
         status: 'aprovado' ou 'rejeitado'
         dados: Dicionário com os dados FTTH
+        auditado_por: Nome do auditor
     """
     try:
+        if auditado_por is None:
+            auditado_por = st.session_state.get('user_name', 'Sistema')
+        
         update_data = {
             'status': status,
             'data_auditoria': get_current_time(),
-            'auditado_por': 'leo'
+            'auditado_por': auditado_por
         }
-        
+                
         if status == 'aprovado':
             update_data.update({
                 'cto_numero': dados.get('cto_numero'),
@@ -258,12 +262,16 @@ def update_viability_ftta(viability_id: str, status: str, dados: Dict) -> bool:
         viability_id: ID da viabilização
         status: 'aprovado' ou 'rejeitado'
         dados: Dicionário com os dados FTTA
+        auditado_por: Nome do auditor
     """
     try:
+        if auditado_por is None:
+            auditado_por = st.session_state.get('user_name', 'Sistema')
+        
         update_data = {
             'status': status,
             'data_auditoria': get_current_time(),
-            'auditado_por': 'leo'
+            'auditado_por': auditado_por
         }
         
         if status == 'aprovado':
@@ -373,13 +381,17 @@ def register_building_without_viability(condominio: str, localizacao: str, obser
         condominio: Nome do prédio
         localizacao: Plus Code ou endereço
         observacao: Motivo da não viabilidade
+        registrado_por': Nome do usuário
     """
     try:
+        if registrado_por is None:
+            registrado_por = st.session_state.get('user_name', 'Sistema')
+            
         new_record = {
             'condominio': condominio,
             'localizacao': localizacao,
             'observacao': observacao,
-            'registrado_por': 'leo'
+            'registrado_por': registrado_por
         }
         
         response = supabase.table('predios_sem_viabilidade').insert(new_record).execute()
@@ -403,8 +415,11 @@ def reject_building_viability(viability_id: str, condominio: str, localizacao: s
         condominio: Nome do prédio
         localizacao: Plus Code
         observacao: Motivo da rejeição
+        auditado_por: Nome do auditor
     """
     try:
+        if auditado_por is None:
+            auditado_por = st.session_state.get('user_name', 'Sistema')
         # 1. Registrar na tabela de prédios sem viabilidade
         if not register_building_without_viability(condominio, localizacao, observacao):
             return False
@@ -415,7 +430,7 @@ def reject_building_viability(viability_id: str, condominio: str, localizacao: s
             'status_predio': 'rejeitado',
             'motivo_rejeicao': f'Edifício sem viabilidade: {observacao}',
             'data_auditoria': get_current_time(),
-            'auditado_por': 'leo'
+            'auditado_por': auditado_por
         }
         
         response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
