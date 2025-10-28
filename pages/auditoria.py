@@ -372,32 +372,35 @@ def show_viability_form(row: dict, urgente: bool = False):
                 # MOSTRAR BUSCA DE CTOs
                 # ========================================
                 if st.session_state.get(f'mostrar_busca_{row["id"]}', False):
+                    cache_key = f'busca_cache_{row["id"]}'
+    
+                    if cache_key not in st.session_state:
                                         
-                    try:
-                        # Converter Plus Code para coordenadas
-                        lat, lon = pluscode_to_coords(row['plus_code_cliente'])
-                        
-                        if lat and lon:
-                            # 🆕 CARREGAR CTOs E LINHAS
-                            with st.spinner("Carregando dados..."):
-                                # Baixar e carregar CTOs
-                                download_ctos_file(file_id_ctos, ctos_kml_path)
-                                ctos = load_ctos_from_kml(ctos_kml_path)
-                                
-                                # 🆕 Baixar e carregar linhas de projeto
-                                all_lines = {}
-                                for company, config in KML_CONFIGS.items():
-                                    try:
-                                        download_file(config["file_id"], config["path"])
-                                        lines = load_lines_from_kml(config["path"])
-                                        all_lines[company] = {
-                                            "lines": lines,
-                                            "color": config["color"]
-                                        }
-                                        logger.info(f"Carregadas {len(lines)} linhas para {company}")
-                                    except Exception as e:
-                                        logger.error(f"Erro ao carregar {company}: {e}")
-                                        all_lines[company] = {"lines": [], "color": config["color"]}
+                        try:
+                            # Converter Plus Code para coordenadas
+                            lat, lon = pluscode_to_coords(row['plus_code_cliente'])
+                            
+                            if lat and lon:
+                                # 🆕 CARREGAR CTOs E LINHAS
+                                with st.spinner("Carregando dados..."):
+                                    # Baixar e carregar CTOs
+                                    download_ctos_file(file_id_ctos, ctos_kml_path)
+                                    ctos = load_ctos_from_kml(ctos_kml_path)
+                                    
+                                    # 🆕 Baixar e carregar linhas de projeto
+                                    all_lines = {}
+                                    for company, config in KML_CONFIGS.items():
+                                        try:
+                                            download_file(config["file_id"], config["path"])
+                                            lines = load_lines_from_kml(config["path"])
+                                            all_lines[company] = {
+                                                "lines": lines,
+                                                "color": config["color"]
+                                            }
+                                            logger.info(f"Carregadas {len(lines)} linhas para {company}")
+                                        except Exception as e:
+                                            logger.error(f"Erro ao carregar {company}: {e}")
+                                            all_lines[company] = {"lines": [], "color": config["color"]}
                             
                             # Buscar CTOs próximas
                             candidate_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=3500.0)
@@ -428,8 +431,27 @@ def show_viability_form(row: dict, urgente: bool = False):
                                     
                                     cto_routes.sort(key=lambda x: x["distance"])
                                     cto_routes = cto_routes[:5]
+
+                                # 💾 SALVAR NO CACHE
+                                st.session_state[cache_key] = {
+                                    'lat': lat,
+                                    'lon': lon,
+                                    'cto_routes': cto_routes,
+                                    'all_lines': all_lines
+                                }
+                        except Exception as e:
+                            st.error(f"❌ Erro na busca: {e}")
+                            logger.error(f"Erro ao buscar CTOs: {e}")
+                    
+                    # 📦 USAR DADOS DO CACHE
+                    if cache_key in st.session_state:
+                        cached = st.session_state[cache_key]
+                        lat = cached['lat']
+                        lon = cached['lon']
+                        cto_routes = cached['cto_routes']
+                        all_lines = cached['all_lines']
                                 
-                                st.success(f"✅ {len(cto_routes)} CTOs encontradas")
+                               # st.success(f"✅ {len(cto_routes)} CTOs encontradas")
 
                                 # ========================================
                                 # MAPA INTERATIVO
@@ -610,6 +632,8 @@ def show_viability_form(row: dict, urgente: bool = False):
                     with col_fechar:
                         if st.button("❌ Fechar Busca", use_container_width=True, key=f"fechar_busca_{row['id']}"):
                             del st.session_state[f'mostrar_busca_{row["id"]}']
+                            if f'busca_cache_{row["id"]}' in st.session_state:
+                                del st.session_state[f'busca_cache_{row["id"]}']
                             st.rerun()                    
                 
                 # ========================================
