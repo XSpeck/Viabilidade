@@ -242,10 +242,9 @@ st.markdown("---")
 # ======================
 st.subheader("📋 Dados Detalhados FTTH")
 
-tab_ftth1, tab_ftth2, tab_ftth3 = st.tabs([
+tab_ftth1, tab_ftth2 = st.tabs([
     f"✅ Aprovadas ({stats['ftth_aprovadas']})",
-    f"❌ Rejeitadas ({stats['ftth_rejeitadas']})",
-    f"📡 UTP ({stats['ftth_utp']})"
+    f"❌ Rejeitadas ({stats['ftth_rejeitadas']})"    
 ])
 
 # TAB 1: Aprovadas
@@ -346,41 +345,6 @@ with tab_ftth2:
         )
     else:
         st.success("✅ Não há FTTH rejeitadas!")
-
-# TAB 3: UTP
-with tab_ftth3:
-    ftth_utp = get_ftth_utp()
-    
-    if ftth_utp:
-        df_utp = pd.DataFrame(ftth_utp)
-        
-        # Selecionar colunas
-        colunas = ['data_auditoria', 'plus_code_cliente', 'nome_cliente', 'auditado_por']
-        
-        df_display = df_utp[[col for col in colunas if col in df_utp.columns]].copy()
-        
-        # Renomear
-        df_display.columns = ['Data', 'Plus Code', 'Cliente', 'Auditor'][:len(df_display.columns)]
-        
-        # Formatar data
-        if 'Data' in df_display.columns:
-            df_display['Data'] = df_display['Data'].apply(
-                lambda x: format_datetime_resultados(x) if x else '-'
-            )
-        
-        st.dataframe(df_display, use_container_width=True, height=400)
-        st.caption(f"📊 Total: {len(ftth_utp)} registros")
-        
-        # Exportar
-        csv = df_display.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Baixar CSV",
-            data=csv,
-            file_name="ftth_utp.csv",
-            mime="text/csv"
-        )
-    else:
-        st.info("Nenhuma solicitação UTP ainda.")
 
 st.markdown("---")
 
