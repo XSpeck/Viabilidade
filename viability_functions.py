@@ -211,7 +211,7 @@ def get_archived_viabilities() -> Dict[str, List[Dict]]:
         logger.error(f"Erro ao buscar arquivo: {e}")
         return {'finalizadas': [], 'rejeitadas': []}
 
-def update_viability_ftth(viability_id: str, status: str, dados: Dict) -> bool:
+def update_viability_ftth(viability_id: str, status: str, dados: Dict, auditado_por: str = None) -> bool:
     """
     Atualiza viabilização FTTH (casa)
     
@@ -222,6 +222,7 @@ def update_viability_ftth(viability_id: str, status: str, dados: Dict) -> bool:
         auditado_por: Nome do auditor
     """
     try:
+        # ✅ DEFINIR auditado_por ANTES de usar
         if auditado_por is None:
             auditado_por = st.session_state.get('user_name', 'Sistema')
         
@@ -254,7 +255,7 @@ def update_viability_ftth(viability_id: str, status: str, dados: Dict) -> bool:
         st.error(f"❌ Erro ao atualizar: {e}")
         return False
 
-def update_viability_ftta(viability_id: str, status: str, dados: Dict) -> bool:
+def update_viability_ftta(viability_id: str, status: str, dados: Dict, auditado_por: str = None) -> bool:
     """
     Atualiza viabilização FTTA (edifício)
     
@@ -373,7 +374,7 @@ def request_building_viability(viability_id: str, dados: Dict) -> bool:
         st.error(f"❌ Erro ao solicitar: {e}")
         return False
 
-def register_building_without_viability(condominio: str, localizacao: str, observacao: str) -> bool:
+def register_building_without_viability(condominio: str, localizacao: str, observacao: str, registrado_por: str = None) -> bool:
     """
     Registra prédio sem viabilidade na tabela de consulta
     
@@ -381,7 +382,7 @@ def register_building_without_viability(condominio: str, localizacao: str, obser
         condominio: Nome do prédio
         localizacao: Plus Code ou endereço
         observacao: Motivo da não viabilidade
-        registrado_por': Nome do usuário
+        registrado_por: Nome do usuário
     """
     try:
         if registrado_por is None:
@@ -406,7 +407,7 @@ def register_building_without_viability(condominio: str, localizacao: str, obser
         return False
 
 
-def reject_building_viability(viability_id: str, condominio: str, localizacao: str, observacao: str) -> bool:
+def reject_building_viability(viability_id: str, condominio: str, localizacao: str, observacao: str, auditado_por: str = None) -> bool:
     """
     Rejeita viabilização de prédio e registra na tabela de consulta
     
@@ -420,8 +421,9 @@ def reject_building_viability(viability_id: str, condominio: str, localizacao: s
     try:
         if auditado_por is None:
             auditado_por = st.session_state.get('user_name', 'Sistema')
+        
         # 1. Registrar na tabela de prédios sem viabilidade
-        if not register_building_without_viability(condominio, localizacao, observacao):
+        if not register_building_without_viability(condominio, localizacao, observacao, auditado_por):
             return False
         
         # 2. Atualizar status da viabilização
