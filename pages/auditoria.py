@@ -69,6 +69,44 @@ reference_lon = -49.3696
 file_id_ctos = "1EcKNk2yqHDEMMXJZ17fT0flPV19HDhKJ"
 ctos_kml_path = "ctos.kml"
 
+KML_CONFIGS = {
+    "COOPER-COCAL": {
+        "file_id": "1XD-GgwgFgB2RcKkBAxf5RSBWu2yfIf2w",
+        "color": "#FF1493",
+        "path": "cooper_cocal.kml"
+    },
+    "COOPERA": {
+        "file_id": "1E5tKI5brZMo1rcrJANXggYegV1IrCdnv",
+        "color": "#00FF00",
+        "path": "coopera.kml"
+    },
+    "COPERALIANCA": {
+        "file_id": "1cDZwFpCDygrmZvP2_oSZoXT3oKXKT8Bh",
+        "color": "#0000FF",
+        "path": "coperalianca.kml"
+    },
+    "CERMOFUL": {
+        "file_id": "1r4gnRFaNUmAZ6f9oTdR1x9RcfksWTXDx",
+        "color": "#FF8C00",
+        "path": "cermoful.kml"
+    },
+    "CERTREL": {
+        "file_id": "1ZGczns-MIV897jQ8HRhH6LFgMRMdydm4",
+        "color": "#8A2BE2",
+        "path": "certrel.kml"
+    },
+    "FORÇALUZ": {
+        "file_id": "1CHAWKnha0C1f44uLJYXUOj0UcrtnlPKK",
+        "color": "#FFD700",
+        "path": "forcaluz.kml"
+    },
+    "CELESC": {
+        "file_id": "1M5P4_THpr1qxcxhPVOyQCdGTE5_7faRB",
+        "color": "#FF0000",
+        "path": "celesc.kml"
+    }
+}
+
 # ============================================
 # FUNÇÕES DE BUSCA (copiar do validator_system.py)
 # ============================================
@@ -165,6 +203,49 @@ def get_walking_route(start_lat: float, start_lon: float, end_lat: float, end_lo
     except Exception as e:
         logger.error(f"Erro ao calcular rota: {e}")
         return None
+
+@st.cache_data(ttl=3600)
+def load_lines_from_kml(path: str) -> List[List[Tuple[float, float]]]:
+    """Carrega linhas de projeto de um arquivo KML"""
+    try:
+        namespaces = {'kml': 'http://www.opengis.net/kml/2.2'}
+        tree = ET.parse(path)
+        root = tree.getroot()
+        lines = []
+        for ls in root.findall(".//kml:LineString", namespaces):
+            coords_elem = ls.find("kml:coordinates", namespaces)
+            if coords_elem is not None and coords_elem.text:
+                try:
+                    raw = coords_elem.text.strip().split()
+                    coords = []
+                    for c in raw:
+                        parts = c.split(',')
+                        if len(parts) >= 2:
+                            lon, lat = float(parts[0]), float(parts[1])
+                            if validate_coordinates(lat, lon):
+                                coords.append((lat, lon))
+                    if len(coords) > 1:
+                        lines.append(coords)
+                except (ValueError, IndexError) as e:
+                    logger.warning(f"Linha KML inválida ignorada: {e}")
+                    continue
+        logger.info(f"Carregadas {len(lines)} linhas do KML {path}")
+        return lines
+    except Exception as e:
+        logger.error(f"Erro ao carregar linhas KML: {e}")
+        return []
+
+@st.cache_data(ttl=3600)
+def download_file(file_id: str, output: str) -> str:
+    """Download de arquivo do Google Drive"""
+    try:
+        url = f"https://drive.google.com/uc?id={file_id}"
+        gdown.download(url, output, quiet=True, fuzzy=True)
+        logger.info(f"Arquivo {output} baixado com sucesso")
+        return output
+    except Exception as e:
+        logger.error(f"Erro ao baixar {output}: {e}")
+        raise Exception(f"Falha no download do arquivo {output}: {str(e)}")
 
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
@@ -297,10 +378,26 @@ def show_viability_form(row: dict, urgente: bool = False):
                         lat, lon = pluscode_to_coords(row['plus_code_cliente'])
                         
                         if lat and lon:
-                            # Carregar CTOs
-                            with st.spinner("Carregando CTOs..."):
+                            # 🆕 CARREGAR CTOs E LINHAS
+                            with st.spinner("Carregando dados..."):
+                                # Baixar e carregar CTOs
                                 download_ctos_file(file_id_ctos, ctos_kml_path)
                                 ctos = load_ctos_from_kml(ctos_kml_path)
+                                
+                                # 🆕 Baixar e carregar linhas de projeto
+                                all_lines = {}
+                                for company, config in KML_CONFIGS.items():
+                                    try:
+                                        download_file(config["file_id"], config["path"])
+                                        lines = load_lines_from_kml(config["path"])
+                                        all_lines[company] = {
+                                            "lines": lines,
+                                            "color": config["color"]
+                                        }
+                                        logger.info(f"Carregadas {len(lines)} linhas para {company}")
+                                    except Exception as e:
+                                        logger.error(f"Erro ao carregar {company}: {e}")
+                                        all_lines[company] = {"lines": [], "color": config["color"]}
                             
                             # Buscar CTOs próximas
                             candidate_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=3500.0)
@@ -346,6 +443,15 @@ def show_viability_form(row: dict, urgente: bool = False):
                                     zoom_start=16,
                                     tiles="OpenStreetMap"
                                 )
+                                for company, data in all_lines.items():
+                                    for line_coords in data["lines"]:
+                                        folium.PolyLine(
+                                            locations=line_coords,
+                                            color=data["color"],
+                                            weight=3,
+                                            opacity=0.6,
+                                            tooltip=f"Projeto {company}"
+                                        ).add_to(mapa)
                                 
                                 # Marcador do CLIENTE
                                 folium.Marker(
