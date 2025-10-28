@@ -372,8 +372,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                 # MOSTRAR BUSCA DE CTOs
                 # ========================================
                 if st.session_state.get(f'mostrar_busca_{row["id"]}', False):
-                    cache_key = f'busca_cache_{row["id"]}'
-                    mapa_key = f'mapa_renderizado_{row["id"]}'
+                    cache_key = f'busca_cache_{row["id"]}'                   
                     
                     # 🚫 Se ainda não existe cache, processa tudo
                     if cache_key not in st.session_state:
@@ -450,15 +449,12 @@ def show_viability_form(row: dict, urgente: bool = False):
                             logger.error(f"Erro ao buscar CTOs: {e}")
                     
                     # 📦 USAR DADOS DO CACHE
-                    if cache_key in st.session_state and not st.session_state.get(mapa_key):
+                    if cache_key in st.session_state:
                         cached = st.session_state[cache_key]
                         lat = cached['lat']
                         lon = cached['lon']
                         cto_routes = cached['cto_routes']
-                        all_lines = cached['all_lines']
-
-                        # 👉 Renderiza o mapa apenas uma vez
-                        st.session_state[mapa_key] = True  
+                        all_lines = cached['all_lines']                       
                                 
                         st.success(f"✅ {len(cto_routes)} CTOs encontradas")
 
@@ -634,9 +630,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                             if st.button("❌ Fechar Busca", use_container_width=True, key=f"fechar_busca_{row['id']}"):
                                 del st.session_state[f'mostrar_busca_{row["id"]}']
                                 if f'busca_cache_{row["id"]}' in st.session_state:
-                                    del st.session_state[f'busca_cache_{row["id"]}']
-                                if f'mapa_renderizado_{row["id"]}' in st.session_state:
-                                    del st.session_state[f'mapa_renderizado_{row["id"]}']
+                                    del st.session_state[f'busca_cache_{row["id"]}']                                
                                 st.rerun()                    
                 
                 # ========================================
