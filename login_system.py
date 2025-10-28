@@ -192,24 +192,25 @@ def show_navigation_menu():
         if st.button("📊 Meus Resultados", width='stretch', key="nav_results"):
             st.switch_page("pages/resultados.py") 
 
-        # Página de Viabilidades (apenas Admin - nível 1)
+        # Página de Viabilidades (Nv 1)
         if st.session_state.user_nivel == 1:
             if st.button("📋 Viabilidades", width='stretch', key="nav_viabilidades"):
                 st.switch_page("pages/viabilidades.py")
         
-        # Página de Auditoria (só Leo)
+        # Página de Auditoria (Nv 1)
         if st.session_state.user_nivel == 1:
             if st.button("👁️ Auditoria", width='stretch', key="nav_audit"):
                 st.switch_page("pages/auditoria.py")
         
-        # Página de Agenda (apenas Leo)
+        # Página de Agenda (Nv 1)
         if st.session_state.user_nivel == 1:
             if st.button("📅 Agenda FTTA/UTP", width='stretch', key="nav_agenda"):
                 st.switch_page("pages/agenda_ftta_utp.py")
                 
-        # Página de Relatórios (todos)
-        if st.button("📈 Relatórios", width='stretch', key="nav_reports"):
-            st.switch_page("pages/relatorios.py")        
+        # Página de Relatórios (Nv 1)
+        if st.session_state.user_nivel == 1:
+            if st.button("📈 Relatórios", width='stretch', key="nav_reports"):
+                st.switch_page("pages/relatorios.py")        
 
 # ======================
 # Função Principal de Integração
