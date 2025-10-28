@@ -726,6 +726,102 @@ def devolver_viabilidade(viability_id: str) -> bool:
     except Exception as e:
         logger.error(f"Erro ao devolver viabilização: {e}")
         return False
+        
+# ======================
+# Funções para Relatórios
+# ======================
+
+def get_ftth_approved() -> List[Dict]:
+    """Busca todas as viabilizações FTTH aprovadas"""
+    try:
+        response = supabase.table('viabilizacoes')\
+            .select('*')\
+            .eq('tipo_instalacao', 'FTTH')\
+            .eq('status', 'aprovado')\
+            .order('data_auditoria', desc=True)\
+            .execute()
+        return response.data if response.data else []
+    except Exception as e:
+        logger.error(f"Erro ao buscar FTTH aprovadas: {e}")
+        return []
+
+def get_ftth_rejected() -> List[Dict]:
+    """Busca todas as viabilizações FTTH rejeitadas"""
+    try:
+        response = supabase.table('viabilizacoes')\
+            .select('*')\
+            .eq('tipo_instalacao', 'FTTH')\
+            .eq('status', 'rejeitado')\
+            .order('data_auditoria', desc=True)\
+            .execute()
+        return response.data if response.data else []
+    except Exception as e:
+        logger.error(f"Erro ao buscar FTTH rejeitadas: {e}")
+        return []
+
+def get_ftth_utp() -> List[Dict]:
+    """Busca todas as viabilizações marcadas como UTP"""
+    try:
+        response = supabase.table('viabilizacoes')\
+            .select('*')\
+            .eq('tipo_instalacao', 'FTTH')\
+            .eq('status', 'utp')\
+            .order('data_auditoria', desc=True)\
+            .execute()
+        return response.data if response.data else []
+    except Exception as e:
+        logger.error(f"Erro ao buscar UTP: {e}")
+        return []
+
+def get_report_statistics() -> Dict:
+    """Retorna estatísticas detalhadas para relatórios"""
+    try:
+        # Buscar todas as viabilizações
+        response = supabase.table('viabilizacoes').select('*').execute()
+        
+        if not response.data:
+            return {
+                'ftth_aprovadas': 0,
+                'ftth_rejeitadas': 0,
+                'ftth_utp': 0,
+                'predios_estruturados': 0,
+                'pontos_sem_viabilidade': 0,
+                'taxa_aprovacao_ftth': 0
+            }
+        
+        data = response.data
+        
+        # FTTH
+        ftth_aprovadas = len([d for d in data if d['tipo_instalacao'] == 'FTTH' and d['status'] == 'aprovado'])
+        ftth_rejeitadas = len([d for d in data if d['tipo_instalacao'] == 'FTTH' and d['status'] == 'rejeitado'])
+        ftth_utp = len([d for d in data if d['tipo_instalacao'] == 'FTTH' and d['status'] == 'utp'])
+        
+        # Prédios estruturados
+        predios_response = supabase.table('utps_fttas_atendidos').select('*').execute()
+        predios_estruturados = len(predios_response.data) if predios_response.data else 0
+        
+        # Taxa de aprovação FTTH
+        total_ftth = ftth_aprovadas + ftth_rejeitadas + ftth_utp
+        taxa_aprovacao = (ftth_aprovadas / total_ftth * 100) if total_ftth > 0 else 0
+        
+        return {
+            'ftth_aprovadas': ftth_aprovadas,
+            'ftth_rejeitadas': ftth_rejeitadas,
+            'ftth_utp': ftth_utp,
+            'predios_estruturados': predios_estruturados,
+            'pontos_sem_viabilidade': ftth_rejeitadas,
+            'taxa_aprovacao_ftth': taxa_aprovacao
+        }
+    except Exception as e:
+        logger.error(f"Erro ao buscar estatísticas: {e}")
+        return {
+            'ftth_aprovadas': 0,
+            'ftth_rejeitadas': 0,
+            'ftth_utp': 0,
+            'predios_estruturados': 0,
+            'pontos_sem_viabilidade': 0,
+            'taxa_aprovacao_ftth': 0
+        }
 
 def get_statistics() -> Dict:
     """Retorna estatísticas gerais do sistema"""
