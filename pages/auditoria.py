@@ -451,7 +451,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                         cto_routes = cached['cto_routes']
                         all_lines = cached['all_lines']
                                 
-                               # st.success(f"✅ {len(cto_routes)} CTOs encontradas")
+                                st.success(f"✅ {len(cto_routes)} CTOs encontradas")
 
                                 # ========================================
                                 # MAPA INTERATIVO
