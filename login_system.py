@@ -191,7 +191,12 @@ def show_navigation_menu():
         # Página de Resultados (todos)
         if st.button("📊 Meus Resultados", width='stretch', key="nav_results"):
             st.switch_page("pages/resultados.py") 
-                
+
+        # Página de Viabilidades (apenas Admin - nível 1)
+        if st.session_state.user_nivel == 1:
+            if st.button("📋 Viabilidades", width='stretch', key="nav_viabilidades"):
+                st.switch_page("pages/viabilidades.py")
+        
         # Página de Auditoria (só Leo)
         if st.session_state.user_nivel == 1:
             if st.button("👁️ Auditoria", width='stretch', key="nav_audit"):
