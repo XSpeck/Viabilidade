@@ -124,13 +124,12 @@ col_graph1, col_graph2 = st.columns(2)
 with col_graph1:
     st.markdown("#### 🥧 Distribuição de Status")
     
-    labels = ['Aprovadas', 'Rejeitadas', 'UTP']
+    labels = ['Aprovadas', 'Rejeitadas']
     values = [
         stats['ftth_aprovadas'],
-        stats['ftth_rejeitadas'],
-        stats['ftth_utp']
+        stats['ftth_rejeitadas']        
     ]
-    colors = ['#4CAF50', '#F44336', '#FF9800']
+    colors = ['#4CAF50', '#F44336']
     
     fig_pizza = go.Figure(data=[go.Pie(
         labels=labels,
