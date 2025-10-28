@@ -5,7 +5,7 @@ Salve como: pages/auditoria.py
 
 import streamlit as st
 from login_system import require_authentication
-from streamlit_autorefresh import st_autorefresh
+#from streamlit_autorefresh import st_autorefresh
 from viability_functions import (
     format_time_br_supa,
     get_pending_viabilities,
@@ -44,7 +44,7 @@ st.set_page_config(
 # Atualização automática
 # ======================
 
-st_autorefresh(interval=15000, key="auditoria_refresh")  # 15000 ms = 15 segundos
+#st_autorefresh(interval=15000, key="auditoria_refresh")  # 15000 ms = 15 segundos
 
 # Verificar autenticação
 if not require_authentication():
@@ -373,6 +373,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                 # ========================================
                 if st.session_state.get(f'mostrar_busca_{row["id"]}', False):
                     cache_key = f'busca_cache_{row["id"]}'
+                    mapa_key = f'mapa_renderizado_{row["id"]}'
                     
                     # 🚫 Se ainda não existe cache, processa tudo
                     if cache_key not in st.session_state:
@@ -449,12 +450,15 @@ def show_viability_form(row: dict, urgente: bool = False):
                             logger.error(f"Erro ao buscar CTOs: {e}")
                     
                     # 📦 USAR DADOS DO CACHE
-                    if cache_key in st.session_state:
+                    if cache_key in st.session_state and not st.session_state.get(mapa_key):
                         cached = st.session_state[cache_key]
                         lat = cached['lat']
                         lon = cached['lon']
                         cto_routes = cached['cto_routes']
                         all_lines = cached['all_lines']
+
+                        # 👉 Renderiza o mapa apenas uma vez
+                        st.session_state[mapa_key] = True  
                                 
                         st.success(f"✅ {len(cto_routes)} CTOs encontradas")
 
@@ -631,6 +635,8 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 del st.session_state[f'mostrar_busca_{row["id"]}']
                                 if f'busca_cache_{row["id"]}' in st.session_state:
                                     del st.session_state[f'busca_cache_{row["id"]}']
+                                if f'mapa_renderizado_{row["id"]}' in st.session_state:
+                                    del st.session_state[f'mapa_renderizado_{row["id"]}']
                                 st.rerun()                    
                 
                 # ========================================
