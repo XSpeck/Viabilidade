@@ -5,7 +5,7 @@ Salve como: pages/auditoria.py
 
 import streamlit as st
 from login_system import require_authentication
-from streamlit_autorefresh import st_autorefresh
+#from streamlit_autorefresh import st_autorefresh
 from viability_functions import (
     format_time_br_supa,
     get_pending_viabilities,
@@ -44,7 +44,7 @@ st.set_page_config(
 # Atualização automática
 # ======================
 
-st_autorefresh(interval=15000, key="auditoria_refresh")  # 15000 ms = 15 segundos
+#st_autorefresh(interval=15000, key="auditoria_refresh")  # 15000 ms = 15 segundos
 
 # Verificar autenticação
 if not require_authentication():
