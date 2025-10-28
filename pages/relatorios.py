@@ -8,7 +8,6 @@ from login_system import require_authentication
 from viability_functions import (
     get_ftth_approved,
     get_ftth_rejected,
-    get_ftth_utp,
     get_structured_buildings,
     get_buildings_without_viability,
     get_report_statistics,
@@ -22,6 +21,7 @@ import folium
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 from openlocationcode import openlocationcode as olc
+from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
@@ -74,40 +74,89 @@ with col_header2:
 st.markdown("---")
 
 # ======================
+# FILTRO DE DATA
+# ======================
+st.subheader("📅 Filtrar por Período")
+
+col_filtro1, col_filtro2, col_filtro3 = st.columns([2, 2, 1])
+
+with col_filtro1:
+    data_inicio = st.date_input(
+        "Data Início",
+        value=None,
+        key="data_inicio_relatorio",
+        format="DD/MM/YYYY",
+        help="Deixe vazio para mostrar desde o início"
+    )
+
+with col_filtro2:
+    data_fim = st.date_input(
+        "Data Fim",
+        value=None,
+        key="data_fim_relatorio",
+        format="DD/MM/YYYY",
+        help="Deixe vazio para mostrar até hoje"
+    )
+
+with col_filtro3:
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🔍 Aplicar Filtro", type="primary", use_container_width=True):
+        st.rerun()
+
+# Converter datas para ISO format (se fornecidas)
+data_inicio_iso = data_inicio.isoformat() if data_inicio else None
+data_fim_iso = data_fim.isoformat() if data_fim else None
+
+# Mostrar período ativo
+if data_inicio or data_fim:
+    periodo_texto = f"📊 Exibindo dados de "
+    if data_inicio:
+        periodo_texto += f"{data_inicio.strftime('%d/%m/%Y')}"
+    else:
+        periodo_texto += "início"
+    periodo_texto += " até "
+    if data_fim:
+        periodo_texto += f"{data_fim.strftime('%d/%m/%Y')}"
+    else:
+        periodo_texto += "hoje"
+    st.info(periodo_texto)
+else:
+    st.success("✅ Exibindo todos os dados (sem filtro de período)")
+
+st.markdown("---")
+
+# ======================
 # 1. KPIs Principais
 # ======================
 st.subheader("🎯 Indicadores Principais")
 
-stats = get_report_statistics()
+stats = get_report_statistics(data_inicio_iso, data_fim_iso)
 
 col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
 
 with col_kpi1:
     st.metric(
-        label="📈 FTTH Aprovadas",
+        label="✅ FTTH Aprovadas",
         value=stats['ftth_aprovadas'],
-        delta=None
+        help="Inclui aprovadas e finalizadas"
     )
 
 with col_kpi2:
     st.metric(
         label="🏢 Prédios Estruturados",
-        value=stats['predios_estruturados'],
-        delta=None
+        value=stats['predios_estruturados']
     )
 
 with col_kpi3:
     st.metric(
-        label="✅ Taxa de Aprovação",
-        value=f"{stats['taxa_aprovacao_ftth']:.1f}%",
-        delta=None
+        label="📈 Taxa de Aprovação",
+        value=f"{stats['taxa_aprovacao_ftth']:.1f}%"
     )
 
 with col_kpi4:
     st.metric(
         label="📍 Pontos Sem Viabilidade",
         value=stats['pontos_sem_viabilidade'],
-        delta=None,
         delta_color="inverse"
     )
 
@@ -122,12 +171,12 @@ col_graph1, col_graph2 = st.columns(2)
 
 # Gráfico de Pizza
 with col_graph1:
-    st.markdown("#### 🥧 Distribuição de Status")
+    st.markdown("#### 🥧 Aprovadas vs Rejeitadas")
     
     labels = ['Aprovadas', 'Rejeitadas']
     values = [
         stats['ftth_aprovadas'],
-        stats['ftth_rejeitadas']        
+        stats['ftth_rejeitadas']
     ]
     colors = ['#4CAF50', '#F44336']
     
@@ -180,7 +229,7 @@ st.markdown("---")
 st.subheader("🗺️ Mapa de Pontos Sem Viabilidade FTTH")
 st.info("📍 Analise as áreas com rejeições para identificar oportunidades de expansão da rede")
 
-ftth_rejeitadas = get_ftth_rejected()
+ftth_rejeitadas = get_ftth_rejected(data_inicio_iso, data_fim_iso)
 
 if ftth_rejeitadas:
     # Criar mapa centrado
@@ -233,7 +282,7 @@ if ftth_rejeitadas:
     
     st.caption(f"📊 Total de {len(ftth_rejeitadas)} pontos sem viabilidade mapeados")
 else:
-    st.success("✅ Não há pontos FTTH sem viabilidade registrados!")
+    st.success("✅ Não há pontos FTTH sem viabilidade no período selecionado!")
 
 st.markdown("---")
 
@@ -244,12 +293,12 @@ st.subheader("📋 Dados Detalhados FTTH")
 
 tab_ftth1, tab_ftth2 = st.tabs([
     f"✅ Aprovadas ({stats['ftth_aprovadas']})",
-    f"❌ Rejeitadas ({stats['ftth_rejeitadas']})"    
+    f"❌ Rejeitadas ({stats['ftth_rejeitadas']})"
 ])
 
 # TAB 1: Aprovadas
 with tab_ftth1:
-    ftth_aprovadas = get_ftth_approved()
+    ftth_aprovadas = get_ftth_approved(data_inicio_iso, data_fim_iso)
     
     if ftth_aprovadas:
         # Busca
@@ -270,18 +319,34 @@ with tab_ftth1:
         
         # Selecionar colunas
         colunas = ['data_auditoria', 'plus_code_cliente', 'nome_cliente', 'cto_numero', 
-                   'portas_disponiveis', 'menor_rx', 'distancia_cliente', 'auditado_por']
+                   'portas_disponiveis', 'menor_rx', 'distancia_cliente', 'auditado_por', 'status']
         
         df_display = df_aprovadas[[col for col in colunas if col in df_aprovadas.columns]].copy()
         
         # Renomear
-        df_display.columns = ['Data', 'Plus Code', 'Cliente', 'CTO', 
-                              'Portas', 'RX (dBm)', 'Distância', 'Auditor'][:len(df_display.columns)]
+        rename_dict = {
+            'data_auditoria': 'Data',
+            'plus_code_cliente': 'Plus Code',
+            'nome_cliente': 'Cliente',
+            'cto_numero': 'CTO',
+            'portas_disponiveis': 'Portas',
+            'menor_rx': 'RX (dBm)',
+            'distancia_cliente': 'Distância',
+            'auditado_por': 'Auditor',
+            'status': 'Status'
+        }
+        df_display.rename(columns=rename_dict, inplace=True)
         
         # Formatar data
         if 'Data' in df_display.columns:
             df_display['Data'] = df_display['Data'].apply(
                 lambda x: format_datetime_resultados(x) if x else '-'
+            )
+        
+        # Formatar status
+        if 'Status' in df_display.columns:
+            df_display['Status'] = df_display['Status'].apply(
+                lambda x: '✅ Aprovada' if x == 'aprovado' else '📦 Finalizada'
             )
         
         st.dataframe(df_display, use_container_width=True, height=400)
@@ -296,7 +361,7 @@ with tab_ftth1:
             mime="text/csv"
         )
     else:
-        st.info("Nenhuma FTTH aprovada ainda.")
+        st.info("Nenhuma FTTH aprovada no período selecionado.")
 
 # TAB 2: Rejeitadas
 with tab_ftth2:
@@ -344,7 +409,7 @@ with tab_ftth2:
             mime="text/csv"
         )
     else:
-        st.success("✅ Não há FTTH rejeitadas!")
+        st.success("✅ Não há FTTH rejeitadas no período selecionado!")
 
 st.markdown("---")
 
