@@ -1,12 +1,27 @@
 """
-Página de Relatórios - Histórico e estatísticas
+Página de Relatórios - Análises e visualizações completas
 Salve como: pages/relatorios.py
 """
 
 import streamlit as st
 from login_system import require_authentication
-from viability_functions import get_archived_viabilities, get_statistics, format_time_br_supa, format_datetime_resultados
+from viability_functions import (
+    get_ftth_approved,
+    get_ftth_rejected,
+    get_ftth_utp,
+    get_structured_buildings,
+    get_buildings_without_viability,
+    get_report_statistics,
+    format_datetime_resultados,
+    format_time_br_supa
+)
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import folium
+from folium.plugins import MarkerCluster
+from streamlit_folium import st_folium
+from openlocationcode import openlocationcode as olc
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,7 +31,7 @@ logger = logging.getLogger(__name__)
 # ======================
 st.set_page_config(
     page_title="Relatórios - Validador de Projetos",
-    page_icon="📁",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -26,203 +41,450 @@ if not require_authentication():
     st.stop()
 
 # ======================
+# Funções Auxiliares
+# ======================
+def pluscode_to_coords(pluscode: str):
+    """Converte Plus Code para coordenadas"""
+    try:
+        reference_lat = -28.6775
+        reference_lon = -49.3696
+        pluscode = pluscode.strip().upper()
+        if not olc.isFull(pluscode):
+            pluscode = olc.recoverNearest(pluscode, reference_lat, reference_lon)
+        decoded = olc.decode(pluscode)
+        lat = (decoded.latitudeLo + decoded.latitudeHi) / 2
+        lon = (decoded.longitudeLo + decoded.longitudeHi) / 2
+        return lat, lon
+    except Exception as e:
+        logger.error(f"Erro ao converter Plus Code: {e}")
+        return None, None
+
+# ======================
 # Header
 # ======================
-st.title("📁 Relatórios e Arquivo")
-st.markdown("Histórico completo de viabilizações")
+st.title("📊 Relatórios e Análises")
+st.markdown("Análise completa de viabilizações e expansão da rede")
 
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
 with col_header2:
-    if st.button("🔄 Atualizar", width='stretch'):
+    if st.button("🔄 Atualizar", use_container_width=True):
         st.rerun()
 
 st.markdown("---")
 
 # ======================
-# Estatísticas Gerais
+# 1. KPIs Principais
 # ======================
-st.subheader("📊 Estatísticas Gerais")
+st.subheader("🎯 Indicadores Principais")
 
-stats = get_statistics()
+stats = get_report_statistics()
 
-col1, col2, col3 = st.columns(3)
-#with col1:
-   # st.metric("📦 Total", stats['total'])
-with col1:
-    st.metric("⏳ Pendentes", stats['pendentes'])
-with col2:
-    st.metric("✅ Finalizadas", stats['finalizadas'])
-with col3:
-    st.metric("❌ Rejeitadas", stats['rejeitadas'])
-#with col5:
-  #  st.metric("📈 Taxa Aprovação", f"{stats['taxa_aprovacao']:.1f}%")
+col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
+
+with col_kpi1:
+    st.metric(
+        label="📈 FTTH Aprovadas",
+        value=stats['ftth_aprovadas'],
+        delta=None
+    )
+
+with col_kpi2:
+    st.metric(
+        label="🏢 Prédios Estruturados",
+        value=stats['predios_estruturados'],
+        delta=None
+    )
+
+with col_kpi3:
+    st.metric(
+        label="✅ Taxa de Aprovação",
+        value=f"{stats['taxa_aprovacao_ftth']:.1f}%",
+        delta=None
+    )
+
+with col_kpi4:
+    st.metric(
+        label="📍 Pontos Sem Viabilidade",
+        value=stats['pontos_sem_viabilidade'],
+        delta=None,
+        delta_color="inverse"
+    )
 
 st.markdown("---")
 
 # ======================
-# Buscar Dados Arquivados
+# 2. Gráficos FTTH
 # ======================
-archived = get_archived_viabilities()
-finalizadas = archived['finalizadas']
-rejeitadas = archived['rejeitadas']
+st.subheader("📊 Análise FTTH (Residencial)")
 
-# ======================
-# Abas de Visualização
-# ======================
-tab1, tab2 = st.tabs(["✅ Viabilidades Aprovadas", "❌ Sem Viabilidade"])
+col_graph1, col_graph2 = st.columns(2)
 
-# ======================
-# TAB 1: Viabilidades Aprovadas
-# ======================
-with tab1:
-    st.markdown("### 📋 Viabilizações Finalizadas")
+# Gráfico de Pizza
+with col_graph1:
+    st.markdown("#### 🥧 Distribuição de Status")
     
-    if not finalizadas:
-        st.info("Nenhuma viabilização finalizada ainda.")
-    else:
-        # Busca
-        search_approved = st.text_input(
-            "🔍 Buscar", 
-            placeholder="Plus Code, CTO, Usuário, Prédio...", 
-            key="search_approved"
+    labels = ['Aprovadas', 'Rejeitadas', 'UTP']
+    values = [
+        stats['ftth_aprovadas'],
+        stats['ftth_rejeitadas'],
+        stats['ftth_utp']
+    ]
+    colors = ['#4CAF50', '#F44336', '#FF9800']
+    
+    fig_pizza = go.Figure(data=[go.Pie(
+        labels=labels,
+        values=values,
+        hole=.3,
+        marker_colors=colors,
+        textinfo='label+percent+value',
+        textposition='auto'
+    )])
+    
+    fig_pizza.update_layout(
+        height=400,
+        showlegend=True,
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
+    
+    st.plotly_chart(fig_pizza, use_container_width=True)
+
+# Gráfico de Barras Comparativo
+with col_graph2:
+    st.markdown("#### 📊 Comparativo de Resultados")
+    
+    fig_barras = go.Figure(data=[
+        go.Bar(
+            name='Quantidade',
+            x=labels,
+            y=values,
+            marker_color=colors,
+            text=values,
+            textposition='auto'
         )
+    ])
+    
+    fig_barras.update_layout(
+        height=400,
+        yaxis_title="Quantidade",
+        showlegend=False,
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
+    
+    st.plotly_chart(fig_barras, use_container_width=True)
+
+st.markdown("---")
+
+# ======================
+# 3. MAPA - Pontos Sem Viabilidade FTTH
+# ======================
+st.subheader("🗺️ Mapa de Pontos Sem Viabilidade FTTH")
+st.info("📍 Analise as áreas com rejeições para identificar oportunidades de expansão da rede")
+
+ftth_rejeitadas = get_ftth_rejected()
+
+if ftth_rejeitadas:
+    # Criar mapa centrado
+    mapa = folium.Map(
+        location=[-28.6775, -49.3696],
+        zoom_start=12,
+        tiles="OpenStreetMap"
+    )
+    
+    # Criar cluster de marcadores
+    marker_cluster = MarkerCluster(
+        name="Pontos Sem Viabilidade",
+        overlay=True,
+        control=True,
+        icon_create_function=None
+    ).add_to(mapa)
+    
+    # Adicionar marcadores
+    for idx, row in enumerate(ftth_rejeitadas):
+        lat, lon = pluscode_to_coords(row['plus_code_cliente'])
         
-        # Filtrar
-        df_finalizadas = pd.DataFrame(finalizadas)
-        
-        if search_approved:
-            mask = df_finalizadas.astype(str).apply(
-                lambda x: x.str.lower().str.contains(search_approved.lower(), na=False)
-            ).any(axis=1)
-            df_finalizadas = df_finalizadas[mask]
-        
-        st.caption(f"Mostrando {len(df_finalizadas)} de {len(finalizadas)} registros")
-        
-        # Exibir dados
-        for _, row in df_finalizadas.iterrows():
-            if row['tipo_instalacao'] == 'FTTH':
-                tipo_icon = "🏠"
-            elif row['tipo_instalacao'] == 'Prédio':
-                tipo_icon = "🏢"
-            else:
-                tipo_icon = "📋"
+        if lat and lon:
+            popup_html = f"""
+            <div style='width: 250px'>
+                <h4>❌ Sem Viabilidade</h4>
+                <p><b>📍 Plus Code:</b> {row['plus_code_cliente']}</p>
+                <p><b>👤 Cliente:</b> {row.get('nome_cliente', 'N/A')}</p>
+                <p><b>👥 Solicitante:</b> {row['usuario']}</p>
+                <p><b>📅 Data:</b> {format_time_br_supa(row['data_auditoria'])}</p>
+                <p><b>📝 Motivo:</b> {row.get('motivo_rejeicao', 'Não temos projeto neste ponto')}</p>
+                <p><b>🔍 Auditor:</b> {row.get('auditado_por', 'N/A')}</p>
+            </div>
+            """
             
-            with st.expander(
-                f"{tipo_icon} {row['plus_code_cliente']} - {row['usuario']} - {format_datetime_resultados(row['data_finalizacao'])}"
-            ):
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.markdown("#### 📍 Informações Gerais")
-                    st.text(f"Usuário: {row['usuario']}")
-                    st.text(f"Plus Code: {row['plus_code_cliente']}")
-                    st.text(f"Tipo: {row['tipo_instalacao']}")
-                    st.text(f"Solicitado: {format_time_br_supa(row['data_solicitacao'])}")
-                    st.text(f"Auditado: {format_datetime_resultados(row['data_auditoria'])}")
-                    st.text(f"Finalizado: {format_datetime_resultados(row['data_finalizacao'])}")
-                    st.text(f"Auditado por: {row['auditado_por']}")
-                
-                with col2:
-                    if row['tipo_instalacao'] == 'FTTH':
-                        st.markdown("#### 🏠 Dados FTTH")
-                        st.text(f"N° Caixa: {row['cto_numero']}")
-                        st.text(f"Portas: {row['portas_disponiveis']}")
-                        st.text(f"Menor RX: {row['menor_rx']} dBm")
-                        st.text(f"Distância: {row['distancia_cliente']}")
-                        st.text(f"Localização: {row['localizacao_caixa']}")
-                        if row.get('observacoes'):
-                            st.text(f"Obs: {row['observacoes']}")
-                    else:
-                        st.markdown("#### 🏢 Dados FTTA")
-                        st.text(f"Prédio: {row['predio_ftta']}")
-                        st.text(f"Portas: {row['portas_disponiveis']}")
-                        st.text(f"Média RX: {row['media_rx']} dBm")
-                        if row.get('observacoes'):
-                            st.text(f"Obs: {row['observacoes']}")
+            folium.Marker(
+                location=[lat, lon],
+                popup=folium.Popup(popup_html, max_width=300),
+                tooltip=f"❌ {row['plus_code_cliente']} - {row.get('nome_cliente', 'Cliente')}",
+                icon=folium.Icon(color='red', icon='times-circle', prefix='fa')
+            ).add_to(marker_cluster)
+    
+    # Renderizar mapa
+    st_folium(
+        mapa,
+        width=None,
+        height=500,
+        returned_objects=[],
+        key="mapa_rejeitadas"
+    )
+    
+    st.caption(f"📊 Total de {len(ftth_rejeitadas)} pontos sem viabilidade mapeados")
+else:
+    st.success("✅ Não há pontos FTTH sem viabilidade registrados!")
+
+st.markdown("---")
 
 # ======================
-# TAB 2: Sem Viabilidade
+# 4. TABELAS FTTH
 # ======================
-with tab2:
-    st.markdown("### 🚫 Solicitações Rejeitadas")
+st.subheader("📋 Dados Detalhados FTTH")
+
+tab_ftth1, tab_ftth2, tab_ftth3 = st.tabs([
+    f"✅ Aprovadas ({stats['ftth_aprovadas']})",
+    f"❌ Rejeitadas ({stats['ftth_rejeitadas']})",
+    f"📡 UTP ({stats['ftth_utp']})"
+])
+
+# TAB 1: Aprovadas
+with tab_ftth1:
+    ftth_aprovadas = get_ftth_approved()
     
-    if not rejeitadas:
-        st.info("Nenhuma solicitação rejeitada.")
-    else:
+    if ftth_aprovadas:
         # Busca
-        search_rejected = st.text_input(
-            "🔍 Buscar", 
-            placeholder="Plus Code, Usuário...", 
-            key="search_rejected"
+        search_aprovadas = st.text_input(
+            "🔍 Buscar",
+            placeholder="Cliente, Plus Code, CTO, Auditor...",
+            key="search_aprovadas"
         )
         
-        # Filtrar
-        df_rejeitadas = pd.DataFrame(rejeitadas)
+        df_aprovadas = pd.DataFrame(ftth_aprovadas)
         
-        if search_rejected:
+        # Filtrar
+        if search_aprovadas:
+            mask = df_aprovadas.astype(str).apply(
+                lambda x: x.str.lower().str.contains(search_aprovadas.lower(), na=False)
+            ).any(axis=1)
+            df_aprovadas = df_aprovadas[mask]
+        
+        # Selecionar colunas
+        colunas = ['data_auditoria', 'plus_code_cliente', 'nome_cliente', 'cto_numero', 
+                   'portas_disponiveis', 'menor_rx', 'distancia_cliente', 'auditado_por']
+        
+        df_display = df_aprovadas[[col for col in colunas if col in df_aprovadas.columns]].copy()
+        
+        # Renomear
+        df_display.columns = ['Data', 'Plus Code', 'Cliente', 'CTO', 
+                              'Portas', 'RX (dBm)', 'Distância', 'Auditor'][:len(df_display.columns)]
+        
+        # Formatar data
+        if 'Data' in df_display.columns:
+            df_display['Data'] = df_display['Data'].apply(
+                lambda x: format_datetime_resultados(x) if x else '-'
+            )
+        
+        st.dataframe(df_display, use_container_width=True, height=400)
+        st.caption(f"📊 Mostrando {len(df_display)} de {len(ftth_aprovadas)} registros")
+        
+        # Exportar
+        csv = df_display.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Baixar CSV",
+            data=csv,
+            file_name="ftth_aprovadas.csv",
+            mime="text/csv"
+        )
+    else:
+        st.info("Nenhuma FTTH aprovada ainda.")
+
+# TAB 2: Rejeitadas
+with tab_ftth2:
+    if ftth_rejeitadas:
+        # Busca
+        search_rejeitadas = st.text_input(
+            "🔍 Buscar",
+            placeholder="Cliente, Plus Code, Motivo...",
+            key="search_rejeitadas"
+        )
+        
+        df_rejeitadas = pd.DataFrame(ftth_rejeitadas)
+        
+        # Filtrar
+        if search_rejeitadas:
             mask = df_rejeitadas.astype(str).apply(
-                lambda x: x.str.lower().str.contains(search_rejected.lower(), na=False)
+                lambda x: x.str.lower().str.contains(search_rejeitadas.lower(), na=False)
             ).any(axis=1)
             df_rejeitadas = df_rejeitadas[mask]
         
-        st.caption(f"Mostrando {len(df_rejeitadas)} de {len(rejeitadas)} registros")
+        # Selecionar colunas
+        colunas = ['data_auditoria', 'plus_code_cliente', 'nome_cliente', 
+                   'motivo_rejeicao', 'auditado_por']
         
-        # Exibir dados
-        for _, row in df_rejeitadas.iterrows():
-            tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
-            
-            with st.expander(
-                f"❌ {tipo_icon} {row['plus_code_cliente']} - {row['usuario']} - {format_datetime_resultados(row['data_auditoria'])}"
-            ):
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.markdown("#### 📍 Informações")
-                    st.text(f"Usuário: {row['usuario']}")
-                    st.text(f"Plus Code: {row['plus_code_cliente']}")
-                    st.text(f"Tipo: {row['tipo_instalacao']}")
-                    st.text(f"Solicitado: {format_time_br_supa(row['data_solicitacao'])}")
-                    st.text(f"Auditado: {format_datetime_resultados(row['data_auditoria'])}")
-                    st.text(f"Auditado por: {row['auditado_por']}")
-                
-                with col2:
-                    st.markdown("#### ❌ Motivo da Rejeição")
-                    st.error(row.get('motivo_rejeicao', 'Não temos projeto neste ponto'))
+        df_display = df_rejeitadas[[col for col in colunas if col in df_rejeitadas.columns]].copy()
+        
+        # Renomear
+        df_display.columns = ['Data', 'Plus Code', 'Cliente', 'Motivo', 'Auditor'][:len(df_display.columns)]
+        
+        # Formatar data
+        if 'Data' in df_display.columns:
+            df_display['Data'] = df_display['Data'].apply(
+                lambda x: format_datetime_resultados(x) if x else '-'
+            )
+        
+        st.dataframe(df_display, use_container_width=True, height=400)
+        st.caption(f"📊 Mostrando {len(df_display)} de {len(ftth_rejeitadas)} registros")
+        
+        # Exportar
+        csv = df_display.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Baixar CSV",
+            data=csv,
+            file_name="ftth_rejeitadas.csv",
+            mime="text/csv"
+        )
+    else:
+        st.success("✅ Não há FTTH rejeitadas!")
 
-# ======================
-# Exportar Dados (se for Leo)
-# ======================
+# TAB 3: UTP
+with tab_ftth3:
+    ftth_utp = get_ftth_utp()
+    
+    if ftth_utp:
+        df_utp = pd.DataFrame(ftth_utp)
+        
+        # Selecionar colunas
+        colunas = ['data_auditoria', 'plus_code_cliente', 'nome_cliente', 'auditado_por']
+        
+        df_display = df_utp[[col for col in colunas if col in df_utp.columns]].copy()
+        
+        # Renomear
+        df_display.columns = ['Data', 'Plus Code', 'Cliente', 'Auditor'][:len(df_display.columns)]
+        
+        # Formatar data
+        if 'Data' in df_display.columns:
+            df_display['Data'] = df_display['Data'].apply(
+                lambda x: format_datetime_resultados(x) if x else '-'
+            )
+        
+        st.dataframe(df_display, use_container_width=True, height=400)
+        st.caption(f"📊 Total: {len(ftth_utp)} registros")
+        
+        # Exportar
+        csv = df_display.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Baixar CSV",
+            data=csv,
+            file_name="ftth_utp.csv",
+            mime="text/csv"
+        )
+    else:
+        st.info("Nenhuma solicitação UTP ainda.")
+
 st.markdown("---")
 
-if st.session_state.user_nivel == 1:
-    st.subheader("📥 Exportar Dados")
-    
-    col_exp1, col_exp2 = st.columns(2)
-    
-    with col_exp1:
-        if finalizadas:
-            df_export_fin = pd.DataFrame(finalizadas)
-            csv_fin = df_export_fin.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📊 Baixar Viabilizações Aprovadas (CSV)",
-                data=csv_fin,
-                file_name="viabilizacoes_aprovadas.csv",
-                mime="text/csv",
-                width='stretch'
+# ======================
+# 5. SEÇÃO PRÉDIOS
+# ======================
+st.subheader("🏢 Prédios (FTTA/UTP)")
+
+# KPIs Prédios
+predios_estruturados = get_structured_buildings()
+predios_sem_viab = get_buildings_without_viability()
+
+# Separar por tecnologia
+ftta_count = len([p for p in predios_estruturados if p.get('tecnologia') == 'FTTA'])
+utp_count = len([p for p in predios_estruturados if p.get('tecnologia') == 'UTP'])
+
+col_pred1, col_pred2, col_pred3, col_pred4 = st.columns(4)
+
+with col_pred1:
+    st.metric("🏗️ Total Estruturados", len(predios_estruturados))
+
+with col_pred2:
+    st.metric("⚡ FTTA Estruturados", ftta_count)
+
+with col_pred3:
+    st.metric("📡 UTP Estruturados", utp_count)
+
+with col_pred4:
+    st.metric("❌ Sem Viabilidade", len(predios_sem_viab))
+
+st.markdown("---")
+
+# Tabelas Prédios
+tab_pred1, tab_pred2 = st.tabs([
+    f"✅ Estruturados ({len(predios_estruturados)})",
+    f"❌ Sem Viabilidade ({len(predios_sem_viab)})"
+])
+
+# TAB 1: Estruturados
+with tab_pred1:
+    if predios_estruturados:
+        df_estruturados = pd.DataFrame(predios_estruturados)
+        
+        # Selecionar colunas
+        colunas = ['data_estruturacao', 'condominio', 'tecnologia', 
+                   'localizacao', 'estruturado_por']
+        
+        df_display = df_estruturados[[col for col in colunas if col in df_estruturados.columns]].copy()
+        
+        # Renomear
+        df_display.columns = ['Data', 'Condomínio', 'Tecnologia', 'Localização', 'Técnico'][:len(df_display.columns)]
+        
+        # Formatar data
+        if 'Data' in df_display.columns:
+            df_display['Data'] = df_display['Data'].apply(
+                lambda x: format_datetime_resultados(x) if x else '-'
             )
-    
-    with col_exp2:
-        if rejeitadas:
-            df_export_rej = pd.DataFrame(rejeitadas)
-            csv_rej = df_export_rej.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📊 Baixar Rejeitadas (CSV)",
-                data=csv_rej,
-                file_name="viabilizacoes_rejeitadas.csv",
-                mime="text/csv",
-                width='stretch'
+        
+        st.dataframe(df_display, use_container_width=True, height=400)
+        
+        # Exportar
+        csv = df_display.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Baixar CSV",
+            data=csv,
+            file_name="predios_estruturados.csv",
+            mime="text/csv"
+        )
+    else:
+        st.info("Nenhum prédio estruturado ainda.")
+
+# TAB 2: Sem Viabilidade
+with tab_pred2:
+    if predios_sem_viab:
+        df_sem_viab = pd.DataFrame(predios_sem_viab)
+        
+        # Selecionar colunas
+        colunas = ['data_registro', 'condominio', 'localizacao', 
+                   'observacao', 'registrado_por']
+        
+        df_display = df_sem_viab[[col for col in colunas if col in df_sem_viab.columns]].copy()
+        
+        # Renomear
+        df_display.columns = ['Data', 'Condomínio', 'Localização', 'Motivo', 'Registrado Por'][:len(df_display.columns)]
+        
+        # Formatar data
+        if 'Data' in df_display.columns:
+            df_display['Data'] = df_display['Data'].apply(
+                lambda x: format_datetime_resultados(x) if x else '-'
             )
+        
+        st.dataframe(df_display, use_container_width=True, height=400)
+        
+        # Exportar
+        csv = df_display.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Baixar CSV",
+            data=csv,
+            file_name="predios_sem_viabilidade.csv",
+            mime="text/csv"
+        )
+    else:
+        st.success("✅ Não há prédios sem viabilidade!")
 
 # ======================
 # Footer
@@ -230,6 +492,6 @@ if st.session_state.user_nivel == 1:
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666; padding: 20px;'>
-    <p>📁 <strong>Validador de Projetos</strong> | Desenvolvido ByLeo</p>
+    <p>📊 <strong>Validador de Projetos</strong> | Desenvolvido ByLeo</p>
 </div>
 """, unsafe_allow_html=True)
