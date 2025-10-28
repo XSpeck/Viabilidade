@@ -14,7 +14,9 @@ from viability_functions import (
     delete_viability,
     get_statistics,
     request_building_viability,
-    reject_building_viability 
+    reject_building_viability,
+    get_auditor_viabilities,
+    devolver_viabilidade
 )
 import logging
 # Imports adicionais para busca de CTOs
@@ -339,6 +341,20 @@ def show_viability_form(row: dict, urgente: bool = False):
                     st.rerun()            
             if urgente:
                 st.error("🔥 **URGENTE - Cliente Presencial**")
+
+            # Botão para devolver viabilização
+            col_devolver = st.columns([1, 2, 1])[1]
+            with col_devolver:
+                if st.button(
+                    "↩️ Devolver para Fila",
+                    key=f"devolver_{row['id']}",
+                    type="secondary",
+                    use_container_width=True,
+                    help="Devolve esta viabilização para outros auditores pegarem"
+                ):
+                    if devolver_viabilidade(row['id']):
+                        st.success("✅ Viabilização devolvida!")
+                        st.rerun()
         
         with col2:
             # Formulário baseado no tipo
@@ -1007,7 +1023,7 @@ def show_viability_form(row: dict, urgente: bool = False):
 # ======================
 # Buscar Pendências
 # ======================
-pending = get_pending_viabilities()
+pending = get_auditor_viabilities(st.session_state.user_name)
 
 # ======================
 # Notificação de novas solicitações
