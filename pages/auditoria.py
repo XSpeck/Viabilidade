@@ -531,12 +531,13 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 
                              
                                 # Renderizar mapa (COM KEY ÚNICA)
-                                st_folium(
+                                output = st_folium(
                                     mapa, 
                                     width=700, 
                                     height=500,
-                                    key=f"mapa_auditoria_{row['id']}",  # ✅ Key única
-                                    returned_objects=[]  # ✅ Não retorna objetos clicados
+                                    key=f"mapa_auditoria_{row['id']}",
+                                    returned_objects=[],
+                                    feature_group_to_add=None
                                 )
                                 
                                 st.markdown("---")
