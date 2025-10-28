@@ -439,19 +439,24 @@ def show_viability_form(row: dict, urgente: bool = False):
                                     'cto_routes': cto_routes,
                                     'all_lines': all_lines
                                 }
-                        except Exception as e:
-                            st.error(f"❌ Erro na busca: {e}")
-                            logger.error(f"Erro ao buscar CTOs: {e}")
+                            else:
+                                st.warning("⚠️ Nenhuma CTO encontrada próxima (raio de 3.5km)")
+                        else:
+                            st.error("❌ Erro ao converter Plus Code para coordenadas")
                     
-                    # 📦 USAR DADOS DO CACHE
-                    if cache_key in st.session_state:
-                        cached = st.session_state[cache_key]
-                        lat = cached['lat']
-                        lon = cached['lon']
-                        cto_routes = cached['cto_routes']
-                        all_lines = cached['all_lines']
-                                
-                                st.success(f"✅ {len(cto_routes)} CTOs encontradas")
+                    except Exception as e:
+                        st.error(f"❌ Erro na busca: {e}")
+                        logger.error(f"Erro ao buscar CTOs: {e}")
+                
+                # 📦 USAR DADOS DO CACHE
+                if cache_key in st.session_state:
+                    cached = st.session_state[cache_key]
+                    lat = cached['lat']
+                    lon = cached['lon']
+                    cto_routes = cached['cto_routes']
+                    all_lines = cached['all_lines']
+                            
+                    st.success(f"✅ {len(cto_routes)} CTOs encontradas")
 
                                 # ========================================
                                 # MAPA INTERATIVO
