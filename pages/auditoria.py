@@ -458,111 +458,111 @@ def show_viability_form(row: dict, urgente: bool = False):
                             
                     st.success(f"✅ {len(cto_routes)} CTOs encontradas")
 
-                                # ========================================
-                                # MAPA INTERATIVO
-                                # ========================================
-                                
-                                st.markdown("### 🗺️ Visualização no Mapa")                               
-                                
-                                # Criar mapa centrado no cliente
-                                mapa = folium.Map(
-                                    location=[lat, lon],
-                                    zoom_start=16,
-                                    tiles="OpenStreetMap"
-                                )
-                                for company, data in all_lines.items():
-                                    for line_coords in data["lines"]:
-                                        folium.PolyLine(
-                                            locations=line_coords,
-                                            color=data["color"],
-                                            weight=3,
-                                            opacity=0.6,
-                                            tooltip=f"Projeto {company}"
-                                        ).add_to(mapa)
-                                
-                                # Marcador do CLIENTE
-                                folium.Marker(
-                                    location=[lat, lon],
-                                    popup=f"<b>🏠 Cliente</b><br>{row.get('nome_cliente', 'Cliente')}<br>{row['plus_code_cliente']}",
-                                    tooltip="📍 Localização do Cliente",
-                                    icon=folium.Icon(color='red', icon='home', prefix='fa')
-                                ).add_to(mapa)
-                                
-                                # Adicionar CTOs encontradas
-                                for idx, item in enumerate(cto_routes):
-                                    cto = item["cto"]
-                                    route = item["route"]
-                                    
-                                    # Cor baseada na posição (verde = mais próxima)
-                                    cores = ['green', 'blue', 'orange', 'purple', 'darkred']
-                                    cor = cores[idx] if idx < len(cores) else 'gray'
-                                    
-                                    # Ícone com número
-                                    icons_numero = ['1', '2', '3', '4', '5']
-                                    icon_numero = icons_numero[idx] if idx < len(icons_numero) else str(idx+1)
-                                    
-                                    # Popup com informações
-                                    if route:
-                                        dist_info = f"🚶 Rota: {format_distance(route['distance'])}<br>🏃 +50m: {format_distance(route['distance'] + 50)}"
-                                    else:
-                                        dist_info = f"📏 Linha reta: {format_distance(cto['distance'])}"
-                                    
-                                    popup_html = f"""
-                                    <div style='width: 200px'>
-                                        <h4>{icon_numero}. {cto['name']}</h4>
-                                        <p>{dist_info}</p>
-                                        <p>📍 {coords_to_pluscode(cto['lat'], cto['lon'])}</p>
-                                    </div>
-                                    """
-                                    
-                                    # Marcador da CTO
-                                    folium.Marker(
-                                        location=[cto["lat"], cto["lon"]],
-                                        popup=folium.Popup(popup_html, max_width=250),
-                                        tooltip=f"{icon_numero}. {cto['name']} - {format_distance(item['distance'])}",
-                                        icon=folium.Icon(color=cor, icon='info-sign', prefix='glyphicon')
-                                    ).add_to(mapa)
-                                    
-                                    # Desenhar ROTA se existir
-                                    if route and route.get('geometry'):
-                                        # Extrair coordenadas da rota
-                                        coordenadas_rota = []
-                                        for coord in route['geometry']['coordinates']:
-                                            coordenadas_rota.append([coord[1], coord[0]])  # [lat, lon]
-                                        
-                                        # Linha da rota
-                                        folium.PolyLine(
-                                            locations=coordenadas_rota,
-                                            color=cor,
-                                            weight=4,
-                                            opacity=0.7,
-                                            tooltip=f"Rota até {cto['name']}"
-                                        ).add_to(mapa)
-                                    else:
-                                        # Linha reta se não houver rota
-                                        folium.PolyLine(
-                                            locations=[[lat, lon], [cto["lat"], cto["lon"]]],
-                                            color=cor,
-                                            weight=2,
-                                            opacity=0.4,
-                                            dash_array='10',
-                                            tooltip=f"Linha reta até {cto['name']}"
-                                        ).add_to(mapa)
-                                
-                                # Ajustar zoom para mostrar todos os pontos
-                                bounds = [[lat, lon]]
-                                for item in cto_routes:
-                                    bounds.append([item["cto"]["lat"], item["cto"]["lon"]])
-                                
-                                mapa.fit_bounds(bounds, padding=[50, 50])
-                                
-                                # Renderizar mapa
-                                st_folium(mapa, width=700, height=500)
-                                
-                                st.markdown("---")
-                                # ========================================
-                                # FIM DO MAPA
-                                # ========================================
+                # ========================================
+                # MAPA INTERATIVO
+                # ========================================
+                
+                st.markdown("### 🗺️ Visualização no Mapa")                               
+                
+                # Criar mapa centrado no cliente
+                mapa = folium.Map(
+                    location=[lat, lon],
+                    zoom_start=16,
+                    tiles="OpenStreetMap"
+                )
+                for company, data in all_lines.items():
+                    for line_coords in data["lines"]:
+                        folium.PolyLine(
+                            locations=line_coords,
+                            color=data["color"],
+                            weight=3,
+                            opacity=0.6,
+                            tooltip=f"Projeto {company}"
+                        ).add_to(mapa)
+                
+                # Marcador do CLIENTE
+                folium.Marker(
+                    location=[lat, lon],
+                    popup=f"<b>🏠 Cliente</b><br>{row.get('nome_cliente', 'Cliente')}<br>{row['plus_code_cliente']}",
+                    tooltip="📍 Localização do Cliente",
+                    icon=folium.Icon(color='red', icon='home', prefix='fa')
+                ).add_to(mapa)
+                
+                # Adicionar CTOs encontradas
+                for idx, item in enumerate(cto_routes):
+                    cto = item["cto"]
+                    route = item["route"]
+                    
+                    # Cor baseada na posição (verde = mais próxima)
+                    cores = ['green', 'blue', 'orange', 'purple', 'darkred']
+                    cor = cores[idx] if idx < len(cores) else 'gray'
+                    
+                    # Ícone com número
+                    icons_numero = ['1', '2', '3', '4', '5']
+                    icon_numero = icons_numero[idx] if idx < len(icons_numero) else str(idx+1)
+                    
+                    # Popup com informações
+                    if route:
+                        dist_info = f"🚶 Rota: {format_distance(route['distance'])}<br>🏃 +50m: {format_distance(route['distance'] + 50)}"
+                    else:
+                        dist_info = f"📏 Linha reta: {format_distance(cto['distance'])}"
+                    
+                    popup_html = f"""
+                    <div style='width: 200px'>
+                        <h4>{icon_numero}. {cto['name']}</h4>
+                        <p>{dist_info}</p>
+                        <p>📍 {coords_to_pluscode(cto['lat'], cto['lon'])}</p>
+                    </div>
+                    """
+                    
+                    # Marcador da CTO
+                    folium.Marker(
+                        location=[cto["lat"], cto["lon"]],
+                        popup=folium.Popup(popup_html, max_width=250),
+                        tooltip=f"{icon_numero}. {cto['name']} - {format_distance(item['distance'])}",
+                        icon=folium.Icon(color=cor, icon='info-sign', prefix='glyphicon')
+                    ).add_to(mapa)
+                    
+                    # Desenhar ROTA se existir
+                    if route and route.get('geometry'):
+                        # Extrair coordenadas da rota
+                        coordenadas_rota = []
+                        for coord in route['geometry']['coordinates']:
+                            coordenadas_rota.append([coord[1], coord[0]])  # [lat, lon]
+                        
+                        # Linha da rota
+                        folium.PolyLine(
+                            locations=coordenadas_rota,
+                            color=cor,
+                            weight=4,
+                            opacity=0.7,
+                            tooltip=f"Rota até {cto['name']}"
+                        ).add_to(mapa)
+                    else:
+                        # Linha reta se não houver rota
+                        folium.PolyLine(
+                            locations=[[lat, lon], [cto["lat"], cto["lon"]]],
+                            color=cor,
+                            weight=2,
+                            opacity=0.4,
+                            dash_array='10',
+                            tooltip=f"Linha reta até {cto['name']}"
+                        ).add_to(mapa)
+                
+                # Ajustar zoom para mostrar todos os pontos
+                bounds = [[lat, lon]]
+                for item in cto_routes:
+                    bounds.append([item["cto"]["lat"], item["cto"]["lon"]])
+                
+                mapa.fit_bounds(bounds, padding=[50, 50])
+                
+                # Renderizar mapa
+                st_folium(mapa, width=700, height=500)
+                
+                st.markdown("---")
+                # ========================================
+                # FIM DO MAPA
+                # ========================================
                                 
                                 # Exibir CTOs
                                 for idx, item in enumerate(cto_routes):
