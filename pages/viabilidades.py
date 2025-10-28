@@ -79,67 +79,6 @@ def pegar_viabilidade(viability_id: str, auditor: str) -> bool:
         logger.error(f"Erro ao pegar viabilização: {e}")
         return False
 
-# ======================
-# Header
-# ======================
-st.title("📋 Viabilizações Disponíveis")
-st.markdown("Lista de solicitações aguardando auditoria técnica")
-
-# Botão de atualizar
-col_header1, col_header2 = st.columns([4, 1])
-with col_header2:
-    if st.button("🔄 Atualizar", use_container_width=True):
-        st.rerun()
-
-st.markdown("---")
-
-# ======================
-# Buscar Pendentes
-# ======================
-pending = get_pending_viabilities()
-
-# Notificação de novas solicitações
-if "pendentes_viabilidades" not in st.session_state:
-    st.session_state.pendentes_viabilidades = len(pending)
-
-if len(pending) > st.session_state.pendentes_viabilidades:
-    novas = len(pending) - st.session_state.pendentes_viabilidades
-    st.toast(f"📬 {novas} nova(s) solicitação(ões)!", icon="🆕")
-
-st.session_state.pendentes_viabilidades = len(pending)
-
-# ======================
-# Exibir Lista
-# ======================
-if not pending:
-    st.info("✅ Não há viabilizações disponíveis no momento.")
-    st.success("🎉 Todas as solicitações foram distribuídas aos auditores!")
-else:
-    st.subheader(f"📊 {len(pending)} Solicitação(ões) Disponível(is)")
-    
-    # Separar urgentes e normais
-    urgentes = [p for p in pending if p.get('urgente', False)]
-    normais = [p for p in pending if not p.get('urgente', False)]
-    
-    # Mostrar urgentes primeiro
-    if urgentes:
-        st.error(f"🔥 **{len(urgentes)} URGENTE(S) - Cliente(s) Presencial(is)**")
-        st.markdown("---")
-        
-        for row in urgentes:
-            mostrar_card_viabilidade(row, urgente=True)
-    
-    # Depois mostrar normais
-    if normais:
-        if urgentes:
-            st.markdown("---")
-            st.markdown("---")
-        st.info(f"📋 **{len(normais)} Solicitação(ões) Normal(is)**")
-        st.markdown("---")
-        
-        for row in normais:
-            mostrar_card_viabilidade(row, urgente=False)
-
 def mostrar_card_viabilidade(row: dict, urgente: bool = False):
     """Exibe card resumido de uma viabilização"""
     
@@ -212,23 +151,64 @@ def mostrar_card_viabilidade(row: dict, urgente: bool = False):
         
         st.markdown("---")
 
-# Chamar função para exibir cards
-if pending:
+# ======================
+# Header
+# ======================
+st.title("📋 Viabilizações Disponíveis")
+st.markdown("Lista de solicitações aguardando auditoria técnica")
+
+# Botão de atualizar
+col_header1, col_header2 = st.columns([4, 1])
+with col_header2:
+    if st.button("🔄 Atualizar", use_container_width=True):
+        st.rerun()
+
+st.markdown("---")
+
+# ======================
+# Buscar Pendentes
+# ======================
+pending = get_pending_viabilities()
+
+# Notificação de novas solicitações
+if "pendentes_viabilidades" not in st.session_state:
+    st.session_state.pendentes_viabilidades = len(pending)
+
+if len(pending) > st.session_state.pendentes_viabilidades:
+    novas = len(pending) - st.session_state.pendentes_viabilidades
+    st.toast(f"📬 {novas} nova(s) solicitação(ões)!", icon="🆕")
+
+st.session_state.pendentes_viabilidades = len(pending)
+
+# ======================
+# Exibir Lista
+# ======================
+if not pending:
+    st.info("✅ Não há viabilizações disponíveis no momento.")
+    st.success("🎉 Todas as solicitações foram distribuídas aos auditores!")
+else:
+    st.subheader(f"📊 {len(pending)} Solicitação(ões) Disponível(is)")
+    
+    # Separar urgentes e normais
     urgentes = [p for p in pending if p.get('urgente', False)]
     normais = [p for p in pending if not p.get('urgente', False)]
     
+    # Mostrar urgentes primeiro
     if urgentes:
         st.error(f"🔥 **{len(urgentes)} URGENTE(S) - Cliente(s) Presencial(is)**")
         st.markdown("---")
+        
         for row in urgentes:
             mostrar_card_viabilidade(row, urgente=True)
     
+    # Depois mostrar normais
     if normais:
         if urgentes:
             st.markdown("---")
             st.markdown("---")
         st.info(f"📋 **{len(normais)} Solicitação(ões) Normal(is)**")
         st.markdown("---")
+        
         for row in normais:
             mostrar_card_viabilidade(row, urgente=False)
 
