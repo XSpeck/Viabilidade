@@ -529,8 +529,15 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 
                                 mapa.fit_bounds(bounds, padding=[50, 50])
                                 
-                                # Renderizar mapa
-                                st_folium(mapa, width=700, height=500)
+                             
+                                # Renderizar mapa (COM KEY ÚNICA)
+                                st_folium(
+                                    mapa, 
+                                    width=700, 
+                                    height=500,
+                                    key=f"mapa_auditoria_{row['id']}",  # ✅ Key única
+                                    returned_objects=[]  # ✅ Não retorna objetos clicados
+                                )
                                 
                                 st.markdown("---")
                                 # ========================================
