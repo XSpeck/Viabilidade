@@ -670,7 +670,6 @@ def save_selected_cto(viability_id: str, cto_data: Dict) -> bool:
         st.error(f"❌ Erro ao salvar: {e}")
         return False
 
-
 def get_ftth_pending_search() -> List[Dict]:
     """Busca solicitações FTTH aguardando busca detalhada (Leo escolher CTO)"""
     try:
@@ -686,6 +685,47 @@ def get_ftth_pending_search() -> List[Dict]:
     except Exception as e:
         logger.error(f"Erro ao buscar FTTH pendentes: {e}")
         return []
+
+def get_auditor_viabilities(auditor_name: str) -> List[Dict]:
+    """Busca viabilizações em auditoria do auditor específico"""
+    try:
+        response = supabase.table('viabilizacoes')\
+            .select('*')\
+            .eq('status', 'em_auditoria')\
+            .eq('auditor_responsavel', auditor_name)\
+            .order('urgente', desc=True)\
+            .order('data_solicitacao', desc=False)\
+            .execute()
+        
+        if response.data:
+            # Filtrar prédios agendados
+            filtered = [r for r in response.data if r.get('status_predio') != 'agendado']
+            return filtered
+        return []
+    except Exception as e:
+        logger.error(f"Erro ao buscar viabilizações do auditor: {e}")
+        return []
+
+def devolver_viabilidade(viability_id: str) -> bool:
+    """Devolve viabilização para fila (remove auditor e volta para pendente)"""
+    try:
+        update_data = {
+            'status': 'pendente',
+            'auditor_responsavel': None
+        }
+        
+        response = supabase.table('viabilizacoes')\
+            .update(update_data)\
+            .eq('id', viability_id)\
+            .execute()
+        
+        if response.data:
+            logger.info(f"Viabilização {viability_id} devolvida")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Erro ao devolver viabilização: {e}")
+        return False
 
 def get_statistics() -> Dict:
     """Retorna estatísticas gerais do sistema"""
