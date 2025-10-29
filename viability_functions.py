@@ -176,7 +176,7 @@ def get_user_results(username: str) -> List[Dict]:
             supabase.table('viabilizacoes')
             .select('*')
             .eq('usuario', username)            
-            .or_('status.in.(aprovado,rejeitado,utp,pendente),status_predio.in.(aguardando_dados,agendado,estruturado)')
+            .or_('status.in.(aprovado,rejeitado,utp,pendente,em_auditoria),status_predio.in.(aguardando_dados,agendado,estruturado)')
             .is_('data_finalizacao', None)
             .order('data_auditoria', desc=True)
             .execute()
