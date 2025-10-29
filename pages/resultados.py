@@ -138,8 +138,8 @@ if not results:
     st.markdown("""
     ### Como funciona?
     1. Faça uma busca na **página principal**
-    2. Clique em **"Viabilizar"** ao encontrar uma CTO
-    3. Aguarde a **auditoria técnica** do Leo
+    2. Clique em **"Viabilizar"**
+    3. Aguarde a **auditoria técnica**
     4. Seus resultados aparecerão aqui!
     """)
     st.stop()
@@ -476,7 +476,7 @@ if building_pending:
             # Se já foi enviado, mostrar mensagem de aguardando
             elif status_atual == 'pronto_auditoria':
                 st.success("✅ **Dados enviados com sucesso!**")
-                st.info("⏳ **Aguardando agendamento da visita técnica pelo Leo**")
+                st.info("⏳ **Aguardando agendamento da visita técnica**")
                 
                 st.markdown("---")
                 st.markdown("### 📋 Dados Enviados")
