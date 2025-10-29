@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 from supabase_config import supabase
-from notifier import notify_new_viability
+from notifier import notify_new_viability, notify_new_agenda_data
 import pytz
 
 logger = logging.getLogger(__name__)
