@@ -475,8 +475,10 @@ with tab1:
         
         # Filtrar
         if search_atendidos:
+            termo_busca = re.escape(search_atendidos.lower().replace("+", "").strip())
             mask = df_atendidos.astype(str).apply(
-                lambda x: x.str.lower().str.contains(search_atendidos.lower(), na=False)
+               # lambda x: x.str.lower().str.contains(search_atendidos.lower(), na=False)
+                lambda x: x.str.lower().str.replace("+", "", regex=False).str.contains(termo_busca, regex=True, na=False)
             ).any(axis=1)
             df_atendidos = df_atendidos[mask]
         
