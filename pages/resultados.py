@@ -527,59 +527,30 @@ if building_pending:
 st.markdown("---")
 st.subheader("📋 Histórico Completo de Viabilizações")
 
- #Filtro de data para o histórico
-col_hist_filtro1, col_hist_filtro2, col_hist_filtro3 = st.columns([2, 2, 1])
-
-# Inicializar flag de "mostrar todos"
-if 'mostrar_todos_historico' not in st.session_state:
-    st.session_state.mostrar_todos_historico = False
-
-# Definir valores padrão baseado no flag
-if st.session_state.mostrar_todos_historico:
-    valor_inicio_default = None
-    valor_fim_default = None
-else:
-    valor_inicio_default = datetime.now().date() - timedelta(days=30)
-    valor_fim_default = datetime.now().date()
+# Filtro de data para o histórico
+col_hist_filtro1, col_hist_filtro2 = st.columns(2)
 
 with col_hist_filtro1:
     data_inicio_hist = st.date_input(
         "📅 Data Início",
-        value=valor_inicio_default,
+        value=datetime.now().date() - timedelta(days=30),
         key="data_inicio_historico",
         format="DD/MM/YYYY",
-        help="Deixe vazio para mostrar desde o início"
+        help="Padrão: últimos 30 dias"
     )
 
 with col_hist_filtro2:
     data_fim_hist = st.date_input(
         "📅 Data Fim",
-        value=valor_fim_default,
+        value=datetime.now().date(),
         key="data_fim_historico",
         format="DD/MM/YYYY",
-        help="Deixe vazio para mostrar até hoje"
+        help="Padrão: hoje"
     )
-
-with col_hist_filtro3:
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🔄 Todos", use_container_width=True, help="Mostrar todos os registros"):
-        st.session_state.mostrar_todos_historico = True
-        st.rerun()
-
-# Se mudou as datas manualmente, desativar flag "mostrar todos"
-if data_inicio_hist != valor_inicio_default or data_fim_hist != valor_fim_default:
-    st.session_state.mostrar_todos_historico = False
 
 # Mostrar período selecionado
 if data_inicio_hist and data_fim_hist:
     st.caption(f"📊 Exibindo de {data_inicio_hist.strftime('%d/%m/%Y')} até {data_fim_hist.strftime('%d/%m/%Y')}")
-elif not data_inicio_hist and not data_fim_hist:
-    st.success("✅ Exibindo todos os registros (sem filtro de período)")
-elif not data_inicio_hist:
-    st.caption(f"📊 Exibindo até {data_fim_hist.strftime('%d/%m/%Y')}")
-elif not data_fim_hist:
-    st.caption(f"📊 Exibindo desde {data_inicio_hist.strftime('%d/%m/%Y')}")
-
 # Buscar TODAS as viabilizações do usuário (incluindo finalizadas)
 try:
     response_historico = supabase.table('viabilizacoes')\
