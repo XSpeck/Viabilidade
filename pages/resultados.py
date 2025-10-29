@@ -146,18 +146,31 @@ rejected = [r for r in results_filtrados if r['status'] == 'rejeitado']
 utp = [r for r in results_filtrados if r['status'] == 'utp']
 structured = [r for r in results_filtrados if r.get('status_predio') == 'estruturado']
 building_pending = [r for r in results_filtrados if r.get('status_predio') in ['aguardando_dados', 'pronto_auditoria', 'agendado']]
-pending_analysis = [r for r in results_filtrados if r['status'] == 'pendente' and not r.get('status_predio')]
+
+# Pendentes: incluir tanto 'pendente' quanto 'em_auditoria'
+pending_analysis = [r for r in results_filtrados 
+                   if r['status'] in ['pendente', 'em_auditoria'] 
+                   and not r.get('status_predio')]
 
 st.markdown("---")
+# ======================
+# Separar pendentes por status
+# ======================
+# Na fila (ninguém pegou ainda)
+na_fila = [r for r in pending_analysis if not r.get('auditor_responsavel')]
+
+# Em auditoria (alguém pegou)
+em_auditoria = [r for r in pending_analysis if r.get('auditor_responsavel')]
 
 # ======================
-# Mostrar Em Andamento
+# Mostrar Em Auditoria (alguém já pegou)
 # ======================
-if pending_analysis:
-    st.subheader("⏳ Em Análise Técnica")
-    st.info("🔍 Suas solicitações estão sendo analisadas pela equipe técnica")
+if em_auditoria:
+    st.subheader("🔍 Em Análise Técnica")
     
-    for row in pending_analysis:
+    for row in em_auditoria:
+        auditor = row.get('auditor_responsavel', 'Auditor')
+        
         tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
         
         if row['tipo_instalacao'] == 'FTTH':
@@ -172,7 +185,7 @@ if pending_analysis:
         
         urgente_badge = " 🔥 **URGENTE**" if row.get('urgente', False) else ""        
         
-        with st.expander(f"⏳ {tipo_icon} {row['plus_code_cliente']} - {tipo_nome}{urgente_badge}"):
+        with st.expander(f"🔍 {tipo_icon} {row['plus_code_cliente']} - {tipo_nome}{urgente_badge}"):
             
             col_pend1, col_pend2 = st.columns(2)
             
@@ -191,11 +204,59 @@ if pending_analysis:
             
             with col_pend2:
                 st.markdown("### ⏱️ Status")
-                st.warning("🔍 **Em análise pela equipe técnica**")
-                st.info("⏳ Aguarde a auditoria do Leo")
-                st.caption("💡 Você será notificado quando a análise for concluída")
+                st.success(f"👤 **{auditor} está verificando sua solicitação**")
+                st.info("🔍 Análise técnica em andamento")
+                st.caption("💡 Você será notificado assim que a análise for concluída")
     
     st.markdown("---")
+
+# ======================
+# Mostrar Na Fila (ninguém pegou ainda)
+# ======================
+if na_fila:
+    st.subheader("📋 Aguardando Análise")
+    st.info(f"📬 {len(na_fila)} solicitação(ões) na fila aguardando auditor")
+    
+    for row in na_fila:
+        tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
+        
+        if row['tipo_instalacao'] == 'FTTH':
+            tipo_nome = "Casa (FTTH)"
+        elif row['tipo_instalacao'] == 'Prédio':
+            if row.get('tecnologia_predio'):
+                tipo_nome = f"Prédio ({row['tecnologia_predio']})"
+            else:
+                tipo_nome = "Prédio"
+        else:
+            tipo_nome = row['tipo_instalacao']
+        
+        urgente_badge = " 🔥 **URGENTE**" if row.get('urgente', False) else ""        
+        
+        with st.expander(f"📋 {tipo_icon} {row['plus_code_cliente']} - {tipo_nome}{urgente_badge}"):
+            
+            col_pend1, col_pend2 = st.columns(2)
+            
+            with col_pend1:
+                st.markdown("### 📋 Informações")
+                if row.get('nome_cliente'):
+                    st.text(f"🙋 Cliente: {row['nome_cliente']}")
+                st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
+                st.text(f"🏷️ Tipo: {tipo_nome}")
+                if row.get('predio_ftta'):
+                    st.text(f"🏢 Edifício: {row['predio_ftta']}")
+                st.text(f"📅 Solicitado: {format_time_br_supa(row['data_solicitacao'])}")
+                
+                if row.get('urgente', False):
+                    st.error("🔥 **Solicitação Urgente - Cliente Presencial**")
+            
+            with col_pend2:
+                st.markdown("### ⏱️ Status")
+                st.warning("📋 **Na fila para análise**")
+                st.info("⏳ Aguardando um auditor pegar sua solicitação")
+                st.caption("💡 Você será notificado quando iniciar a análise")
+    
+    st.markdown("---")
+
 
 # ======================
 # Mostrar Aprovadas
