@@ -666,8 +666,9 @@ try:
         
         # Filtrar se houver busca
         if busca_historico:
+            termo_busca = re.escape(busca_historico.lower().replace("+", "").strip())
             mask = df_historico.astype(str).apply(
-                lambda x: x.str.lower().str.contains(busca_historico.lower(), na=False)
+                lambda x: x.str.lower().str.replace("+", "", regex=False).str.contains(termo_busca, regex=True, na=False)                
             ).any(axis=1)
             df_historico = df_historico[mask]
         
