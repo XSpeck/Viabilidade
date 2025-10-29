@@ -66,7 +66,7 @@ with col_filtro1:
 with col_filtro2:
     filtro_status = st.selectbox(
         "Status",
-        options=["Todos", "Em Análise", "Aprovado", "Rejeitado", "UTP", "Prédio Pendente"],
+        options=["Todos", "Na Fila / Em Análise", "Aprovado", "Rejeitado", "UTP", "Prédio Pendente"],
         key="filtro_status"
     )
 
@@ -85,8 +85,8 @@ if filtro_tipo != "Todos":
     results_filtrados = [r for r in results_filtrados if r['tipo_instalacao'] == filtro_tipo]
 
 # Filtro por status
-if filtro_status == "Em Análise":
-    results_filtrados = [r for r in results_filtrados if r['status'] == 'pendente']
+if filtro_status == "Na Fila / Em Análise":
+    results_filtrados = [r for r in results_filtrados if r['status'] in ['pendente', 'em_auditoria']
 elif filtro_status == "Aprovado":
     results_filtrados = [r for r in results_filtrados if r['status'] == 'aprovado']
 elif filtro_status == "Rejeitado":
