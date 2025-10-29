@@ -527,39 +527,58 @@ if building_pending:
 st.markdown("---")
 st.subheader("📋 Histórico Completo de Viabilizações")
 
-# Filtro de data para o histórico
+ Filtro de data para o histórico
 col_hist_filtro1, col_hist_filtro2, col_hist_filtro3 = st.columns([2, 2, 1])
 
+# Inicializar flag de "mostrar todos"
+if 'mostrar_todos_historico' not in st.session_state:
+    st.session_state.mostrar_todos_historico = False
+
+# Definir valores padrão baseado no flag
+if st.session_state.mostrar_todos_historico:
+    valor_inicio_default = None
+    valor_fim_default = None
+else:
+    valor_inicio_default = datetime.now().date() - timedelta(days=30)
+    valor_fim_default = datetime.now().date()
+
 with col_hist_filtro1:
-    # Padrão: últimos 30 dias
     data_inicio_hist = st.date_input(
         "📅 Data Início",
-        value=datetime.now().date() - timedelta(days=30),
+        value=valor_inicio_default,
         key="data_inicio_historico",
-        format="DD/MM/YYYY"
+        format="DD/MM/YYYY",
+        help="Deixe vazio para mostrar desde o início"
     )
 
 with col_hist_filtro2:
     data_fim_hist = st.date_input(
         "📅 Data Fim",
-        value=datetime.now().date(),
+        value=valor_fim_default,
         key="data_fim_historico",
-        format="DD/MM/YYYY"
+        format="DD/MM/YYYY",
+        help="Deixe vazio para mostrar até hoje"
     )
 
 with col_hist_filtro3:
     st.markdown("<br>", unsafe_allow_html=True)
-    limpar_filtro = st.button("🔄 Todos", use_container_width=True, help="Mostrar todos os registros")
+    if st.button("🔄 Todos", use_container_width=True, help="Mostrar todos os registros"):
+        st.session_state.mostrar_todos_historico = True
+        st.rerun()
 
-# Se clicar em limpar, resetar datas
-if limpar_filtro:
-    st.session_state.data_inicio_historico = None
-    st.session_state.data_fim_historico = None
-    st.rerun()
+# Se mudou as datas manualmente, desativar flag "mostrar todos"
+if data_inicio_hist != valor_inicio_default or data_fim_hist != valor_fim_default:
+    st.session_state.mostrar_todos_historico = False
 
 # Mostrar período selecionado
 if data_inicio_hist and data_fim_hist:
     st.caption(f"📊 Exibindo de {data_inicio_hist.strftime('%d/%m/%Y')} até {data_fim_hist.strftime('%d/%m/%Y')}")
+elif not data_inicio_hist and not data_fim_hist:
+    st.success("✅ Exibindo todos os registros (sem filtro de período)")
+elif not data_inicio_hist:
+    st.caption(f"📊 Exibindo até {data_fim_hist.strftime('%d/%m/%Y')}")
+elif not data_fim_hist:
+    st.caption(f"📊 Exibindo desde {data_inicio_hist.strftime('%d/%m/%Y')}")
 
 # Buscar TODAS as viabilizações do usuário (incluindo finalizadas)
 try:
@@ -583,29 +602,29 @@ try:
         df_historico = pd.DataFrame(historico_completo)
         
         # Aplicar filtro de data
-        if data_inicio_hist or data_fim_hist:
-            # Filtrar por data_auditoria (ou data_solicitacao se não tiver auditoria)
-            df_historico['data_filtro'] = df_historico.apply(
-                lambda row: row.get('data_auditoria') if row.get('data_auditoria') 
-                else row.get('data_solicitacao'), 
-                axis=1
-            )
-            
-            # Converter para datetime
-            df_historico['data_filtro'] = pd.to_datetime(df_historico['data_filtro'], errors='coerce')
-            
-            # Filtrar
-            if data_inicio_hist:
-                df_historico = df_historico[
-                    df_historico['data_filtro'].dt.date >= data_inicio_hist
-                ]
-            
-            if data_fim_hist:
-                df_historico = df_historico[
-                    df_historico['data_filtro'].dt.date <= data_fim_hist
-                ]
-            
-            # Remover coluna auxiliar
+        # Criar coluna auxiliar com data_auditoria (ou data_solicitacao se não tiver)
+        df_historico['data_filtro'] = df_historico.apply(
+            lambda row: row.get('data_auditoria') if row.get('data_auditoria') 
+            else row.get('data_solicitacao'), 
+            axis=1
+        )
+        
+        # Converter para datetime
+        df_historico['data_filtro'] = pd.to_datetime(df_historico['data_filtro'], errors='coerce')
+        
+        # Aplicar filtro (se datas foram fornecidas)
+        if data_inicio_hist:
+            df_historico = df_historico[
+                df_historico['data_filtro'].dt.date >= data_inicio_hist
+            ]
+        
+        if data_fim_hist:
+            df_historico = df_historico[
+                df_historico['data_filtro'].dt.date <= data_fim_hist
+            ]
+        
+        # Remover coluna auxiliar
+        if 'data_filtro' in df_historico.columns:
             df_historico = df_historico.drop(columns=['data_filtro'])
         
         # Filtrar se houver busca
