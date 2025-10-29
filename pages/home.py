@@ -32,14 +32,6 @@ if not require_authentication():
 reference_lat = -28.6775
 reference_lon = -49.3696
 
-# ======================
-# Funções de Validação
-# ======================
-#def validate_plus_code(plus_code: str) -> bool:
-  #  """Valida formato de Plus Code"""
-  #  pattern = r'^[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3}$'
-  #  return bool(re.match(pattern, plus_code.upper().strip()))
-
 def validate_coordinates(coord_string: str) -> tuple:
     """
     Valida e extrai coordenadas no formato: lat, lon
