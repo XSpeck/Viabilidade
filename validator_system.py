@@ -22,6 +22,7 @@ from viability_functions import (
     format_time_br,
     get_ftth_pending_search,
     save_selected_cto,
+    validate_plus_code,
     update_viability_ftth
 )
 from login_system import require_authentication
