@@ -215,7 +215,7 @@ if em_auditoria:
 # ======================
 if na_fila:
     st.subheader("📋 Aguardando Análise")
-    st.info(f"📬 {len(na_fila)} solicitação(ões) na fila aguardando auditor")
+    st.info(f"📬 {len(na_fila)} solicitação(ões) na fila aguardando verificação")
     
     for row in na_fila:
         tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
@@ -252,7 +252,7 @@ if na_fila:
             with col_pend2:
                 st.markdown("### ⏱️ Status")
                 st.warning("📋 **Na fila para análise**")
-                st.info("⏳ Aguardando um auditor pegar sua solicitação")
+                st.info("⏳ Aguardando um técnico pegar sua solicitação")
                 st.caption("💡 Você será notificado quando iniciar a análise")
     
     st.markdown("---")
@@ -554,7 +554,7 @@ if building_pending:
                     col_submit = st.columns([1, 2, 1])[1]
                     with col_submit:
                         submit_building = st.form_submit_button(
-                            "📤 Enviar para Auditoria Técnica",
+                            "📤 Enviar para verificação Técnica",
                             type="primary",
                             use_container_width=True
                         )
