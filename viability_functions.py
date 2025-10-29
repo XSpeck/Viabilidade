@@ -22,6 +22,13 @@ def get_current_time():
     """Retorna data/hora atual no fuso horário do Brasil"""
     return datetime.now(TIMEZONE_BR).isoformat()
 
+# ======================
+# Funções Utilitárias
+# ======================
+def validate_plus_code(plus_code: str) -> bool:
+    pattern = r'^[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3}$'
+    return bool(re.match(pattern, plus_code.upper().strip()))
+
 def format_time_br(iso_string: str, only_time: bool = False) -> str:
     """Converte string ISO em formato legível no fuso horário de Brasília"""
     if not iso_string:
