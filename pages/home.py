@@ -7,7 +7,7 @@ import streamlit as st
 from login_system import require_authentication
 from openlocationcode import openlocationcode as olc
 import re
-from viability_functions import create_viability_request
+from viability_functions import create_viability_request, validate_plus_code
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,10 +35,10 @@ reference_lon = -49.3696
 # ======================
 # Funções de Validação
 # ======================
-def validate_plus_code(plus_code: str) -> bool:
-    """Valida formato de Plus Code"""
-    pattern = r'^[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3}$'
-    return bool(re.match(pattern, plus_code.upper().strip()))
+#def validate_plus_code(plus_code: str) -> bool:
+  #  """Valida formato de Plus Code"""
+  #  pattern = r'^[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3}$'
+  #  return bool(re.match(pattern, plus_code.upper().strip()))
 
 def validate_coordinates(coord_string: str) -> tuple:
     """
