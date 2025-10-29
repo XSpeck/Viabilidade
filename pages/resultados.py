@@ -86,7 +86,10 @@ if filtro_tipo != "Todos":
 
 # Filtro por status
 if filtro_status == "Em Análise":
-    results_filtrados = [r for r in results_filtrados if r['status'] in ['pendente', 'em_auditoria']
+    results_filtrados = [
+        r for r in results_filtrados
+        if r['status'] in ['pendente', 'em_auditoria']
+    ]
 elif filtro_status == "Aprovado":
     results_filtrados = [r for r in results_filtrados if r['status'] == 'aprovado']
 elif filtro_status == "Rejeitado":
