@@ -525,12 +525,43 @@ if building_pending:
 # ADICIONE AQUI A TABELA DE HISTÓRICO
 # ======================
 st.markdown("---")
-st.markdown("---")
 st.subheader("📋 Histórico Completo de Viabilizações")
 
-# Buscar TODAS as viabilizações do usuário (incluindo finalizadas)
-import pandas as pd
+# Filtro de data para o histórico
+col_hist_filtro1, col_hist_filtro2, col_hist_filtro3 = st.columns([2, 2, 1])
 
+with col_hist_filtro1:
+    # Padrão: últimos 30 dias
+    data_inicio_hist = st.date_input(
+        "📅 Data Início",
+        value=datetime.now().date() - timedelta(days=30),
+        key="data_inicio_historico",
+        format="DD/MM/YYYY"
+    )
+
+with col_hist_filtro2:
+    data_fim_hist = st.date_input(
+        "📅 Data Fim",
+        value=datetime.now().date(),
+        key="data_fim_historico",
+        format="DD/MM/YYYY"
+    )
+
+with col_hist_filtro3:
+    st.markdown("<br>", unsafe_allow_html=True)
+    limpar_filtro = st.button("🔄 Todos", use_container_width=True, help="Mostrar todos os registros")
+
+# Se clicar em limpar, resetar datas
+if limpar_filtro:
+    st.session_state.data_inicio_historico = None
+    st.session_state.data_fim_historico = None
+    st.rerun()
+
+# Mostrar período selecionado
+if data_inicio_hist and data_fim_hist:
+    st.caption(f"📊 Exibindo de {data_inicio_hist.strftime('%d/%m/%Y')} até {data_fim_hist.strftime('%d/%m/%Y')}")
+
+# Buscar TODAS as viabilizações do usuário (incluindo finalizadas)
 try:
     response_historico = supabase.table('viabilizacoes')\
         .select('*')\
@@ -551,6 +582,32 @@ try:
         # Converter para DataFrame
         df_historico = pd.DataFrame(historico_completo)
         
+        # Aplicar filtro de data
+        if data_inicio_hist or data_fim_hist:
+            # Filtrar por data_auditoria (ou data_solicitacao se não tiver auditoria)
+            df_historico['data_filtro'] = df_historico.apply(
+                lambda row: row.get('data_auditoria') if row.get('data_auditoria') 
+                else row.get('data_solicitacao'), 
+                axis=1
+            )
+            
+            # Converter para datetime
+            df_historico['data_filtro'] = pd.to_datetime(df_historico['data_filtro'], errors='coerce')
+            
+            # Filtrar
+            if data_inicio_hist:
+                df_historico = df_historico[
+                    df_historico['data_filtro'].dt.date >= data_inicio_hist
+                ]
+            
+            if data_fim_hist:
+                df_historico = df_historico[
+                    df_historico['data_filtro'].dt.date <= data_fim_hist
+                ]
+            
+            # Remover coluna auxiliar
+            df_historico = df_historico.drop(columns=['data_filtro'])
+        
         # Filtrar se houver busca
         if busca_historico:
             mask = df_historico.astype(str).apply(
@@ -568,10 +625,16 @@ try:
         df_display = df_historico[colunas_disponiveis].copy()
         
         # Renomear colunas
-        df_display.columns = [
-            'Data Solicitação', 'Tipo', 'Plus Code', 
-            'Cliente', 'Status', 'CTO', 'Prédio'
-        ][:len(colunas_disponiveis)]
+        rename_dict = {
+            'data_solicitacao': 'Data Solicitação',
+            'tipo_instalacao': 'Tipo',
+            'plus_code_cliente': 'Plus Code',
+            'nome_cliente': 'Cliente',
+            'status': 'Status',
+            'cto_numero': 'CTO',
+            'predio_ftta': 'Prédio'
+        }
+        df_display.rename(columns=rename_dict, inplace=True)
         
         # Formatar data
         if 'Data Solicitação' in df_display.columns:
@@ -594,6 +657,7 @@ try:
 except Exception as e:
     st.error(f"❌ Erro ao carregar histórico: {e}")
     logger.error(f"Erro histórico: {e}")
+    
 # ======================
 # Footer
 # ======================
