@@ -10,6 +10,7 @@ from typing import Dict, List, Optional
 from supabase_config import supabase
 from notifier import notify_new_viability, notify_new_agenda_data
 import pytz
+import re
 
 logger = logging.getLogger(__name__)
 
