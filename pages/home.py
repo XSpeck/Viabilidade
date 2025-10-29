@@ -512,8 +512,9 @@ with tab2:
         
         # Filtrar
         if search_sem_viab:
+            termo_busca = re.escape(search_sem_viab.lower().replace("+", "").strip())
             mask = df_sem_viab.astype(str).apply(
-                lambda x: x.str.lower().str.contains(search_sem_viab.lower(), na=False)
+                lambda x: x.str.lower().str.replace("+", "", regex=False).str.contains(termo_busca, regex=True, na=False)                
             ).any(axis=1)
             df_sem_viab = df_sem_viab[mask]
         
