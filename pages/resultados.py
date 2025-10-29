@@ -157,10 +157,12 @@ st.markdown("---")
 # Separar pendentes por status
 # ======================
 # Na fila (ninguém pegou ainda)
-na_fila = [r for r in pending_analysis if not r.get('auditor_responsavel')]
+na_fila = [r for r in pending_analysis 
+           if r['status'] == 'pendente' and not r.get('auditor_responsavel')]
 
 # Em auditoria (alguém pegou)
-em_auditoria = [r for r in pending_analysis if r.get('auditor_responsavel')]
+em_auditoria = [r for r in pending_analysis 
+                if r['status'] == 'em_auditoria' or r.get('auditor_responsavel')]
 
 # ======================
 # Mostrar Em Auditoria (alguém já pegou)
