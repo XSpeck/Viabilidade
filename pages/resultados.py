@@ -40,65 +40,17 @@ st.title("📊 Meus Resultados")
 
 st.markdown(f"Viabilizações de **{st.session_state.user_name}**")
 
-st.markdown("---")
-
-# Filtro por data
-col_data1, col_data2 = st.columns(2)
-
-with col_data1:
-    filtro_data_inicio = st.date_input(
-        "📅 Data Início",
-        value=None,
-        key="filtro_data_inicio_resultados",
-        format="DD/MM/YYYY",
-        help="Filtrar resultados a partir desta data"
-    )
-
-with col_data2:
-    filtro_data_fim = st.date_input(
-        "📅 Data Fim",
-        value=None,
-        key="filtro_data_fim_resultados",
-        format="DD/MM/YYYY",
-        help="Filtrar resultados até esta data"
-    )
-
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
 with col_header2:
     if st.button("🔄 Atualizar", use_container_width=True):
         st.rerun()
 
-
 # ======================
 # Buscar Resultados
 # ======================
 results = get_user_results(st.session_state.user_name)
-# Aplicar filtro de data (se fornecido)
-if filtro_data_inicio or filtro_data_fim:
-    results_filtrados_data = []
-    for r in results:
-        data_auditoria = r.get('data_auditoria')
-        if data_auditoria:
-            # Converter para data
-            try:
-                data_obj = datetime.fromisoformat(data_auditoria.replace('Z', '+00:00')).date()
-                
-                # Verificar limites
-                dentro_periodo = True
-                if filtro_data_inicio and data_obj < filtro_data_inicio:
-                    dentro_periodo = False
-                if filtro_data_fim and data_obj > filtro_data_fim:
-                    dentro_periodo = False
-                
-                if dentro_periodo:
-                    results_filtrados_data.append(r)
-            except:
-                results_filtrados_data.append(r)  # Incluir se der erro
-        else:
-            results_filtrados_data.append(r)  # Incluir se não tiver data
-    
-    results = results_filtrados_data
+
 st.markdown("---")
 st.subheader("🔍 Filtros")
 
