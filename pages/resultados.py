@@ -527,7 +527,7 @@ if building_pending:
 st.markdown("---")
 st.subheader("📋 Histórico Completo de Viabilizações")
 
- Filtro de data para o histórico
+ #Filtro de data para o histórico
 col_hist_filtro1, col_hist_filtro2, col_hist_filtro3 = st.columns([2, 2, 1])
 
 # Inicializar flag de "mostrar todos"
