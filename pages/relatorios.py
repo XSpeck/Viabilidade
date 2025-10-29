@@ -312,8 +312,11 @@ with tab_ftth1:
         
         # Filtrar
         if search_aprovadas:
+            termo_busca = re.escape(search_aprovadas.lower().replace("+", "").strip())
             mask = df_aprovadas.astype(str).apply(
-                lambda x: x.str.lower().str.contains(search_aprovadas.lower(), na=False)
+                lambda x: x.str.lower().str.replace("+", "", regex=False).str.contains(termo_busca, regex=True, na=False)
+                #lambda x: x.str.lower().str.contains(search_aprovadas.lower(), na=False)
+                
             ).any(axis=1)
             df_aprovadas = df_aprovadas[mask]
         
