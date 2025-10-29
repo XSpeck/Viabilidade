@@ -11,6 +11,7 @@ import logging
 import pandas as pd
 from datetime import datetime, timedelta
 from supabase_config import supabase
+import re
 
 logger = logging.getLogger(__name__)
 
