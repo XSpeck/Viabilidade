@@ -7,8 +7,8 @@ logger = logging.getLogger(__name__)
 # ======================
 # CONFIGURAÇÕES DO SUPABASE
 # ======================
-SUPABASE_URL = st.secrets["SUPABASE_URL"]    #"https://rvyldmtzcneexotozbev.supabase.co"
-SUPABASE_KEY = st.secrets["SUPABASE_KEY"]    #"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2eWxkbXR6Y25lZXhvdG96YmV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTAwODEsImV4cCI6MjA3NjE4NjA4MX0.9WIl6mNUFZwV9kB6sHFjFn2K4Ti6QJCikHSXHjX2rVM"
+SUPABASE_URL = st.secrets["SUPABASE_URL"] 
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"] 
 
 # ======================
 # Cliente Supabase
