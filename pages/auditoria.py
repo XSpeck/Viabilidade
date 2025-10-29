@@ -7,12 +7,10 @@ import streamlit as st
 from login_system import require_authentication
 #from streamlit_autorefresh import st_autorefresh
 from viability_functions import (
-    format_time_br_supa,
-    get_pending_viabilities,
+    format_time_br_supa,    
     update_viability_ftth,
     update_viability_ftta,
-    delete_viability,
-    get_statistics,
+    delete_viability,    
     request_building_viability,
     reject_building_viability,
     get_auditor_viabilities,
