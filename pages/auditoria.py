@@ -441,7 +441,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                                             })
                                     
                                     cto_routes.sort(key=lambda x: x["distance"])
-                                    cto_routes = cto_routes[:10]
+                                    cto_routes = cto_routes[:5]
                                 
                                 st.success(f"✅ {len(cto_routes)} CTOs encontradas")
 
