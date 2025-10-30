@@ -7,14 +7,15 @@ Salve como: notifier.py
 import requests
 import logging
 import os
+import streamlit as st
 
 logger = logging.getLogger(__name__)
 
 # =======================================================
 # CONFIGURAÇÕES — defina via variáveis de ambiente ou fixo
 # =======================================================
-BOT_TOKEN = "8216679407:AAFuNR3KzYYxAoX8DmJOCYVhCPd8prFK2-U"
-CHAT_ID = "-1003166673427" 
+BOT_TOKEN = st.secrets["TELEGRAM_BOT_TOKEN"]
+CHAT_ID = st.secrets["TELEGRAM_CHAT_ID"] 
 
 def send_telegram_message(message: str):
     """Função genérica para enviar mensagem ao Telegram."""
