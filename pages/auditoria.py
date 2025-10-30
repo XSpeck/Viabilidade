@@ -441,7 +441,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                                             })
                                     
                                     cto_routes.sort(key=lambda x: x["distance"])
-                                    cto_routes = cto_routes[:5]
+                                    cto_routes = cto_routes[:10]
                                 
                                 st.success(f"✅ {len(cto_routes)} CTOs encontradas")
 
@@ -511,30 +511,30 @@ def show_viability_form(row: dict, urgente: bool = False):
                                     ).add_to(mapa)
                                     
                                     # Desenhar ROTA se existir
-                                    if route and route.get('geometry'):
+                                    #if route and route.get('geometry'):
                                         # Extrair coordenadas da rota
-                                        coordenadas_rota = []
-                                        for coord in route['geometry']['coordinates']:
-                                            coordenadas_rota.append([coord[1], coord[0]])  # [lat, lon]
+                                        #coordenadas_rota = []
+                                       # for coord in route['geometry']['coordinates']:
+                                           # coordenadas_rota.append([coord[1], coord[0]])  # [lat, lon]
                                         
                                         # Linha da rota
-                                        folium.PolyLine(
-                                            locations=coordenadas_rota,
-                                            color=cor,
-                                            weight=4,
-                                            opacity=0.7,
-                                            tooltip=f"Rota até {cto['name']}"
-                                        ).add_to(mapa)
-                                    else:
+                                       # folium.PolyLine(
+                                         #   locations=coordenadas_rota,
+                                          #  color=cor,
+                                          #  weight=4,
+                                         #   opacity=0.7,
+                                         #   tooltip=f"Rota até {cto['name']}"
+                                    #    ).add_to(mapa)
+                                  #  else:
                                         # Linha reta se não houver rota
-                                        folium.PolyLine(
-                                            locations=[[lat, lon], [cto["lat"], cto["lon"]]],
-                                            color=cor,
-                                            weight=2,
-                                            opacity=0.4,
-                                            dash_array='10',
-                                            tooltip=f"Linha reta até {cto['name']}"
-                                        ).add_to(mapa)
+                                      #  folium.PolyLine(
+                                      #      locations=[[lat, lon], [cto["lat"], cto["lon"]]],
+                                       #     color=cor,
+                                        #    weight=2,
+                                          #  opacity=0.4,
+                                         #   dash_array='10',
+                                        #    tooltip=f"Linha reta até {cto['name']}"
+                                      #  ).add_to(mapa)
                                 
                                 # Ajustar zoom para mostrar todos os pontos
                                 bounds = [[lat, lon]]
