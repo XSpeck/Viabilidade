@@ -456,17 +456,419 @@ try:
     # - O estilo dos st.metric
     # - Mantendo a mesma lógica de processamento
     
+    # ABA 3: Clientes sem ONU
     with tab3:
         st.header("👥 Clientes Ativos sem ONU Cadastrada")
-        st.info("⚙️ Funcionalidade em desenvolvimento - Copie o código da ABA 3 do app original aqui")
+        st.markdown("**Clientes que estão ativos no sistema mas não aparecem no relatório de ONUs**")
+        
+        if df_logins_completo is not None:
+            # Identificar coluna de status
+            col_status_completo = None
+            for col in df_logins_completo.columns:
+                if any(palavra in col.lower().replace('"', '') for palavra in ["ativo", "status"]):
+                    col_status_completo = col
+                    break
+            
+            # Filtrar apenas clientes ativos
+            if col_status_completo:
+                clientes_ativos_todos = df_logins_completo[
+                    df_logins_completo[col_status_completo].astype(str).str.lower().str.strip() == "sim"
+                ].copy()
+            else:
+                clientes_ativos_todos = df_logins_completo.copy()
+            
+            # Identificar coluna de login
+            col_login_completo = None
+            for col in df_logins_completo.columns:
+                if col.lower().replace('"', '') == "login":
+                    col_login_completo = col
+                    break
+            
+            if col_login_completo:
+                # Logins que estão no arquivo logins mas não no relatório
+                logins_no_relatorio = set()
+                if "Login" in df.columns:
+                    logins_no_relatorio = set(df["Login"].unique())
+                
+                logins_todos_ativos = set(clientes_ativos_todos[col_login_completo].unique())
+                clientes_sem_onu = logins_todos_ativos - logins_no_relatorio
+                
+                # Filtrar o dataframe para mostrar apenas clientes sem ONU
+                df_clientes_sem_onu = clientes_ativos_todos[
+                    clientes_ativos_todos[col_login_completo].isin(clientes_sem_onu)
+                ].copy()
+                
+                # Métricas
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("👥 Clientes Ativos sem ONU", len(df_clientes_sem_onu))
+                with col2:
+                    # Contar quantos são UTP
+                    clientes_utp = 0
+                    if "Transmissor" in df_clientes_sem_onu.columns:
+                        clientes_utp = len(df_clientes_sem_onu[
+                            df_clientes_sem_onu["Transmissor"].astype(str).str.contains("Clientes_UTP", case=False, na=False)
+                        ])
+                    st.metric("📡 Clientes UTP", clientes_utp)
+                with col3:
+                    outros_tipos = len(df_clientes_sem_onu) - clientes_utp
+                    st.metric("🔗 Outros Tipos", outros_tipos)
+                
+                if len(df_clientes_sem_onu) > 0:
+                    # Filtros
+                    st.subheader("🔍 Filtros")
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        # Filtro por tipo de transmissor
+                        tipos_transmissor = ["Todos"] + list(df_clientes_sem_onu["Transmissor"].value_counts().index)
+                        filtro_transmissor = st.selectbox("Filtrar por Transmissor:", tipos_transmissor, key="transmissor_sem_onu")
+                    
+                    with col2:
+                        # Filtro por complemento
+                        complementos = ["Todos"] + [comp for comp in df_clientes_sem_onu["Complemento"].value_counts().index if pd.notna(comp)]
+                        filtro_complemento = st.selectbox("Filtrar por Complemento:", complementos, key="complemento_sem_onu")
+                    
+                    # Aplicar filtros
+                    df_filtrado = df_clientes_sem_onu.copy()
+                    
+                    if filtro_transmissor != "Todos":
+                        df_filtrado = df_filtrado[df_filtrado["Transmissor"] == filtro_transmissor]
+                    
+                    if filtro_complemento != "Todos":
+                        df_filtrado = df_filtrado[df_filtrado["Complemento"] == filtro_complemento]
+                    
+                    # Preparar tabela para exibição
+                    colunas_exibir = [col_login_completo, "Cliente", "Transmissor", "Complemento", "Plano", "Endereco", "Bairro"]
+                    colunas_existentes = [col for col in colunas_exibir if col in df_filtrado.columns]
+                    
+                    tabela_clientes = df_filtrado[colunas_existentes].copy()
+                    
+                    # Renomear colunas para melhor visualização
+                    if col_login_completo in tabela_clientes.columns:
+                        tabela_clientes = tabela_clientes.rename(columns={col_login_completo: "Login"})
+                    
+                    st.subheader(f"📋 Lista de Clientes ({len(df_filtrado)} registros)")
+                    st.dataframe(
+                        tabela_clientes,
+                        width='stretch',
+                        height=400
+                    )
+                    
+                    # Botão de download
+                    csv_clientes_sem_onu = tabela_clientes.to_csv(sep=';', index=False)
+                    st.download_button(
+                        label="💾 Baixar Lista de Clientes sem ONU",
+                        data=csv_clientes_sem_onu,
+                        file_name="clientes_sem_onu.csv",
+                        mime="text/csv"
+                    )
+                    
+                    # Resumo por transmissor
+                    st.subheader("📊 Resumo por Transmissor")
+                    resumo_transmissor = df_clientes_sem_onu.groupby("Transmissor").agg({
+                        col_login_completo: "count",
+                        "Bairro": "nunique"
+                    }).reset_index()
+                    
+                    resumo_transmissor.columns = ["Transmissor", "Qtd Clientes", "Bairros Atendidos"]
+                    resumo_transmissor = resumo_transmissor.sort_values("Qtd Clientes", ascending=False)
+                    
+                    st.dataframe(resumo_transmissor, width='stretch')
+                    
+                else:
+                    st.success("✅ Todos os clientes ativos possuem ONU cadastrada!")
+                    st.balloons()
+            else:
+                st.error("❌ Coluna de Login não encontrada no arquivo logins.csv")
+        else:
+            st.warning("⚠️ Arquivo logins.csv não foi carregado. Esta análise requer o arquivo de logins.")
     
+    # ABA 4: Clientes N1 (Rede Neutra)
     with tab4:
-        st.header("🏢 Clientes N1 (Rede Neutra)")
-        st.info("⚙️ Funcionalidade em desenvolvimento - Copie o código da ABA 4 do app original aqui")
+        st.header("🏢 Clientes N1 CONEXÕES DE INTERNET LTDA (Rede Neutra)")
+        st.markdown("**Análise de clientes N1 CONEXÕES DE INTERNET LTDA - Operadora de Rede Neutra**")
+        
+        if df_logins_completo is not None:
+            # Filtrar clientes N1 na coluna Cliente
+            clientes_n1 = df_logins_completo[
+                df_logins_completo["Cliente"].astype(str).str.contains(
+                    "N1 CONEXOES DE INTERNET LTDA", case=False, na=False
+                )
+            ].copy()
+            
+            # Identificar coluna de status para separar ativos/inativos
+            col_status_n1 = None
+            for col in df_logins_completo.columns:
+                if any(palavra in col.lower().replace('"', '') for palavra in ["ativo", "status"]):
+                    col_status_n1 = col
+                    break
+            
+            clientes_n1_ativos = pd.DataFrame()
+            clientes_n1_inativos = pd.DataFrame()
+            
+            if col_status_n1:
+                clientes_n1_ativos = clientes_n1[
+                    clientes_n1[col_status_n1].astype(str).str.lower().str.strip() == "sim"
+                ].copy()
+                
+                clientes_n1_inativos = clientes_n1[
+                    clientes_n1[col_status_n1].astype(str).str.lower().str.strip() != "sim"
+                ].copy()
+            else:
+                clientes_n1_ativos = clientes_n1.copy()
+            
+            # Métricas
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("🏢 Total N1", len(clientes_n1))
+            with col2:
+                st.metric("✅ N1 Ativos", len(clientes_n1_ativos))
+            with col3:
+                st.metric("❌ N1 Inativos", len(clientes_n1_inativos))
+            with col4:
+                # Verificar quantos N1 ativos têm ONUs
+                n1_com_onu = 0
+                col_login_n1 = None
+                for col in df_logins_completo.columns:
+                    if col.lower().replace('"', '') == "login":
+                        col_login_n1 = col
+                        break
+                
+                if col_login_n1 and "Login" in df.columns:
+                    logins_n1_ativos = set(clientes_n1_ativos[col_login_n1].unique())
+                    logins_com_onu = set(df["Login"].unique())
+                    n1_com_onu = len(logins_n1_ativos.intersection(logins_com_onu))
+                
+                st.metric("📶 N1 com ONU", n1_com_onu)
+            
+            if len(clientes_n1) > 0:
+                st.info("ℹ️ **Rede Neutra**: N1 CONEXÕES é uma operadora de rede neutra que utiliza a infraestrutura para atender outros provedores.")
+                
+                # Filtros
+                st.subheader("🔍 Filtros")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    status_filtro = st.selectbox(
+                        "Status:", 
+                        ["Todos", "Apenas Ativos", "Apenas Inativos"],
+                        key="status_filtro_n1"
+                    )
+                
+                with col2:
+                    # Filtro por transmissor
+                    tipos_transmissor_n1 = ["Todos"] + list(clientes_n1["Transmissor"].value_counts().index)
+                    filtro_transmissor_n1 = st.selectbox("Transmissor:", tipos_transmissor_n1, key="transmissor_n1")
+                
+                # Aplicar filtros
+                if status_filtro == "Apenas Ativos":
+                    df_n1_filtrado = clientes_n1_ativos.copy()
+                elif status_filtro == "Apenas Inativos":
+                    df_n1_filtrado = clientes_n1_inativos.copy()
+                else:
+                    df_n1_filtrado = clientes_n1.copy()
+                
+                if filtro_transmissor_n1 != "Todos":
+                    df_n1_filtrado = df_n1_filtrado[df_n1_filtrado["Transmissor"] == filtro_transmissor_n1]
+                
+                # ---- NOVA TABELA ----
+                # Juntar com informações técnicas do relatório
+                tabela_n1 = df_n1_filtrado.merge(
+                    df[["Login", "PON ID", "Caixa FTTH", "Sinal RX", "Última atualização", "Transmissor"]],
+                    on="Login",
+                    how="left",
+                    suffixes=("_logins", "_relatorio")
+                )
+
+                # Ajustar transmissor:
+                # 1. Se vier dos logins, usa ele
+                # 2. Se não tiver, pega do relatório
+                if "Transmissor_logins" in tabela_n1.columns and "Transmissor_relatorio" in tabela_n1.columns:
+                    tabela_n1["Transmissor"] = tabela_n1["Transmissor_logins"].fillna(tabela_n1["Transmissor_relatorio"])
+                elif "Transmissor_logins" in tabela_n1.columns:
+                    tabela_n1["Transmissor"] = tabela_n1["Transmissor_logins"]
+                elif "Transmissor_relatorio" in tabela_n1.columns:
+                    tabela_n1["Transmissor"] = tabela_n1["Transmissor_relatorio"]
+                else:
+                    tabela_n1["Transmissor"] = "N/A"
+
+                # Adicionar Plus Code
+                if ctos_localizacao:
+                    tabela_n1["Plus Code"] = tabela_n1["Caixa FTTH"].map(ctos_localizacao).fillna("N/A")
+                else:
+                    tabela_n1["Plus Code"] = "N/A"
+
+                # Selecionar colunas na ordem desejada
+                colunas_exibir_n1 = ["Login", "Transmissor", "PON ID", "Caixa FTTH", "Sinal RX", "Última atualização", "Plus Code"]
+                colunas_existentes_n1 = [col for col in colunas_exibir_n1 if col in tabela_n1.columns]
+                tabela_n1 = tabela_n1[colunas_existentes_n1]
+                
+                st.subheader(f"📋 Lista de Clientes N1 - Rede Neutra ({len(tabela_n1)} registros)")
+                st.dataframe(
+                    tabela_n1,
+                    width='stretch',
+                    height=400
+                )
+                
+                # Botão de download
+                csv_n1 = tabela_n1.to_csv(sep=';', index=False)
+                st.download_button(
+                    label="💾 Baixar Lista Clientes N1 (Rede Neutra)",
+                    data=csv_n1,
+                    file_name="clientes_n1_rede_neutra.csv",
+                    mime="text/csv"
+                )
+                
+                # Resumos
+                st.subheader("📊 Análise da Rede Neutra")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("**Distribuição por Transmissor**")
+                    resumo_transmissor_n1 = clientes_n1.groupby("Transmissor").agg({
+                        "Login": "count"
+                    }).reset_index()
+                    resumo_transmissor_n1.columns = ["Transmissor", "Qtd Clientes N1"]
+                    resumo_transmissor_n1 = resumo_transmissor_n1.sort_values("Qtd Clientes N1", ascending=False)
+                    st.dataframe(resumo_transmissor_n1, width='stretch')
+                
+                
+                
+                # Análise de conectividade
+                if n1_com_onu > 0:
+                    st.subheader("🔗 Análise de Conectividade FTTH")
+                    
+                    porcentagem_ftth = (n1_com_onu / len(clientes_n1_ativos)) * 100 if len(clientes_n1_ativos) > 0 else 0
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Clientes N1 com FTTH", f"{n1_com_onu} ({porcentagem_ftth:.1f}%)")
+                    with col2:
+                        n1_sem_ftth = len(clientes_n1_ativos) - n1_com_onu
+                        st.metric("Clientes N1 sem FTTH", f"{n1_sem_ftth} ({100-porcentagem_ftth:.1f}%)")
+                    
+            else:
+                st.info("ℹ️ Nenhum cliente N1 CONEXÕES DE INTERNET LTDA encontrado no sistema.")
+        else:
+            st.warning("⚠️ Arquivo logins.csv não foi carregado. Esta análise requer o arquivo de logins.")
     
+    # ABA 5: CTOs Saturadas        
     with tab5:
         st.header("📊 CTOs Saturadas")
-        st.info("⚙️ Funcionalidade em desenvolvimento - Copie o código da ABA 5 do app original aqui")
+
+        if df_logins_completo is not None:
+            # Identificar coluna de status
+            col_status_completo = None
+            for col in df_logins_completo.columns:
+                if any(palavra in col.lower().replace('"', '') for palavra in ["ativo", "status"]):
+                    col_status_completo = col
+                    break
+
+            if col_status_completo:
+                contagem_status = df_logins_completo[col_status_completo].value_counts().reset_index()
+                contagem_status.columns = ["Status", "Quantidade"]
+                
+                # Substituir valores 'sim' e 'não'
+                contagem_status["Status"] = contagem_status["Status"].astype(str).str.lower().str.strip()
+                contagem_status["Status"] = contagem_status["Status"].replace({
+                    "sim": "Ativos",
+                    "não": "Não ativos",
+                    "nao": "Não ativos"
+                })
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric(
+                        "✅ Logins Ativos",
+                        int(contagem_status[contagem_status["Status"].astype(str).str.lower().str.contains("sim|ativo")]["Quantidade"].sum())
+                    )
+                with col2:
+                    st.metric("👥 Total de Logins", len(df_logins_completo))
+
+                st.subheader("📋 Distribuição por Status de Login")
+                st.dataframe(contagem_status, width='stretch')
+
+                # NOVA TABELA: CTOs com logins NÃO ATIVOS (ordem: relatório -> checagem no logins)
+                st.subheader("🚫 Logins Não Ativos por CTO (do Relatório)")
+                # Verificações básicas
+                if "Login" in df_relatorio_original.columns and "Caixa FTTH" in df_relatorio_original.columns:
+                    # Detectar coluna de Login no arquivo de logins (robusto a aspas/case)
+                    col_login_logins = None
+                    for col in df_logins_completo.columns:
+                        if col.lower().replace('"', '') == "login":
+                            col_login_logins = col
+                            break
+
+                    # Procurar especificamente a coluna 'Ativo'
+                    col_ativo = None
+                    for col in df_logins_completo.columns:
+                        if col.strip().lower().replace('"', '') == "ativo":
+                            col_ativo = col
+                            break
+
+                    if col_login_logins and col_ativo:
+                        # 1) Partir do relatório (bruto, sem restrições)
+                        df_rel = df_relatorio_original[["Login", "Caixa FTTH"]].dropna(subset=["Login"]).copy()
+                        df_rel["login_norm"] = df_rel["Login"].astype(str).str.lower().str.strip()
+
+                        # 2) Buscar status no logins.csv
+                        df_log = df_logins_completo[[col_login_logins, col_ativo]].copy()
+                        df_log["login_norm"] = df_log[col_login_logins].astype(str).str.lower().str.strip()
+                        df_log["ativo_norm"] = df_log[col_ativo].astype(str).str.lower().str.strip()
+
+                        # 3) Voltar ao relatório e pegar apenas onde o status é NÃO ativo
+                        cruzado = df_rel.merge(
+                            df_log[["login_norm", col_ativo, "ativo_norm"]],
+                            on="login_norm",
+                            how="left"
+                        )
+
+                        valores_nao_ativos = ["não", "nao", "no", "0", "false", "inativo"]
+                        tabela_nao_ativos = cruzado[cruzado["ativo_norm"].isin(valores_nao_ativos)][["Caixa FTTH", "Login"]].drop_duplicates()
+
+                        if len(tabela_nao_ativos) > 0:
+                            st.dataframe(tabela_nao_ativos.sort_values(["Caixa FTTH", "Login"]).reset_index(drop=True), width='stretch', height=400)
+                            csv_tabela_nao = tabela_nao_ativos.to_csv(sep=';', index=False)
+                            st.download_button(
+                                label="💾 Baixar Logins Não Ativos por CTO",
+                                data=csv_tabela_nao,
+                                file_name="ctos_logins_nao_ativos_relatorio.csv",
+                                mime="text/csv"
+                            )
+                        else:
+                            st.success("✅ Nenhum login não ativo encontrado ocupando ONU no relatório.")
+                    else:
+                        st.warning("⚠️ Não foi possível localizar as colunas 'Login' e/ou 'Ativo' em logins.csv.")
+                else:
+                    st.warning("⚠️ O relatório precisa conter as colunas 'Login' e 'Caixa FTTH'.")
+
+        # Contagem de ONUs por CTO
+        if "Caixa FTTH" in df.columns:
+            st.subheader("🏢 Quantidade de ONUs por CTO")
+
+            resumo_cto = df.groupby("Caixa FTTH").agg({
+                "Login": "count",
+                "Transmissor": lambda x: x.mode().iloc[0] if not x.mode().empty else "N/A",
+                "PON ID": lambda x: x.mode().iloc[0] if not x.mode().empty else "N/A"
+            }).reset_index()
+
+            resumo_cto.columns = ["Caixa FTTH", "Qtd ONUs", "Transmissor", "PON ID"]
+            resumo_cto = resumo_cto.sort_values("Qtd ONUs", ascending=False)
+
+            st.dataframe(resumo_cto, width='stretch')
+
+            # Botão de download
+            csv_cto = resumo_cto.to_csv(sep=';', index=False)
+            st.download_button(
+                label="💾 Baixar Resumo ONUs por CTO",
+                data=csv_cto,
+                file_name="resumo_cto.csv",
+                mime="text/csv"
+            )
+        else:
+            st.warning("⚠️ Coluna 'Caixa FTTH' não encontrada no relatório.") 
     
 except Exception as e:
     st.error(f"❌ Erro ao processar os dados: {e}")
