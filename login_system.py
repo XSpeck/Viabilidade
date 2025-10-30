@@ -210,7 +210,12 @@ def show_navigation_menu():
         # Página de Relatórios (Nv 1)
         if st.session_state.user_nivel == 1:
             if st.button("📈 Relatórios", width='stretch', key="nav_reports"):
-                st.switch_page("pages/relatorios.py")        
+                st.switch_page("pages/relatorios.py")  
+
+        # Página de Análise da Rede (Nv 1)
+        if st.session_state.user_nivel == 1:
+            if st.button("🔧 Análise da Rede", width='stretch', key="nav_analise_rede"):
+                st.switch_page("pages/analise_rede.py")
 
 # ======================
 # Função Principal de Integração
