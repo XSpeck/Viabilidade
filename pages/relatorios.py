@@ -239,72 +239,72 @@ if ftth_rejeitadas:
         tiles="OpenStreetMap"
     )
     
-    # Criar cluster de marcadores
+    # Criar cluster de marcadores COM COR VERMELHA
     marker_cluster = MarkerCluster(
         name="Pontos Sem Viabilidade",
         overlay=True,
         control=True,
-        icon_create_function="""
-        function(cluster) {
-            var childCount = cluster.getChildCount();
-            var c = ' marker-cluster-';
-            if (childCount < 10) {
-                c += 'small';
-            } else if (childCount < 100) {
-                c += 'medium';
-            } else {
-                c += 'large';
+        icon_create_function="""\
+            function(cluster) {
+                var childCount = cluster.getChildCount();
+                var c = ' marker-cluster-';
+                if (childCount < 10) {
+                    c += 'small';
+                } else if (childCount < 100) {
+                    c += 'medium';
+                } else {
+                    c += 'large';
+                }
+                return new L.DivIcon({ 
+                    html: '<div><span>' + childCount + '</span></div>', 
+                    className: 'marker-cluster-red' + c, 
+                    iconSize: new L.Point(40, 40) 
+                });
             }
-            return new L.DivIcon({ 
-                html: '<div><span>' + childCount + '</span></div>', 
-                className: 'marker-cluster-red' + c, 
-                iconSize: new L.Point(40, 40) 
-            });
+        """
+    ).add_to(mapa)
+    
+    # Adicionar CSS customizado para clusters vermelhos
+    mapa.get_root().html.add_child(folium.Element("""\
+    <style>
+        .marker-cluster-red {
+            background-color: rgba(255, 0, 0, 0.6);
         }
-    """
-).add_to(mapa)
-
-# Adicionar CSS customizado para clusters vermelhos
-mapa.get_root().html.add_child(folium.Element("""
-<style>
-    .marker-cluster-red {
-        background-color: rgba(255, 0, 0, 0.6);
-    }
-    .marker-cluster-red div {
-        background-color: rgba(220, 0, 0, 0.6);
-        width: 30px;
-        height: 30px;
-        margin-left: 5px;
-        margin-top: 5px;
-        text-align: center;
-        border-radius: 15px;
-        font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
-        font-weight: bold;
-        line-height: 30px;
-    }
-    .marker-cluster-red span {
-        color: #fff;
-    }
-    .marker-cluster-redsmall {
-        background-color: rgba(255, 100, 100, 0.6);
-    }
-    .marker-cluster-redsmall div {
-        background-color: rgba(255, 0, 0, 0.7);
-    }
-    .marker-cluster-redmedium {
-        background-color: rgba(240, 50, 50, 0.6);
-    }
-    .marker-cluster-redmedium div {
-        background-color: rgba(200, 0, 0, 0.7);
-    }
-    .marker-cluster-redlarge {
-        background-color: rgba(220, 0, 0, 0.6);
-    }
-    .marker-cluster-redlarge div {
-        background-color: rgba(180, 0, 0, 0.7);
-    }
-</style>
-"""))
+        .marker-cluster-red div {
+            background-color: rgba(220, 0, 0, 0.6);
+            width: 30px;
+            height: 30px;
+            margin-left: 5px;
+            margin-top: 5px;
+            text-align: center;
+            border-radius: 15px;
+            font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+            font-weight: bold;
+            line-height: 30px;
+        }
+        .marker-cluster-red span {
+            color: #fff;
+        }
+        .marker-cluster-redsmall {
+            background-color: rgba(255, 100, 100, 0.6);
+        }
+        .marker-cluster-redsmall div {
+            background-color: rgba(255, 0, 0, 0.7);
+        }
+        .marker-cluster-redmedium {
+            background-color: rgba(240, 50, 50, 0.6);
+        }
+        .marker-cluster-redmedium div {
+            background-color: rgba(200, 0, 0, 0.7);
+        }
+        .marker-cluster-redlarge {
+            background-color: rgba(220, 0, 0, 0.6);
+        }
+        .marker-cluster-redlarge div {
+            background-color: rgba(180, 0, 0, 0.7);
+        }
+    </style>
+    """))
     
     # Adicionar marcadores
     for idx, row in enumerate(ftth_rejeitadas):
