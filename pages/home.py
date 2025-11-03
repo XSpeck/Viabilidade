@@ -344,6 +344,24 @@ if st.session_state.get('validated_pluscode'):
                 help="Digite o nome do prédio - verificaremos se já atendemos"
             )
 
+            col_apt1, col_apt2 = st.columns(2)
+    
+            with col_apt1:
+                andar_predio = st.text_input(
+                    "🏗️ Andar *",
+                    placeholder="Ex: 3º, Térreo",
+                    key="andar_predio_input",
+                    help="Em qual andar o cliente mora"
+                )
+            
+            with col_apt2:
+                bloco_predio = st.text_input(
+                    "🏢 Bloco (se houver)",
+                    placeholder="Ex: A, B, Torre 1",
+                    key="bloco_predio_input",
+                    help="Deixe vazio se não houver blocos"
+                )
+
             # Verificação em tempo real
             if nome_predio and len(nome_predio) >= 3:               
                 with st.spinner("🔍 Verificando cadastro..."):
@@ -408,14 +426,24 @@ if st.session_state.get('validated_pluscode'):
                     st.error("❌ Por favor, informe o nome do cliente!")
                 elif not nome_predio or not nome_predio.strip():
                     st.error("❌ Por favor, informe o nome do prédio!")
+                elif not andar_predio or not andar_predio.strip():  # 🆕 VALIDAÇÃO DO ANDAR
+                    st.error("❌ Por favor, informe o andar!")
                 else:
+                    dados_predio_completo = {
+                        'nome_predio': nome_predio.strip(),
+                        'andar': andar_predio.strip(),
+                        'bloco': bloco_predio.strip() if bloco_predio else None
+                    }
+                    
                     if create_viability_request(
                         st.session_state.user_name, 
                         st.session_state.validated_pluscode, 
                         'Prédio',
                         urgente_edificio,
                         nome_predio=nome_predio.strip(),
-                        nome_cliente=nome_cliente_predio.strip()
+                        nome_cliente=nome_cliente_predio.strip(),
+                        andar=andar_predio.strip(),
+                        bloco=bloco_predio.strip() if bloco_predio else None 
                     ):
                         st.session_state.show_viability_modal = False
                         st.session_state.show_success_message = True
