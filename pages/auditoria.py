@@ -640,16 +640,6 @@ def show_viability_form(row: dict, urgente: bool = False):
                 st.markdown("---")
                 
                 with st.form(key=f"form_ftth_{row['id']}"):
-                    
-                    cdoi = st.text_input(
-                        "📡 CDOI *",
-                        placeholder="Ex: CDOI-001, CDOI-ABC",
-                        key=f"cdoi_{row['id']}",
-                        help="Código da CDOI utilizada"
-                    )
-                    
-                    st.markdown("---")
-                    
                     cto = st.text_input(
                         "N° Caixa (CTO) *", 
                         value=row.get('cto_numero', ''),
@@ -698,9 +688,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                         rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
                     
                     if aprovado:
-                        if not cdoi or not cdoi.strip():
-                            st.error("❌ Preencha a CDOI!")
-                        elif not cto or not cto.strip():
+                        if not cto or not cto.strip():
                             st.error("❌ Preencha o N° da Caixa (CTO)!")
                         elif not distancia or not distancia.strip():
                             st.error("❌ Preencha a Distância!")
@@ -712,7 +700,6 @@ def show_viability_form(row: dict, urgente: bool = False):
                             st.error("❌ Preencha o Menor RX!")
                         else:
                             dados = {
-                                'cdoi': cdoi.strip(),
                                 'cto_numero': cto.strip(),
                                 'portas_disponiveis': portas,
                                 'menor_rx': rx.strip(),
