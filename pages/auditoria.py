@@ -733,6 +733,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                     
                     with st.form(key=f"form_ftta_{row['id']}"):
                         predio = st.text_input("Prédio FTTA", value=row.get('predio_ftta', ''), key=f"predio_{row['id']}")
+                        cdoi = st.text_input("📡 CDOI *", placeholder="Ex: CDOI-001, CDOI-ABC", key=f"cdoi_{row['id']}")
                         
                         col_f1, col_f2 = st.columns(2)
                         with col_f1:
