@@ -501,7 +501,7 @@ else:
                             "✅ Escolher",
                             key=f"escolher_cto_{request['id']}_{idx}",
                             type="primary",
-                            use_container_width=True
+                            width='stretch'
                         ):
                             # ========================================
                             # MUDANÇA: Calcular distância COM SOBRA
@@ -542,7 +542,7 @@ else:
                     if st.button(
                         "❌ Sem Viabilidade",
                         type="secondary",
-                        use_container_width=True,
+                        width='stretch',
                         key=f"sem_viab_{request['id']}"
                     ):
                         st.session_state[f'show_reject_form_{request["id"]}'] = True
@@ -561,10 +561,10 @@ else:
                         col_confirm1, col_confirm2 = st.columns(2)
                         
                         with col_confirm1:
-                            confirmar = st.form_submit_button("✅ Confirmar Rejeição", type="primary", use_container_width=True)
+                            confirmar = st.form_submit_button("✅ Confirmar Rejeição", type="primary", width='stretch')
                         
                         with col_confirm2:
-                            cancelar = st.form_submit_button("🔙 Cancelar", use_container_width=True)
+                            cancelar = st.form_submit_button("🔙 Cancelar", width='stretch')
                         
                         if confirmar:
                             dados = {'motivo_rejeicao': motivo.strip() if motivo.strip() else 'Não temos projeto neste ponto'}
