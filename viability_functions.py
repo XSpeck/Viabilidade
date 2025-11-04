@@ -101,7 +101,7 @@ def format_datetime_resultados(iso_datetime: str) -> str:
         logger.error(f"Erro ao formatar data: {e}")
         return iso_datetime[:16]  # Fallback
 
-def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None, nome_cliente: str = None) -> bool:        
+def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente: bool = False, nome_predio: str = None, nome_cliente: str = None, andar: str = None, bloco: str = None) -> bool:
     """
     Cria nova solicitação de viabilização no Supabase
     
@@ -112,6 +112,8 @@ def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente:
         urgente: Se é cliente presencial (urgente)
         nome_predio: Nome do prédio (apenas para Prédio)
         nome_cliente: Nome do cliente final
+        andar: Andar onde o cliente mora (para Prédio)
+        bloco: Bloco do prédio se houver (para Prédio)
     """
     try:
         new_request = {
@@ -128,6 +130,12 @@ def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente:
         # Adicionar nome do cliente se fornecido
         if nome_cliente:
             new_request['nome_cliente'] = nome_cliente
+            
+        if tipo == 'Prédio':
+            if andar:
+                new_request['andar_predio'] = andar
+            if bloco:
+                new_request['bloco_predio'] = bloco
             
         response = supabase.table('viabilizacoes').insert(new_request).execute()
         
