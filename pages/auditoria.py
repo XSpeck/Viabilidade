@@ -732,8 +732,17 @@ def show_viability_form(row: dict, urgente: bool = False):
                     st.markdown("#### 🏢 Dados do Prédio")
                     
                     with st.form(key=f"form_ftta_{row['id']}"):
-                        predio = st.text_input("Prédio FTTA", value=row.get('predio_ftta', ''), key=f"predio_{row['id']}")
+                        cdoi_ftta = st.text_input(
+                            "📡 CDOI *",
+                            placeholder="Ex: CDOI-001, CDOI-ABC",
+                            key=f"cdoi_ftta_{row['id']}",
+                            help="Código da CDOI utilizada"
+                        )
                         
+                        st.markdown("---")
+                        
+                        predio = st.text_input("Prédio FTTA", value=row.get('predio_ftta', ''), key=f"predio_{row['id']}")
+                                                
                         col_f1, col_f2 = st.columns(2)
                         with col_f1:
                             portas = st.number_input("Portas Disponíveis", min_value=0, max_value=50, value=0, key=f"portas_ftta_{row['id']}")
@@ -753,8 +762,17 @@ def show_viability_form(row: dict, urgente: bool = False):
                             rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
                         
                         if aprovado:
-                            if predio and portas > 0 and media_rx:
+                            if not cdoi_ftta or not cdoi_ftta.strip():
+                                st.error("❌ Preencha a CDOI!")
+                            elif not predio or not predio.strip():
+                                st.error("❌ Preencha o nome do Prédio!")
+                            elif portas <= 0:
+                                st.error("❌ Preencha as Portas Disponíveis!")
+                            elif not media_rx or not media_rx.strip():
+                                st.error("❌ Preencha a Média RX!")
+                            else:
                                 dados = {
+                                    'cdoi': cdoi_ftta.strip(),
                                     'predio_ftta': predio,
                                     'portas_disponiveis': portas,
                                     'media_rx': media_rx,
@@ -762,10 +780,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 }
                                 if update_viability_ftta(row['id'], 'aprovado', dados):
                                     st.success("✅ Viabilização aprovada!")
-                                    st.balloons()
                                     st.rerun()
-                            else:
-                                st.error("❌ Preencha todos os campos obrigatórios!")
                         
                         if rejeitado:
                             # Mostrar formulário para coletar motivo
