@@ -250,7 +250,7 @@ def download_file(file_id: str, output: str) -> str:
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
 with col_header2:
-    if st.button("🔄 Atualizar", use_container_width=True):
+    if st.button("🔄 Atualizar", width='stretch'):
         st.rerun()
 
 # ======================
@@ -344,7 +344,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                 "🗑️ Excluir Solicitação",
                 key=f"delete_{row['id']}",
                 type="secondary",
-                use_container_width=True,
+                width='stretch',
                 help="Excluir esta solicitação permanentemente"
             ):
                 if delete_viability(row['id']):
@@ -360,7 +360,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                     "↩️ Devolver para Fila",
                     key=f"devolver_{row['id']}",
                     type="secondary",
-                    use_container_width=True,
+                    width='stretch',
                     help="Devolve esta viabilização para outros auditores pegarem"
                 ):
                     if devolver_viabilidade(row['id']):
@@ -389,7 +389,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                         if st.button(
                             "🔍 Buscar CTOs Próximas",
                             type="secondary",
-                            use_container_width=True,
+                            width='stretch',
                             key=f"btn_buscar_{row['id']}"
                         ):
                             st.session_state[f'mostrar_busca_{row["id"]}'] = True
@@ -608,7 +608,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                                             "✅ Escolher",
                                             key=f"escolher_cto_{row['id']}_{idx}",
                                             type="primary",
-                                            use_container_width=True
+                                            width='stretch'
                                         ):
                                             # Calcular distância com sobra
                                             if route:
@@ -643,7 +643,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                     # Botão para fechar busca
                     col_fechar = st.columns([1, 2, 1])[1]
                     with col_fechar:
-                        if st.button("❌ Fechar Busca", use_container_width=True, key=f"fechar_busca_{row['id']}"):
+                        if st.button("❌ Fechar Busca", width='stretch', key=f"fechar_busca_{row['id']}"):
                             del st.session_state[f'mostrar_busca_{row["id"]}']
                             st.rerun()                    
                 
@@ -694,11 +694,11 @@ def show_viability_form(row: dict, urgente: bool = False):
                     col_btn1, col_btn2 = st.columns(2)
                     
                     with col_btn1:
-                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
+                        aprovado = st.form_submit_button("✅ Viabilizar", type="primary", width='stretch')
                    # with col_btn2:
-                       # utp = st.form_submit_button("📡 Atendemos UTP", use_container_width=True)
+                       # utp = st.form_submit_button("📡 Atendemos UTP", width='stretch')
                     with col_btn2:
-                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
+                        rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", width='stretch')
                     
                     if aprovado:
                         if not cto or not cto.strip():
@@ -768,11 +768,11 @@ def show_viability_form(row: dict, urgente: bool = False):
                         col_btn1, col_btn2, col_btn3 = st.columns(3)
                         
                         with col_btn1:
-                            aprovado = st.form_submit_button("✅ Viabilizar", type="primary", use_container_width=True)
+                            aprovado = st.form_submit_button("✅ Viabilizar", type="primary", width='stretch')
                         with col_btn2:
-                            utp = st.form_submit_button("📡 Atendemos UTP", use_container_width=True)                    
+                            utp = st.form_submit_button("📡 Atendemos UTP", width='stretch')                    
                         with col_btn3:
-                            rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", use_container_width=True)
+                            rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", width='stretch')
                         
                         if aprovado:
                             if not cdoi_ftta or not cdoi_ftta.strip():
@@ -824,13 +824,13 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 confirmar_rej_predio = st.form_submit_button(
                                     "✅ Confirmar Rejeição",
                                     type="primary",
-                                    use_container_width=True
+                                    width='stretch'
                                 )
                             
                             with col_btn_rej2:
                                 cancelar_rej_predio = st.form_submit_button(
                                     "🔙 Cancelar",
-                                    use_container_width=True
+                                    width='stretch'
                                 )
                             
                             if confirmar_rej_predio:
@@ -871,7 +871,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                             if st.button(
                                 "🏢 Solicitar Viabilização do Prédio", 
                                 type="primary", 
-                                use_container_width=True,
+                                width='stretch',
                                 key=f"viab_predio_{row['id']}"
                             ):
                                 if request_building_viability(row['id'], {}):
@@ -958,7 +958,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                         if st.button(
                             "📋 Agendar Visita Técnica",
                             type="primary",
-                            use_container_width=True,
+                            width='stretch',
                             key=f"agendar_{row['id']}"
                         ):
                             if not tecnico or not data_visita or not tecnologia:
@@ -983,7 +983,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                         if st.button(
                             "❌ Edifício Sem Viabilidade",
                             type="secondary",
-                            use_container_width=True,
+                            width='stretch',
                             key=f"sem_viab_{row['id']}"
                         ):
                             st.session_state[f'show_reject_form_{row["id"]}'] = True
@@ -1014,13 +1014,13 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 confirmar_rejeicao = st.form_submit_button(
                                     "✅ Confirmar Rejeição",
                                     type="primary",
-                                    use_container_width=True
+                                    width='stretch'
                                 )
                             
                             with col_btn_rej2:
                                 cancelar = st.form_submit_button(
                                     "🔙 Cancelar",
-                                    use_container_width=True
+                                    width='stretch'
                                 )
                             
                             if confirmar_rejeicao:
