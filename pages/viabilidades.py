@@ -117,7 +117,7 @@ def mostrar_card_viabilidade(row: dict, urgente: bool = False):
                 "✅ Pegar",
                 key=f"pegar_{row['id']}",
                 type="primary",
-                use_container_width=True
+                width='stretch'
             ):
                 if pegar_viabilidade(row['id'], st.session_state.user_name):
                     st.success(f"✅ Viabilização atribuída a você!")
@@ -170,7 +170,7 @@ st.markdown("Lista de solicitações aguardando auditoria técnica")
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
 with col_header2:
-    if st.button("🔄 Atualizar", use_container_width=True):
+    if st.button("🔄 Atualizar", width='stretch'):
         st.rerun()
 
 st.markdown("---")
