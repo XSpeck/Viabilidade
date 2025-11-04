@@ -44,7 +44,7 @@ st.markdown(f"Viabilizações de **{st.session_state.user_name}**")
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
 with col_header2:
-    if st.button("🔄 Atualizar", use_container_width=True):
+    if st.button("🔄 Atualizar", width='stretch'):
         st.rerun()
 
 # ======================
@@ -312,7 +312,7 @@ Média RX: {row['media_rx']} dBm"""
                 st.caption("📋 **Dica:** selecione o texto acima e use **Ctrl+C** para copiar.")
             
             with col_btn3:
-                if st.button("✅ Finalizar", key=f"finish_{row['id']}", type="primary", use_container_width=True):
+                if st.button("✅ Finalizar", key=f"finish_{row['id']}", type="primary", width='stretch'):
                     if finalize_viability_approved(row['id']):
                         st.success("✅ Viabilização finalizada e arquivada!")
                         st.balloons()
@@ -368,7 +368,7 @@ Data Estruturação: {format_datetime_resultados(row.get('data_finalizacao', '')
                 st.markdown("💡 **Dica:** Estrutura concluída! Clique em Finalizar para arquivar.")
             
             with col_btn2:
-                if st.button("✅ Finalizar", key=f"finish_struct_{row['id']}", type="primary", use_container_width=True):
+                if st.button("✅ Finalizar", key=f"finish_struct_{row['id']}", type="primary", width='stretch'):
                     if finalize_viability_approved(row['id']):
                         st.success("✅ Estruturação arquivada!")
                         st.balloons()
@@ -407,7 +407,7 @@ if rejected:
             st.caption(f"🕐 Analisado por: {row['auditado_por']} em {format_datetime_resultados(row['data_auditoria'])}")
 
             st.markdown("---")
-            if st.button("✅ OK, Entendi", key=f"finish_rejected_{row['id']}", type="secondary", use_container_width=True):
+            if st.button("✅ OK, Entendi", key=f"finish_rejected_{row['id']}", type="secondary", width='stretch'):
                 if finalize_viability(row['id']):
                     st.success("✅ Confirmado!")
                     st.rerun()
@@ -430,7 +430,7 @@ if utp:
             st.caption(f"🕐 Analisado por: {row['auditado_por']} em {format_datetime_resultados(row['data_auditoria'])}")
             
             # Botão finalizar (não arquiva, apenas remove da lista)
-            if st.button("✅ Finalizar", key=f"finish_utp_{row['id']}", type="primary", use_container_width=True):
+            if st.button("✅ Finalizar", key=f"finish_utp_{row['id']}", type="primary", width='stretch'):
                 if finalize_viability(row['id']):
                     st.success("✅ Finalizado!")
                     st.rerun()
@@ -570,7 +570,7 @@ if building_pending:
                         submit_building = st.form_submit_button(
                             "📤 Enviar para verificação Técnica",
                             type="primary",
-                            use_container_width=True
+                            width='stretch'
                         )
                     
                     if submit_building:
@@ -711,7 +711,7 @@ try:
         # Exibir tabela
         st.dataframe(
             df_display,
-            use_container_width=True,
+            width='stretch',
             height=400
         )
         
