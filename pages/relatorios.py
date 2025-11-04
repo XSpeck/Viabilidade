@@ -445,14 +445,134 @@ with col_pred4:
 
 st.markdown("---")
 
+# 🆕 BUSCAR VIABILIDADES DE PRÉDIOS (aprovadas/em análise)
+try:
+    response_viab_predios = supabase.table('viabilizacoes')\
+        .select('*')\
+        .eq('tipo_instalacao', 'Prédio')\
+        .in_('status', ['aprovado', 'pendente', 'em_auditoria'])\
+        .order('data_auditoria', desc=True)\
+        .execute()
+    
+    viabilidades_predios = response_viab_predios.data if response_viab_predios.data else []
+except Exception as e:
+    logger.error(f"Erro ao buscar viabilidades de prédios: {e}")
+    viabilidades_predios = []
+
 # Tabelas Prédios
-tab_pred1, tab_pred2 = st.tabs([
+tab_pred1, tab_pred2, tab_pred3 = st.tabs([
+    f"📋 Viabilizações ({len(viabilidades_predios)})",
     f"✅ Estruturados ({len(predios_estruturados)})",
     f"❌ Sem Viabilidade ({len(predios_sem_viab)})"
 ])
 
-# TAB 1: Estruturados
 with tab_pred1:
+    if viabilidades_predios:
+        # Busca
+        search_viab_pred = st.text_input(
+            "🔍 Buscar",
+            placeholder="Prédio, Plus Code, Usuário...",
+            key="search_viab_predios"
+        )
+        
+        df_viab_pred = pd.DataFrame(viabilidades_predios)
+        
+        # Filtrar
+        if search_viab_pred:
+            termo_busca = re.escape(search_viab_pred.lower().replace("+", "").strip())
+            mask = df_viab_pred.astype(str).apply(
+                lambda x: x.str.lower().str.replace("+", "", regex=False).str.contains(termo_busca, regex=True, na=False)
+            ).any(axis=1)
+            df_viab_pred = df_viab_pred[mask]
+        
+        # Selecionar colunas
+        colunas = ['data_solicitacao', 'status', 'predio_ftta', 'andar_predio', 'bloco_predio',
+                   'plus_code_cliente', 'usuario', 'nome_cliente', 'cdoi', 
+                   'portas_disponiveis', 'media_rx', 'auditado_por', 'data_auditoria']
+        
+        colunas_existentes = [col for col in colunas if col in df_viab_pred.columns]
+        
+        df_display = df_viab_pred[colunas_existentes].copy()
+        
+        # Renomear
+        rename_dict = {
+            'data_solicitacao': 'Data Solicitação',
+            'status': 'Status',
+            'predio_ftta': 'Prédio',
+            'andar_predio': 'Andar',
+            'bloco_predio': 'Bloco',
+            'plus_code_cliente': 'Plus Code',
+            'usuario': 'Solicitante',
+            'nome_cliente': 'Cliente',
+            'cdoi': 'CDOI',
+            'portas_disponiveis': 'Portas',
+            'media_rx': 'Média RX',
+            'auditado_por': 'Auditor',
+            'data_auditoria': 'Data Auditoria'
+        }
+        df_display.rename(columns=rename_dict, inplace=True)
+        
+        # Formatar datas
+        if 'Data Solicitação' in df_display.columns:
+            df_display['Data Solicitação'] = df_display['Data Solicitação'].apply(
+                lambda x: format_datetime_resultados(x) if x else '-'
+            )
+        
+        if 'Data Auditoria' in df_display.columns:
+            df_display['Data Auditoria'] = df_display['Data Auditoria'].apply(
+                lambda x: format_datetime_resultados(x) if x else '-'
+            )
+        
+        # Formatar status
+        if 'Status' in df_display.columns:
+            status_map = {
+                'pendente': '⏳ Pendente',
+                'em_auditoria': '🔍 Em Auditoria',
+                'aprovado': '✅ Aprovado'
+            }
+            df_display['Status'] = df_display['Status'].map(status_map).fillna(df_display['Status'])
+        
+        # Exibir tabela
+        st.dataframe(df_display, use_container_width=True, height=400)
+        st.caption(f"📊 Mostrando {len(df_display)} de {len(viabilidades_predios)} registros")
+        
+        # Exportar
+        csv = df_display.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Baixar CSV",
+            data=csv,
+            file_name="viabilizacoes_predios.csv",
+            mime="text/csv"
+        )
+        
+        # 🆕 ESTATÍSTICAS RÁPIDAS
+        st.markdown("---")
+        st.subheader("📊 Estatísticas Rápidas")
+        
+        col_stats1, col_stats2, col_stats3, col_stats4 = st.columns(4)
+        
+        with col_stats1:
+            pendentes = len([v for v in viabilidades_predios if v['status'] == 'pendente'])
+            st.metric("⏳ Pendentes", pendentes)
+        
+        with col_stats2:
+            em_audit = len([v for v in viabilidades_predios if v['status'] == 'em_auditoria'])
+            st.metric("🔍 Em Auditoria", em_audit)
+        
+        with col_stats3:
+            aprovados = len([v for v in viabilidades_predios if v['status'] == 'aprovado'])
+            st.metric("✅ Aprovados", aprovados)
+        
+        with col_stats4:
+            # Prédios únicos
+            predios_unicos = df_viab_pred['predio_ftta'].nunique() if 'predio_ftta' in df_viab_pred.columns else 0
+            st.metric("🢠Prédios Únicos", predios_unicos)
+        
+    else:
+        st.info("📭 Nenhuma viabilização de prédio no período selecionado.")
+
+# TAB 1: Estruturados
+with tab_pred2:
     if predios_estruturados:
         df_estruturados = pd.DataFrame(predios_estruturados)
         
@@ -485,7 +605,7 @@ with tab_pred1:
         st.info("Nenhum prédio estruturado ainda.")
 
 # TAB 2: Sem Viabilidade
-with tab_pred2:
+with tab_pred3:
     if predios_sem_viab:
         df_sem_viab = pd.DataFrame(predios_sem_viab)
         
