@@ -68,7 +68,7 @@ st.markdown("Análise completa de viabilizações e expansão da rede")
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
 with col_header2:
-    if st.button("🔄 Atualizar", use_container_width=True):
+    if st.button("🔄 Atualizar", width='stretch'):
         st.rerun()
 
 st.markdown("---")
@@ -100,7 +100,7 @@ with col_filtro2:
 
 with col_filtro3:
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🔍 Aplicar Filtro", type="primary", use_container_width=True):
+    if st.button("🔍 Aplicar Filtro", type="primary", width='stretch'):
         st.rerun()
 
 # Converter datas para ISO format (se fornecidas)
@@ -195,7 +195,7 @@ with col_graph1:
         margin=dict(l=20, r=20, t=40, b=20)
     )
     
-    st.plotly_chart(fig_pizza, use_container_width=True)
+    st.plotly_chart(fig_pizza, width='stretch')
 
 # Gráfico de Barras Comparativo
 with col_graph2:
@@ -219,7 +219,7 @@ with col_graph2:
         margin=dict(l=20, r=20, t=40, b=20)
     )
     
-    st.plotly_chart(fig_barras, use_container_width=True)
+    st.plotly_chart(fig_barras, width='stretch')
 
 st.markdown("---")
 
@@ -351,7 +351,7 @@ with tab_ftth1:
                 lambda x: '✅ Aprovada' if x == 'aprovado' else '📦 Finalizada'
             )
         
-        st.dataframe(df_display, use_container_width=True, height=400)
+        st.dataframe(df_display, width='stretch', height=400)
         st.caption(f"📊 Mostrando {len(df_display)} de {len(ftth_aprovadas)} registros")
         
         # Exportar
@@ -400,7 +400,7 @@ with tab_ftth2:
                 lambda x: format_datetime_resultados(x) if x else '-'
             )
         
-        st.dataframe(df_display, use_container_width=True, height=400)
+        st.dataframe(df_display, width='stretch', height=400)
         st.caption(f"📊 Mostrando {len(df_display)} de {len(ftth_rejeitadas)} registros")
         
         # Exportar
@@ -533,7 +533,7 @@ with tab_pred1:
             df_display['Status'] = df_display['Status'].map(status_map).fillna(df_display['Status'])
         
         # Exibir tabela
-        st.dataframe(df_display, use_container_width=True, height=400)
+        st.dataframe(df_display, width='stretch', height=400)
         st.caption(f"📊 Mostrando {len(df_display)} de {len(viabilidades_predios)} registros")
         
         # Exportar
@@ -591,7 +591,7 @@ with tab_pred2:
                 lambda x: format_datetime_resultados(x) if x else '-'
             )
         
-        st.dataframe(df_display, use_container_width=True, height=400)
+        st.dataframe(df_display, width='stretch', height=400)
         
         # Exportar
         csv = df_display.to_csv(index=False).encode('utf-8')
@@ -624,7 +624,7 @@ with tab_pred3:
                 lambda x: format_datetime_resultados(x) if x else '-'
             )
         
-        st.dataframe(df_display, use_container_width=True, height=400)
+        st.dataframe(df_display, width='stretch', height=400)
         
         # Exportar
         csv = df_display.to_csv(index=False).encode('utf-8')
