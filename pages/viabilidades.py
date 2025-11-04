@@ -147,7 +147,17 @@ def mostrar_card_viabilidade(row: dict, urgente: bool = False):
         
         # Linha 3: Informações extras (se houver)
         if row.get('predio_ftta'):
-            st.markdown(f"**🏢 Edifício:** {row['predio_ftta']}")
+            texto_predio = f"**🏢 Edifício:** {row['predio_ftta']}"
+            detalhes_apt = []
+            if row.get('andar_predio'):
+                detalhes_apt.append(f"Andar: {row['andar_predio']}")
+            if row.get('bloco_predio'):
+                detalhes_apt.append(f"Bloco: {row['bloco_predio']}")
+            
+            if detalhes_apt:
+                texto_predio += f" | {' | '.join(detalhes_apt)}"
+            
+            st.markdown(texto_predio)            
         
         st.markdown("---")
 
