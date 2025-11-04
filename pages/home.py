@@ -246,7 +246,7 @@ if st.session_state.get('validated_pluscode'):
     
     col_viab = st.columns([1, 2, 1])[1]
     with col_viab:
-        if st.button("🎯 Viabilizar Esta Localização", type="primary", use_container_width=True):
+        if st.button("🎯 Viabilizar Esta Localização", type="primary", width='stretch'):
             st.session_state.show_viability_modal = True
 
     # ===== MENSAGEM DE SUCESSO APÓS CONFIRMAR ===== ← ADICIONAR AQUI
@@ -296,7 +296,7 @@ if st.session_state.get('validated_pluscode'):
             
             urgente_casa = st.checkbox("🔥 Cliente Presencial (Urgente)", key="urgente_casa")
             
-            if st.button("Confirmar - Casa (FTTH)", type="primary", use_container_width=True, key="confirm_ftth"):
+            if st.button("Confirmar - Casa (FTTH)", type="primary", width='stretch', key="confirm_ftth"):
                 # Validar nome do cliente
                 if not nome_cliente_ftth or not nome_cliente_ftth.strip():
                     st.error("❌ Por favor, informe o nome do cliente!")
@@ -420,7 +420,7 @@ if st.session_state.get('validated_pluscode'):
             
             urgente_edificio = st.checkbox("🔥 Cliente Presencial (Urgente)", key="urgente_edificio")
             
-            if st.button("Confirmar - Edifício", type="primary", use_container_width=True, key="confirm_ftta"):
+            if st.button("Confirmar - Edifício", type="primary", width='stretch', key="confirm_ftta"):
                 # Validar campos
                 if not nome_cliente_predio or not nome_cliente_predio.strip():
                     st.error("❌ Por favor, informe o nome do cliente!")
@@ -457,7 +457,7 @@ if st.session_state.get('validated_pluscode'):
         # ===== Botão Cancelar =====
         col_cancel = st.columns([2, 1, 2])[1]
         with col_cancel:
-            if st.button("❌ Cancelar", use_container_width=True, key="cancel_viability"):
+            if st.button("❌ Cancelar", width='stretch', key="cancel_viability"):
                 st.session_state.show_viability_modal = False
                 st.rerun()
 
@@ -506,7 +506,7 @@ with tab1:
         df_display = df_atendidos[['condominio', 'tecnologia', 'localizacao', 'observacao']].copy()
         df_display.columns = ['Condomínio', 'Tecnologia', 'Localização', 'Observação']
         
-        st.dataframe(df_display, use_container_width=True, height=400)
+        st.dataframe(df_display, width='stretch', height=400)
         st.caption(f"Mostrando {len(df_display)} de {len(predios_atendidos)} registros")
 
 # ===== TAB 2: Prédios Sem Viabilidade =====
@@ -542,7 +542,7 @@ with tab2:
         df_display = df_sem_viab[['condominio', 'localizacao', 'observacao']].copy()
         df_display.columns = ['Condomínio', 'Localização', 'Observação']
         
-        st.dataframe(df_display, use_container_width=True, height=400)
+        st.dataframe(df_display, width='stretch', height=400)
         st.caption(f"Mostrando {len(df_display)} de {len(predios_sem_viab)} registros")
 
 st.markdown("---")
