@@ -338,6 +338,10 @@ if structured:
             with col_struct1:
                 st.markdown("#### 📋 Informações")
                 st.text(f"🏢 Edifício: {row.get('predio_ftta', 'N/A')}")
+                if row.get('andar_predio'):
+                    st.text(f"🏗️ Andar: {row['andar_predio']}")
+                if row.get('bloco_predio'):
+                    st.text(f"🏢 Bloco: {row['bloco_predio']}")
                 st.text(f"📍 Localização: {row['plus_code_cliente']}")
                 st.text(f"🔧 Tecnologia: {row.get('tecnologia_predio', 'N/A')}")
             
@@ -482,8 +486,12 @@ if building_pending:
                 st.markdown("### 📋 Dados Enviados")
                 
                 col_enviado1, col_enviado2 = st.columns(2)
-                with col_enviado1:
+                with col_enviado1:                    
                     st.text(f"🏢 Edifício: {row.get('predio_ftta', 'N/A')}")
+                    if row.get('andar_predio'):
+                        st.text(f"🏗️ Andar: {row['andar_predio']}")
+                    if row.get('bloco_predio'):
+                        st.text(f"🏢 Bloco: {row['bloco_predio']}")
                     st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
                     st.text(f"👤 Síndico: {row.get('nome_sindico', 'N/A')}")
                     st.text(f"📞 Contato: {row.get('contato_sindico', 'N/A')}")
