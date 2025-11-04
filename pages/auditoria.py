@@ -286,6 +286,14 @@ def show_viability_form(row: dict, urgente: bool = False):
     
     if row.get('predio_ftta'):
         titulo_expander += f" | 🏢 {row['predio_ftta']}"
+        detalhes_apt = []
+        if row.get('andar_predio'):
+            detalhes_apt.append(f"Andar {row['andar_predio']}")
+        if row.get('bloco_predio'):
+            detalhes_apt.append(f"Bloco {row['bloco_predio']}")
+        
+        if detalhes_apt:
+            titulo_expander += f" ({', '.join(detalhes_apt)})"
     
     titulo_expander += badge_urgente
     
@@ -311,7 +319,7 @@ def show_viability_form(row: dict, urgente: bool = False):
             if row['tipo_instalacao'] == 'FTTH':
                 tipo_exibir = 'FTTH (Casa)'
             elif row['tipo_instalacao'] == 'Prédio':
-                # Se já foi definido pelo Leo
+                # Se já foi definido
                 if row.get('tecnologia_predio'):
                     tipo_exibir = f"{row['tecnologia_predio']} (Prédio)"
                 else:
@@ -322,7 +330,12 @@ def show_viability_form(row: dict, urgente: bool = False):
             st.text(f"🏷️ Tipo: {tipo_exibir}")
             
             if row.get('predio_ftta'):
-                st.text(f"🏨 Nome: {row['predio_ftta']}")            
+                st.text(f"🏨 Nome: {row['predio_ftta']}")
+                if row.get('andar_predio'):
+                    st.text(f"🏗️ Andar: {row['andar_predio']}")
+                if row.get('bloco_predio'):
+                    st.text(f"🏢 Bloco: {row['bloco_predio']}")
+                
             st.text(f"📅 Solicitado em: {format_time_br_supa(row['data_solicitacao'])}")
             
             # ===== BOTÃO EXCLUIR =====
