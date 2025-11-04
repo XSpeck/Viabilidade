@@ -293,6 +293,7 @@ def update_viability_ftta(viability_id: str, status: str, dados: Dict, auditado_
         
         if status == 'aprovado':
             update_data.update({
+                'cdoi': dados.get('cdoi'),
                 'predio_ftta': dados.get('predio_ftta'),
                 'portas_disponiveis': dados.get('portas_disponiveis'),
                 'media_rx': dados.get('media_rx'),
