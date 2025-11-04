@@ -188,7 +188,7 @@ st.markdown("Sistema de análise de ONUs com problemas - Apenas clientes ativos"
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
 with col_header2:
-    if st.button("🔄 Atualizar", use_container_width=True):
+    if st.button("🔄 Atualizar", width='stretch'):
         st.cache_data.clear()
         st.rerun()
 
@@ -301,7 +301,7 @@ try:
             if "Diferença TX-RX" in onus_defeito.columns:
                 tabela_defeitos["Diferença"] = onus_defeito["Diferença TX-RX"].round(1)
             
-            st.dataframe(tabela_defeitos, use_container_width=True, height=400)
+            st.dataframe(tabela_defeitos, width='stretch', height=400)
             
             # Download
             csv_defeitos = tabela_defeitos.to_csv(sep=';', index=False)
@@ -356,7 +356,7 @@ try:
             resumo_df = pd.DataFrame(resumo_defeitos)
             resumo_df = resumo_df.sort_values("ONUs com Defeito", ascending=False)
             
-            st.dataframe(resumo_df, use_container_width=True)
+            st.dataframe(resumo_df, width='stretch')
             
         else:
             st.success("✅ Nenhuma ONU com defeito detectada!")
@@ -388,7 +388,7 @@ try:
             st.subheader("📋 Lista Detalhada")
             tabela_sinal_fraco = criar_tabela_onus(onus_sinal_fraco, ctos_localizacao)
             
-            st.dataframe(tabela_sinal_fraco, use_container_width=True, height=400)
+            st.dataframe(tabela_sinal_fraco, width='stretch', height=400)
             
             # Download
             csv_sinal_fraco = tabela_sinal_fraco.to_csv(sep=';', index=False)
@@ -443,7 +443,7 @@ try:
             resumo_df = pd.DataFrame(resumo_sinal)
             resumo_df = resumo_df.sort_values("ONUs com Sinal Fraco", ascending=False)
             
-            st.dataframe(resumo_df, use_container_width=True)
+            st.dataframe(resumo_df, width='stretch')
             
         else:
             st.success("✅ Nenhuma ONU com sinal fraco detectada!")
