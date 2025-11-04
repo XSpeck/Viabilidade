@@ -48,7 +48,7 @@ st.markdown("Gerenciamento de visitas técnicas agendadas")
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
 with col_header2:
-    if st.button("🔄 Atualizar", use_container_width=True):
+    if st.button("🔄 Atualizar", width='stretch'):
         st.rerun()
 
 st.markdown("---")
@@ -116,7 +116,7 @@ else:
                 if st.button(
                     "✅ Estruturado",
                     type="primary",
-                    use_container_width=True,
+                    width='stretch',
                     key=f"estruturado_{row['id']}"
                 ):
                     st.session_state[f'show_estruturado_form_{row["id"]}'] = True
@@ -125,7 +125,7 @@ else:
                 if st.button(
                     "❌ Sem Viabilidade",
                     type="secondary",
-                    use_container_width=True,
+                    width='stretch',
                     key=f"sem_viab_agenda_{row['id']}"
                 ):
                     st.session_state[f'show_reject_agenda_form_{row["id"]}'] = True
@@ -157,13 +157,13 @@ else:
                         confirmar_estrut = st.form_submit_button(
                             "✅ Confirmar Estruturação",
                             type="primary",
-                            use_container_width=True
+                            width='stretch'
                         )
                     
                     with col_btn_est2:
                         cancelar_est = st.form_submit_button(
                             "🔙 Cancelar",
-                            use_container_width=True
+                            width='stretch'
                         )
                     
                     if confirmar_estrut:
@@ -216,13 +216,13 @@ else:
                         confirmar_rej = st.form_submit_button(
                             "✅ Confirmar Rejeição",
                             type="primary",
-                            use_container_width=True
+                            width='stretch'
                         )
                     
                     with col_btn_rej2:
                         cancelar_rej = st.form_submit_button(
                             "🔙 Cancelar",
-                            use_container_width=True
+                            width='stretch'
                         )
                     
                     if confirmar_rej:
