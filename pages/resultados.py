@@ -296,6 +296,11 @@ Localização da Caixa: {row['localizacao_caixa']}"""
                     st.info(f"🙋 **Cliente:** {row['nome_cliente']}")
                 
                 # Dados para copiar
+                dados_completos = ""
+                
+                if row.get('cdoi'):
+                    dados_completos += f"CDOI: {row['cdoi']}\n"
+                
                 dados_completos = f"""Prédio FTTA: {row['predio_ftta']}
 Portas disponíveis: {row['portas_disponiveis']}
 Média RX: {row['media_rx']} dBm"""
@@ -315,7 +320,7 @@ Média RX: {row['media_rx']} dBm"""
                 if st.button("✅ Finalizar", key=f"finish_{row['id']}", type="primary", width='stretch'):
                     if finalize_viability_approved(row['id']):
                         st.success("✅ Viabilização finalizada e arquivada!")
-                        st.balloons()
+                        
                         st.rerun()
             
             st.caption(f"🕐 Auditado por: {row['auditado_por']} em {format_datetime_resultados(row['data_auditoria'])}")
