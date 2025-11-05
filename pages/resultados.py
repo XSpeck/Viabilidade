@@ -296,11 +296,6 @@ Localização da Caixa: {row['localizacao_caixa']}"""
                     st.info(f"🙋 **Cliente:** {row['nome_cliente']}")
                 
                 # Dados para copiar
-                dados_completos = ""
-                
-                if row.get('cdoi'):
-                    dados_completos += f"CDOI: {row['cdoi']}\n"
-                
                 dados_completos = f"""
 CDOI: {row['cdoi']}
 Prédio FTTA: {row['predio_ftta']}
