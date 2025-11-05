@@ -487,9 +487,10 @@ with tab_pred1:
             df_viab_pred = df_viab_pred[mask]
         
         # Selecionar colunas
-        colunas = ['data_solicitacao', 'status', 'predio_ftta', 'andar_predio', 'bloco_predio',
-                   'plus_code_cliente', 'usuario', 'nome_cliente', 'cdoi', 
-                   'portas_disponiveis', 'media_rx', 'auditado_por', 'data_auditoria']
+        colunas = ['data_auditoria', 'predio_ftta', 'andar_predio', 'bloco_predio', 'status',
+                   'plus_code_cliente',  'nome_cliente', 'cdoi',
+                   'portas_disponiveis', 'media_rx', 'usuario', 'auditado_por']
+        #'data_solicitacao'
         
         colunas_existentes = [col for col in colunas if col in df_viab_pred.columns]
         
@@ -497,7 +498,7 @@ with tab_pred1:
         
         # Renomear
         rename_dict = {
-            'data_solicitacao': 'Data Solicitação',            
+           # 'data_solicitacao': 'Data Solicitação',            
             'predio_ftta': 'Prédio',
             'andar_predio': 'Andar',
             'bloco_predio': 'Bloco',
@@ -514,10 +515,10 @@ with tab_pred1:
         df_display.rename(columns=rename_dict, inplace=True)
         
         # Formatar datas
-        if 'Data Solicitação' in df_display.columns:
-            df_display['Data Solicitação'] = df_display['Data Solicitação'].apply(
-                lambda x: format_datetime_resultados(x) if x else '-'
-            )
+       # if 'Data Solicitação' in df_display.columns:
+        #    df_display['Data Solicitação'] = df_display['Data Solicitação'].apply(
+         #       lambda x: format_datetime_resultados(x) if x else '-'
+         #   )
         
         if 'Data Auditoria' in df_display.columns:
             df_display['Data Auditoria'] = df_display['Data Auditoria'].apply(
