@@ -297,8 +297,8 @@ Localização da Caixa: {row['localizacao_caixa']}"""
                 
                 # Dados para copiar
                 dados_completos = f"""
-CDOI: {row['cdoi']}
 Prédio FTTA: {row['predio_ftta']}
+CDOI: {row['cdoi']}
 Portas disponíveis: {row['portas_disponiveis']}
 Média RX: {row['media_rx']} dBm"""
                 
