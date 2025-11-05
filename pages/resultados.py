@@ -301,7 +301,9 @@ Localização da Caixa: {row['localizacao_caixa']}"""
                 if row.get('cdoi'):
                     dados_completos += f"CDOI: {row['cdoi']}\n"
                 
-                dados_completos = f"""Prédio FTTA: {row['predio_ftta']}
+                dados_completos = f"""
+CDOI: {row['cdoi']}
+Prédio FTTA: {row['predio_ftta']}
 Portas disponíveis: {row['portas_disponiveis']}
 Média RX: {row['media_rx']} dBm"""
                 
