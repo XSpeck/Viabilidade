@@ -497,11 +497,11 @@ with tab_pred1:
         
         # Renomear
         rename_dict = {
-            'data_solicitacao': 'Data Solicitação',
-            'status': 'Status',
+            'data_solicitacao': 'Data Solicitação',            
             'predio_ftta': 'Prédio',
             'andar_predio': 'Andar',
             'bloco_predio': 'Bloco',
+            'status': 'Status',
             'plus_code_cliente': 'Plus Code',
             'usuario': 'Solicitante',
             'nome_cliente': 'Cliente',
