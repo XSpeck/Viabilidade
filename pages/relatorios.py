@@ -568,7 +568,7 @@ with tab_pred1:
         with col_stats4:
             # Prédios únicos
             predios_unicos = df_viab_pred['predio_ftta'].nunique() if 'predio_ftta' in df_viab_pred.columns else 0
-            st.metric("🢠Prédios Únicos", predios_unicos)
+            st.metric("🏨Prédios Únicos", predios_unicos)
         
     else:
         st.info("📭 Nenhuma viabilização de prédio no período selecionado.")
