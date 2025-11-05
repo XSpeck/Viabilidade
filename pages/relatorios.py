@@ -14,6 +14,7 @@ from viability_functions import (
     format_datetime_resultados,
     format_time_br_supa
 )
+from supabase_config import supabase
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
