@@ -376,9 +376,22 @@ def show_viability_form(row: dict, urgente: bool = False):
                 cto_escolhida = row.get('cto_numero')
                 
                 if cto_escolhida:
-                    st.success(f"✅ CTO Escolhida: **{cto_escolhida}**")
-                    st.caption(f"📏 Distância: {row.get('distancia_cliente', 'N/A')} | 📍 Localização: {row.get('localizacao_caixa', 'N/A')}")
-                    st.warning("⚠️ Os campos abaixo são EDITÁVEIS caso precise corrigir")
+                    col_cto_info, col_cto_btn = st.columns([3, 1])
+                    with col_cto_info:                        
+                        st.success(f"✅ CTO Escolhida: **{cto_escolhida}**")
+                        st.caption(f"📏 Distância: {row.get('distancia_cliente', 'N/A')} | 📍 Localização: {row.get('localizacao_caixa', 'N/A')}")
+                        st.warning("⚠️ Os campos abaixo são EDITÁVEIS caso precise corrigir")
+
+                    with col_cto_btn:
+                        if st.button(
+                            "🔄 Buscar Novamente",
+                            type="secondary",
+                            use_container_width=True,
+                            key=f"btn_rebuscar_{row['id']}",
+                            help="Clicou errado ou não tem porta? Busque outra CTO"
+                        ):
+                            st.session_state[f'mostrar_busca_{row["id"]}'] = True
+                            st.rerun()
                 
                 # ========================================
                 # BOTÃO BUSCAR CTOs (se ainda não escolheu)
