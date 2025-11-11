@@ -111,7 +111,7 @@ else:
             
             # Observações
             if row.get('obs_agendamento'):
-                st.markdown("**📝 Observações:**")
+                st.markdown("**📝 Observações do Cliente:**")
                 st.info(row['obs_agendamento'])
             
             st.markdown("---")
