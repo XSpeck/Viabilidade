@@ -59,6 +59,68 @@ st.markdown("---")
 # ======================
 agendamentos = get_scheduled_visits()
 
+if agendamentos:  # Só mostra filtros se houver agendamentos
+    st.subheader("🔍 Filtros")
+    
+    col_filtro1, col_filtro2, col_filtro3 = st.columns(3)
+    
+    # Extrair valores únicos
+    tecnologias = list(set([a.get('tecnologia_predio', 'N/A') for a in agendamentos if a.get('tecnologia_predio')]))
+    tecnicos = sorted(list(set([a.get('tecnico_responsavel', 'N/A') for a in agendamentos if a.get('tecnico_responsavel')])))
+    datas = sorted(list(set([a.get('data_visita') for a in agendamentos if a.get('data_visita')])))
+    
+    with col_filtro1:
+        filtro_tecnologia = st.selectbox(
+            "🔧 Tecnologia",
+            options=["Todas"] + tecnologias,
+            key="filtro_tech"
+        )
+    
+    with col_filtro2:
+        filtro_tecnico = st.selectbox(
+            "👷 Técnico",
+            options=["Todos"] + tecnicos,
+            key="filtro_tecnico"
+        )
+    
+    with col_filtro3:
+        # Formatar datas
+        datas_dict = {}
+        for d in datas:
+            if d:
+                try:
+                    from datetime import datetime
+                    dt = datetime.strptime(str(d), '%Y-%m-%d')
+                    data_br = dt.strftime('%d/%m/%Y')
+                    datas_dict[data_br] = d
+                except:
+                    datas_dict[d] = d
+        
+        filtro_data = st.selectbox(
+            "📅 Data",
+            options=["Todas"] + list(datas_dict.keys()),
+            key="filtro_data"
+        )
+    
+    # APLICAR FILTROS
+    agendamentos_original = agendamentos.copy()
+    
+    if filtro_tecnologia != "Todas":
+        agendamentos = [a for a in agendamentos if a.get('tecnologia_predio') == filtro_tecnologia]
+    
+    if filtro_tecnico != "Todos":
+        agendamentos = [a for a in agendamentos if a.get('tecnico_responsavel') == filtro_tecnico]
+    
+    if filtro_data != "Todas":
+        data_iso = datas_dict.get(filtro_data, filtro_data)
+        agendamentos = [a for a in agendamentos if a.get('data_visita') == data_iso]
+    
+    # Contador
+    if len(agendamentos) != len(agendamentos_original):
+        st.success(f"📊 Mostrando **{len(agendamentos)}** de **{len(agendamentos_original)}** agendamento(s)")
+    
+    st.markdown("---")
+    
 if not agendamentos:
     st.info("📭 Não há visitas técnicas agendadas no momento.")
     st.success("✅ Agenda vazia!")
