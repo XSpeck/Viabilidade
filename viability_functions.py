@@ -539,6 +539,55 @@ def schedule_building_visit(viability_id: str, data_visita: str, periodo: str, t
         st.error(f"❌ Erro ao agendar: {e}")
         return False
 
+def reschedule_building_visit(viability_id: str, nova_data: str, novo_periodo: str, novo_tecnico: str, motivo_reagendamento: str = None) -> bool:
+    """
+    Reagenda visita técnica para prédio
+    
+    Args:
+        viability_id: ID da viabilização
+        nova_data: Nova data da visita (formato: YYYY-MM-DD)
+        novo_periodo: "Manhã" ou "Tarde"
+        novo_tecnico: Nome do técnico responsável
+        motivo_reagendamento: Motivo do reagendamento (opcional)
+    """
+    try:
+        # Buscar dados atuais para histórico
+        response_atual = supabase.table('viabilizacoes')\
+            .select('data_visita, periodo_visita, tecnico_responsavel')\
+            .eq('id', viability_id)\
+            .execute()
+        
+        historico_texto = ""
+        if response_atual.data and len(response_atual.data) > 0:
+            dados_antigos = response_atual.data[0]
+            historico_texto = f"Reagendado de {dados_antigos.get('data_visita', 'N/A')} {dados_antigos.get('periodo_visita', '')} "
+            historico_texto += f"({dados_antigos.get('tecnico_responsavel', 'N/A')}) "
+            
+            if motivo_reagendamento:
+                historico_texto += f"- Motivo: {motivo_reagendamento}"
+        
+        # Atualizar com novos dados
+        update_data = {
+            'data_visita': str(nova_data),
+            'periodo_visita': novo_periodo,
+            'tecnico_responsavel': novo_tecnico,
+            'data_agendamento': get_current_time(),  # Atualiza timestamp
+            'historico_reagendamento': historico_texto  # Novo campo para histórico
+        }
+        
+        response = supabase.table('viabilizacoes')\
+            .update(update_data)\
+            .eq('id', viability_id)\
+            .execute()
+        
+        if response.data:
+            logger.info(f"Visita reagendada: {viability_id} - {nova_data} {novo_periodo} - {novo_tecnico}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Erro ao reagendar visita: {e}")
+        st.error(f"❌ Erro ao reagendar: {e}")
+        return False
 
 def get_scheduled_visits() -> List[Dict]:
     """Busca agendamentos pendentes"""
