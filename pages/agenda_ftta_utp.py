@@ -67,11 +67,19 @@ with col_filtro1:
     )
 
 with col_filtro2:
-    tecnico_filtro = st.selectbox(
-        "👷 Filtrar por Técnico",
-        options=["Todos"] + list(set([a.get('tecnico_responsavel', 'N/A') for a in agendamentos])),
-        key="tecnico_filtro_agenda"
+   try:
+    opcoes_tecnicos = ["Todos"] + list(
+        set([a.get('tecnico_responsavel', 'N/A') for a in agendamentos if isinstance(a, dict)])
     )
+except Exception as e:
+    st.error(f"Erro ao carregar técnicos: {e}")
+    opcoes_tecnicos = ["Todos"]
+
+tecnico_filtro = st.selectbox(
+    "👷 Filtrar por Técnico",
+    options=opcoes_tecnicos,
+    key="tecnico_filtro_agenda"
+)
 
 # Aplicar filtros
 if data_filtro:
