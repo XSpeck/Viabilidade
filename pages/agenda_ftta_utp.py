@@ -54,6 +54,34 @@ with col_header2:
 
 st.markdown("---")
 
+# Filtros
+st.subheader("🔍 Filtros")
+col_filtro1, col_filtro2 = st.columns(2)
+
+with col_filtro1:
+    data_filtro = st.date_input(
+        "📅 Filtrar por Data",
+        value=None,
+        key="data_filtro_agenda",
+        format="DD/MM/YYYY"
+    )
+
+with col_filtro2:
+    tecnico_filtro = st.selectbox(
+        "👷 Filtrar por Técnico",
+        options=["Todos"] + list(set([a.get('tecnico_responsavel', 'N/A') for a in agendamentos])),
+        key="tecnico_filtro_agenda"
+    )
+
+# Aplicar filtros
+if data_filtro:
+    agendamentos = [a for a in agendamentos if a.get('data_visita') == str(data_filtro)]
+
+if tecnico_filtro != "Todos":
+    agendamentos = [a for a in agendamentos if a.get('tecnico_responsavel') == tecnico_filtro]
+
+st.markdown("---")
+
 # ======================
 # Buscar Agendamentos
 # ======================
