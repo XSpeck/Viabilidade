@@ -159,7 +159,15 @@ else:
             
             with col2:
                 st.markdown("#### 📅 Agendamento")
-                st.text(f"Data: {row.get('data_visita', 'N/A')}")
+                data_visita = row.get('data_visita', 'N/A')
+                if data_visita and data_visita != 'N/A':
+                    try:
+                        from datetime import datetime
+                        data_obj = datetime.strptime(data_visita, '%Y-%m-%d')
+                        data_visita = data_obj.strftime('%d/%m/%Y')
+                    except:
+                        pass
+                st.text(f"Data: {data_visita}")
                 st.text(f"Período: {row.get('periodo_visita', 'N/A')}")
                 st.text(f"Técnico: {row.get('tecnico_responsavel', 'N/A')}")
                 st.text(f"Tecnologia: {row.get('tecnologia_predio', 'N/A')}")
@@ -277,7 +285,15 @@ else:
                     st.markdown("**📅 Dados Atuais:**")
                     col_atual1, col_atual2, col_atual3 = st.columns(3)
                     with col_atual1:
-                        st.text_input("Data Atual", value=row.get('data_visita', 'N/A'), disabled=True)
+                        data_atual = row.get('data_visita', 'N/A')
+                        if data_atual and data_atual != 'N/A':
+                            try:
+                                from datetime import datetime
+                                data_obj = datetime.strptime(data_atual, '%Y-%m-%d')
+                                data_atual = data_obj.strftime('%d/%m/%Y')
+                            except:
+                                pass
+                        st.text_input("Data Atual", value=data_atual, disabled=True)
                     with col_atual2:
                         st.text_input("Período Atual", value=row.get('periodo_visita', 'N/A'), disabled=True)
                     with col_atual3:
