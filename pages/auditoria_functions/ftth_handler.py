@@ -215,8 +215,7 @@ def show_ftth_form(row: dict):
                     
                     st.success(f"✅ {len(cto_routes)} CTOs encontradas")
 
-                    # MAPA
-                    st.markdown("### 🗺️ Visualização no Mapa")
+                    # MAPA (o título já vem do map_viewer)
                     show_project_map(
                         pluscode=row['plus_code_cliente'],
                         client_name=row.get('nome_cliente', 'Cliente'),
