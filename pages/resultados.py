@@ -350,7 +350,14 @@ if structured:
             with col_struct2:
                 st.markdown("#### 👷 Execução")
                 st.text(f"👤 Técnico: {row.get('tecnico_responsavel', 'N/A')}")
-                st.text(f"📅 Data Visita: {row.get('data_visita', 'N/A')}")
+                data_visita = row.get('data_visita', 'N/A')
+                if data_visita and data_visita != 'N/A':
+                    try:
+                        data_obj = datetime.strptime(data_visita, '%Y-%m-%d')
+                        data_visita = data_obj.strftime('%d/%m/%Y')
+                    except:
+                        pass
+                st.text(f"📅 Data Visita: {data_visita}")
                 st.text(f"🕐 Período: {row.get('periodo_visita', 'N/A')}")
             
             st.markdown("---")
@@ -470,7 +477,14 @@ if building_pending:
                     st.markdown("### 📅 Dados do Agendamento")
                     st.text(f"🏢 Edifício: {row.get('predio_ftta', 'N/A')}")
                     st.text(f"📍 Localização: {row['plus_code_cliente']}")
-                    st.text(f"📅 Data: {row.get('data_visita', 'N/A')}")
+                    data_visita = row.get('data_visita', 'N/A')
+                    if data_visita and data_visita != 'N/A':
+                        try:
+                            data_obj = datetime.strptime(data_visita, '%Y-%m-%d')
+                            data_visita = data_obj.strftime('%d/%m/%Y')
+                        except:
+                            pass
+                    st.text(f"📅 Data: {data_visita}")
                     st.text(f"🕐 Período: {row.get('periodo_visita', 'N/A')}")
                 
                 with col_agend2:
