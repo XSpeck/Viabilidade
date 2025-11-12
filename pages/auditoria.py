@@ -811,6 +811,12 @@ def show_viability_form(row: dict, urgente: bool = False):
                         if rejeitado:
                             # Mostrar formulário para coletar motivo
                             st.session_state[f'show_reject_predio_form_{row["id"]}'] = True
+
+                        if utp:
+                            dados = {'motivo_rejeicao': 'Atendemos UTP'}
+                            if update_viability_ftta(row['id'], 'utp', dados):
+                                st.success("📡 Marcado como Atendemos UTP")
+                                st.rerun()
                         
                     if st.session_state.get(f'show_reject_predio_form_{row["id"]}', False):
                         st.markdown("---")
@@ -867,11 +873,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 del st.session_state[f'show_reject_predio_form_{row["id"]}']
                                 st.rerun()
                                 
-                        if utp:
-                            dados = {'motivo_rejeicao': 'Atendemos UTP'}
-                            if update_viability_ftta(row['id'], 'utp', dados):
-                                st.success("📡 Marcado como Atendemos UTP")
-                                st.rerun()
+                        
                     
                     # ===== BOTÃO VIABILIZAR PRÉDIO (apenas se ainda não foi solicitado) =====
                     if status_predio is None:
