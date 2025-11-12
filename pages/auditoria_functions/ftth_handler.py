@@ -302,39 +302,10 @@ def show_ftth_form(row: dict):
                 st.rerun()
     
     # ========================================
-    # BOTÃO VER MAPA (fora da busca)
+    # FORMULÁRIO DE AUDITORIA
     # ========================================
     if not st.session_state.get(f'mostrar_busca_{row["id"]}', False):
         st.markdown("---")
-        st.markdown("### 🗺️ Visualizar Projeto no Mapa")
-        
-        col_mapa = st.columns([1, 2, 1])[1]
-        with col_mapa:
-            if st.button(
-                "🗺️ Ver Mapa do Projeto",
-                width='stretch',
-                key=f"ver_mapa_ftth_{row['id']}"
-            ):
-                st.session_state[f'show_map_ftth_{row["id"]}'] = True
-        
-        if st.session_state.get(f'show_map_ftth_{row["id"]}', False):
-            show_project_map(
-                pluscode=row['plus_code_cliente'],
-                client_name=row.get('nome_cliente', 'Cliente'),
-                unique_key=f"ftth_view_{row['id']}",
-                show_ctos=True
-            )
-            
-            col_fechar_mapa = st.columns([1, 2, 1])[1]
-            with col_fechar_mapa:
-                if st.button("❌ Fechar Mapa", width='stretch', key=f"fechar_mapa_ftth_{row['id']}"):
-                    del st.session_state[f'show_map_ftth_{row["id"]}']
-                    st.rerun()
-    
-    # ========================================
-    # FORMULÁRIO DE AUDITORIA
-    # ========================================
-    st.markdown("---")
     
     with st.form(key=f"form_ftth_{row['id']}"):
         cto = st.text_input(
