@@ -24,9 +24,9 @@ from openlocationcode import openlocationcode as olc
 from geopy.distance import geodesic
 import gdown
 import requests
-import folium
-from streamlit_folium import st_folium
 from typing import List, Tuple
+# Import do módulo de mapas
+from pages.auditoria_functions.map_viewer import show_project_map
 
 logger = logging.getLogger(__name__)
 
@@ -63,52 +63,13 @@ st.title("🔍 Auditoria de Viabilizações")
 st.markdown("Análise técnica das solicitações de viabilidade")
 
 # Configurações para busca
-LOCATIONIQ_KEY = "pk.66f355328aaad40fe69b57c293f66815"
 reference_lat = -28.6775
 reference_lon = -49.3696
 file_id_ctos = "1EcKNk2yqHDEMMXJZ17fT0flPV19HDhKJ"
 ctos_kml_path = "ctos.kml"
 
-KML_CONFIGS = {
-    "COOPER-COCAL": {
-        "file_id": "1XD-GgwgFgB2RcKkBAxf5RSBWu2yfIf2w",
-        "color": "#FF1493",
-        "path": "cooper_cocal.kml"
-    },
-    "COOPERA": {
-        "file_id": "1E5tKI5brZMo1rcrJANXggYegV1IrCdnv",
-        "color": "#00FF00",
-        "path": "coopera.kml"
-    },
-    "COPERALIANCA": {
-        "file_id": "1cDZwFpCDygrmZvP2_oSZoXT3oKXKT8Bh",
-        "color": "#0000FF",
-        "path": "coperalianca.kml"
-    },
-    "CERMOFUL": {
-        "file_id": "1r4gnRFaNUmAZ6f9oTdR1x9RcfksWTXDx",
-        "color": "#FF8C00",
-        "path": "cermoful.kml"
-    },
-    "CERTREL": {
-        "file_id": "1ZGczns-MIV897jQ8HRhH6LFgMRMdydm4",
-        "color": "#8A2BE2",
-        "path": "certrel.kml"
-    },
-    "FORÇALUZ": {
-        "file_id": "1CHAWKnha0C1f44uLJYXUOj0UcrtnlPKK",
-        "color": "#FFD700",
-        "path": "forcaluz.kml"
-    },
-    "CELESC": {
-        "file_id": "1M5P4_THpr1qxcxhPVOyQCdGTE5_7faRB",
-        "color": "#FF0000",
-        "path": "celesc.kml"
-    }
-}
-
 # ============================================
-# FUNÇÕES DE BUSCA (copiar do validator_system.py)
+# FUNÇÕES DE BUSCA (mantidas para CTOs)
 # ============================================
 
 def validate_coordinates(lat: float, lon: float) -> bool:
@@ -203,49 +164,6 @@ def get_walking_route(start_lat: float, start_lon: float, end_lat: float, end_lo
     except Exception as e:
         logger.error(f"Erro ao calcular rota: {e}")
         return None
-
-@st.cache_data(ttl=3600)
-def load_lines_from_kml(path: str) -> List[List[Tuple[float, float]]]:
-    """Carrega linhas de projeto de um arquivo KML"""
-    try:
-        namespaces = {'kml': 'http://www.opengis.net/kml/2.2'}
-        tree = ET.parse(path)
-        root = tree.getroot()
-        lines = []
-        for ls in root.findall(".//kml:LineString", namespaces):
-            coords_elem = ls.find("kml:coordinates", namespaces)
-            if coords_elem is not None and coords_elem.text:
-                try:
-                    raw = coords_elem.text.strip().split()
-                    coords = []
-                    for c in raw:
-                        parts = c.split(',')
-                        if len(parts) >= 2:
-                            lon, lat = float(parts[0]), float(parts[1])
-                            if validate_coordinates(lat, lon):
-                                coords.append((lat, lon))
-                    if len(coords) > 1:
-                        lines.append(coords)
-                except (ValueError, IndexError) as e:
-                    logger.warning(f"Linha KML inválida ignorada: {e}")
-                    continue
-        logger.info(f"Carregadas {len(lines)} linhas do KML {path}")
-        return lines
-    except Exception as e:
-        logger.error(f"Erro ao carregar linhas KML: {e}")
-        return []
-
-@st.cache_data(ttl=3600)
-def download_file(file_id: str, output: str) -> str:
-    """Download de arquivo do Google Drive"""
-    try:
-        url = f"https://drive.google.com/uc?id={file_id}"
-        gdown.download(url, output, quiet=True, fuzzy=True)
-        logger.info(f"Arquivo {output} baixado com sucesso")
-        return output
-    except Exception as e:
-        logger.error(f"Erro ao baixar {output}: {e}")
-        raise Exception(f"Falha no download do arquivo {output}: {str(e)}")
 
 # Botão de atualizar
 col_header1, col_header2 = st.columns([4, 1])
@@ -418,26 +336,10 @@ def show_viability_form(row: dict, urgente: bool = False):
                         lat, lon = pluscode_to_coords(row['plus_code_cliente'])
                         
                         if lat and lon:
-                            # 🆕 CARREGAR CTOs E LINHAS
+                            # Carregar CTOs
                             with st.spinner("Carregando dados..."):
-                                # Baixar e carregar CTOs
                                 download_ctos_file(file_id_ctos, ctos_kml_path)
                                 ctos = load_ctos_from_kml(ctos_kml_path)
-                                
-                                # 🆕 Baixar e carregar linhas de projeto
-                                all_lines = {}
-                                for company, config in KML_CONFIGS.items():
-                                    try:
-                                        download_file(config["file_id"], config["path"])
-                                        lines = load_lines_from_kml(config["path"])
-                                        all_lines[company] = {
-                                            "lines": lines,
-                                            "color": config["color"]
-                                        }
-                                        logger.info(f"Carregadas {len(lines)} linhas para {company}")
-                                    except Exception as e:
-                                        logger.error(f"Erro ao carregar {company}: {e}")
-                                        all_lines[company] = {"lines": [], "color": config["color"]}
                             
                             # Buscar CTOs próximas
                             candidate_ctos = find_nearest_ctos(lat, lon, ctos, max_radius=3500.0)
@@ -472,112 +374,15 @@ def show_viability_form(row: dict, urgente: bool = False):
                                 st.success(f"✅ {len(cto_routes)} CTOs encontradas")
 
                                 # ========================================
-                                # MAPA INTERATIVO
+                                # MAPA INTERATIVO (usando map_viewer)
                                 # ========================================
                                 
-                                st.markdown("### 🗺️ Visualização no Mapa")                               
-                                
-                                # Criar mapa centrado no cliente
-                                mapa = folium.Map(
-                                    location=[lat, lon],
-                                    zoom_start=16,
-                                    tiles="OpenStreetMap"
-                                )
-                                for company, data in all_lines.items():
-                                    for line_coords in data["lines"]:
-                                        folium.PolyLine(
-                                            locations=line_coords,
-                                            color=data["color"],
-                                            weight=3,
-                                            opacity=0.6,
-                                            tooltip=f"Projeto {company}"
-                                        ).add_to(mapa)
-                                
-                                # Marcador do CLIENTE
-                                folium.Marker(
-                                    location=[lat, lon],
-                                    popup=f"<b>🏠 Cliente</b><br>{row.get('nome_cliente', 'Cliente')}<br>{row['plus_code_cliente']}",
-                                    tooltip="📍 Localização do Cliente",
-                                    icon=folium.Icon(color='red', icon='home', prefix='fa')
-                                ).add_to(mapa)
-                                
-                                # Adicionar CTOs encontradas
-                                for idx, item in enumerate(cto_routes):
-                                    cto = item["cto"]
-                                    route = item["route"]
-                                    
-                                    # Cor baseada na posição (verde = mais próxima)
-                                    cores = ['green', 'blue', 'orange', 'purple', 'darkred']
-                                    cor = cores[idx] if idx < len(cores) else 'gray'
-                                    
-                                    # Ícone com número
-                                    icons_numero = ['1', '2', '3', '4', '5']
-                                    icon_numero = icons_numero[idx] if idx < len(icons_numero) else str(idx+1)
-                                    
-                                    # Popup com informações
-                                    if route:
-                                        dist_info = f"🚶 Rota: {format_distance(route['distance'])}<br>🏃 +50m: {format_distance(route['distance'] + 50)}"
-                                    else:
-                                        dist_info = f"📏 Linha reta: {format_distance(cto['distance'])}"
-                                    
-                                    popup_html = f"""
-                                    <div style='width: 200px'>
-                                        <h4>{icon_numero}. {cto['name']}</h4>
-                                        <p>{dist_info}</p>
-                                        <p>📍 {coords_to_pluscode(cto['lat'], cto['lon'])}</p>
-                                    </div>
-                                    """
-                                    
-                                    # Marcador da CTO
-                                    folium.Marker(
-                                        location=[cto["lat"], cto["lon"]],
-                                        popup=folium.Popup(popup_html, max_width=250),
-                                        tooltip=f"{icon_numero}. {cto['name']} - {format_distance(item['distance'])}",
-                                        icon=folium.Icon(color=cor, icon='info-sign', prefix='glyphicon')
-                                    ).add_to(mapa)
-                                    
-                                    # Desenhar ROTA se existir
-                                    #if route and route.get('geometry'):
-                                        # Extrair coordenadas da rota
-                                        #coordenadas_rota = []
-                                       # for coord in route['geometry']['coordinates']:
-                                           # coordenadas_rota.append([coord[1], coord[0]])  # [lat, lon]
-                                        
-                                        # Linha da rota
-                                       # folium.PolyLine(
-                                         #   locations=coordenadas_rota,
-                                          #  color=cor,
-                                          #  weight=4,
-                                         #   opacity=0.7,
-                                         #   tooltip=f"Rota até {cto['name']}"
-                                    #    ).add_to(mapa)
-                                  #  else:
-                                        # Linha reta se não houver rota
-                                      #  folium.PolyLine(
-                                      #      locations=[[lat, lon], [cto["lat"], cto["lon"]]],
-                                       #     color=cor,
-                                        #    weight=2,
-                                          #  opacity=0.4,
-                                         #   dash_array='10',
-                                        #    tooltip=f"Linha reta até {cto['name']}"
-                                      #  ).add_to(mapa)
-                                
-                                # Ajustar zoom para mostrar todos os pontos
-                                bounds = [[lat, lon]]
-                                for item in cto_routes:
-                                    bounds.append([item["cto"]["lat"], item["cto"]["lon"]])
-                                
-                                mapa.fit_bounds(bounds, padding=[50, 50])
-                                
-                             
-                                # Renderizar mapa (COM KEY ÚNICA)
-                                output = st_folium(
-                                    mapa, 
-                                    width=700, 
-                                    height=500,
-                                    key=f"mapa_auditoria_{row['id']}",
-                                    returned_objects=[],
-                                    feature_group_to_add=None
+                                st.markdown("### 🗺️ Visualização no Mapa")
+                                show_project_map(
+                                    pluscode=row['plus_code_cliente'],
+                                    client_name=row.get('nome_cliente', 'Cliente'),
+                                    unique_key=f"ftth_busca_{row['id']}",
+                                    show_ctos=True
                                 )
                                 
                                 st.markdown("---")
@@ -658,7 +463,39 @@ def show_viability_form(row: dict, urgente: bool = False):
                     with col_fechar:
                         if st.button("❌ Fechar Busca", width='stretch', key=f"fechar_busca_{row['id']}"):
                             del st.session_state[f'mostrar_busca_{row["id"]}']
-                            st.rerun()                    
+                            st.rerun()
+                
+                # ========================================
+                # BOTÃO VER MAPA (fora da busca de CTOs)
+                # ========================================
+                if not st.session_state.get(f'mostrar_busca_{row["id"]}', False):
+                    st.markdown("---")
+                    st.markdown("### 🗺️ Visualizar Projeto no Mapa")
+                    
+                    col_mapa = st.columns([1, 2, 1])[1]
+                    with col_mapa:
+                        if st.button(
+                            "🗺️ Ver Mapa do Projeto",
+                            width='stretch',
+                            key=f"ver_mapa_ftth_{row['id']}"
+                        ):
+                            st.session_state[f'show_map_ftth_{row["id"]}'] = True
+                    
+                    if st.session_state.get(f'show_map_ftth_{row["id"]}', False):
+                        # Mostrar mapa COM CTOs
+                        show_project_map(
+                            pluscode=row['plus_code_cliente'],
+                            client_name=row.get('nome_cliente', 'Cliente'),
+                            unique_key=f"ftth_view_{row['id']}",
+                            show_ctos=True
+                        )
+                        
+                        # Botão para fechar
+                        col_fechar_mapa = st.columns([1, 2, 1])[1]
+                        with col_fechar_mapa:
+                            if st.button("❌ Fechar Mapa", width='stretch', key=f"fechar_mapa_ftth_{row['id']}"):
+                                del st.session_state[f'show_map_ftth_{row["id"]}']
+                                st.rerun()
                 
                 # ========================================
                 # FORMULÁRIO DE AUDITORIA
@@ -708,8 +545,6 @@ def show_viability_form(row: dict, urgente: bool = False):
                     
                     with col_btn1:
                         aprovado = st.form_submit_button("✅ Viabilizar", type="primary", width='stretch')
-                   # with col_btn2:
-                       # utp = st.form_submit_button("📡 Atendemos UTP", width='stretch')
                     with col_btn2:
                         rejeitado = st.form_submit_button("❌ Sem Viabilidade", type="secondary", width='stretch')
                     
@@ -742,12 +577,6 @@ def show_viability_form(row: dict, urgente: bool = False):
                         if update_viability_ftth(row['id'], 'rejeitado', dados):
                             st.success("❌ Solicitação rejeitada")
                             st.rerun()
-                    
-                    #if utp:
-                      #  dados = {'motivo_rejeicao': 'Atendemos UTP'}
-                      #  if update_viability_ftth(row['id'], 'utp', dados):
-                       #     st.success("📡 Marcado como Atendemos UTP")
-                        #    st.rerun()
             
             else:  # Prédio (FTTA ou UTP a definir)
                 # Verificar se já foi solicitada viabilização de prédio
@@ -756,6 +585,38 @@ def show_viability_form(row: dict, urgente: bool = False):
                 # Se ainda não foi solicitado OU se foi rejeitado, mostrar formulário normal
                 if status_predio is None or status_predio == 'rejeitado':
                     st.markdown("#### 🏢 Dados do Prédio")
+                    
+                    # ========================================
+                    # BOTÃO VER MAPA (para FTTA)
+                    # ========================================
+                    st.markdown("### 🗺️ Visualizar Projeto no Mapa")
+                    
+                    col_mapa_ftta = st.columns([1, 2, 1])[1]
+                    with col_mapa_ftta:
+                        if st.button(
+                            "🗺️ Ver Mapa do Projeto",
+                            width='stretch',
+                            key=f"ver_mapa_ftta_{row['id']}"
+                        ):
+                            st.session_state[f'show_map_ftta_{row["id"]}'] = True
+                    
+                    if st.session_state.get(f'show_map_ftta_{row["id"]}', False):
+                        # Mostrar mapa SEM CTOs
+                        show_project_map(
+                            pluscode=row['plus_code_cliente'],
+                            client_name=row.get('predio_ftta', 'Prédio'),
+                            unique_key=f"ftta_view_{row['id']}",
+                            show_ctos=False
+                        )
+                        
+                        # Botão para fechar
+                        col_fechar_mapa_ftta = st.columns([1, 2, 1])[1]
+                        with col_fechar_mapa_ftta:
+                            if st.button("❌ Fechar Mapa", width='stretch', key=f"fechar_mapa_ftta_{row['id']}"):
+                                del st.session_state[f'show_map_ftta_{row["id"]}']
+                                st.rerun()
+                    
+                    st.markdown("---")
                     
                     with st.form(key=f"form_ftta_{row['id']}"):
                         cdoi_ftta = st.text_input(
@@ -811,13 +672,13 @@ def show_viability_form(row: dict, urgente: bool = False):
                         if rejeitado:
                             # Mostrar formulário para coletar motivo
                             st.session_state[f'show_reject_predio_form_{row["id"]}'] = True
-
+                        
                         if utp:
                             dados = {'motivo_rejeicao': 'Atendemos UTP'}
                             if update_viability_ftta(row['id'], 'utp', dados):
                                 st.success("📡 Marcado como Atendemos UTP")
                                 st.rerun()
-                        
+                    
                     if st.session_state.get(f'show_reject_predio_form_{row["id"]}', False):
                         st.markdown("---")
                         st.error("### ❌ Registrar Prédio Sem Viabilidade")
@@ -872,8 +733,6 @@ def show_viability_form(row: dict, urgente: bool = False):
                             if cancelar_rej_predio:
                                 del st.session_state[f'show_reject_predio_form_{row["id"]}']
                                 st.rerun()
-                                
-                        
                     
                     # ===== BOTÃO VIABILIZAR PRÉDIO (apenas se ainda não foi solicitado) =====
                     if status_predio is None:
