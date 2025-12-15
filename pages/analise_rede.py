@@ -275,7 +275,7 @@ try:
     # ======================
     # ABAS DE ANÁLISE
     # ======================
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "🔧 ONUs com Defeito (TX > RX)", 
         "📶 ONUs com Sinal Fraco (< -26 dBm)", 
         "👥 Clientes Sem ONU", 
