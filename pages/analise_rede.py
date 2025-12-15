@@ -82,7 +82,7 @@ def processar_kml(uploaded_file):
         return {}
 
 @st.cache_data
-def processar_dados(relatorio_csv, logins_csv, kml_file):
+def processar_dados(relatorio_csv, logins_csv, kml_file, ctos_csv):
     """Processa todos os dados e retorna DataFrame filtrado"""
     
     # Carregar relatório
@@ -90,6 +90,7 @@ def processar_dados(relatorio_csv, logins_csv, kml_file):
     df_relatorio_original = df.copy()
     
     df_logins_completo = None
+    df_ctos = None
     
     # Carregar logins se disponível
     if logins_csv is not None:
@@ -139,8 +140,12 @@ def processar_dados(relatorio_csv, logins_csv, kml_file):
     
     # Processar KML
     ctos_localizacao = processar_kml(kml_file) if kml_file else {}
+
+    # Carregar relatório de CTOs se disponível
+    if ctos_csv is not None:
+        df_ctos = pd.read_csv(io.StringIO(ctos_csv.decode('utf-8')), sep=";")
     
-    return df, ctos_localizacao, df_logins_completo, df_relatorio_original
+    return df, ctos_localizacao, df_logins_completo, df_relatorio_original, df_ctos
 
 def criar_tabela_onus(df_onus, plus_codes):
     """Cria tabela formatada para exibição"""
@@ -218,6 +223,12 @@ with st.sidebar:
         help="Arquivo KML com coordenadas das CTOs"
     )
 
+    ctos_file = st.file_uploader(
+        "Relatório de CTOs (CSV) - Opcional",
+        type=['csv'],
+        help="Arquivo CSV com cadastro de CTOs por porta/OLT"
+    )
+
 # ======================
 # Verificação e Processamento
 # ======================
@@ -234,10 +245,11 @@ if relatorio_file is None:
 # Processar dados
 try:
     with st.spinner("Processando dados..."):
-        df, ctos_localizacao, df_logins_completo, df_relatorio_original = processar_dados(
+        df, ctos_localizacao, df_logins_completo, df_relatorio_original, df_ctos = processar_dados(
             relatorio_file.read(), 
             logins_file.read() if logins_file else None,
-            kml_file
+            kml_file,
+            ctos_file.read() if ctos_file else None
         )
     
     # Métricas principais
@@ -268,7 +280,8 @@ try:
         "📶 ONUs com Sinal Fraco (< -26 dBm)", 
         "👥 Clientes Sem ONU", 
         "🏢 Clientes N1 (Rede Neutra)", 
-        "📊 CTOs Saturadas"
+        "📊 CTOs Saturadas",
+        "🔌 CTOs por Porta/OLT"
     ])
     
     # ABA 1: ONUs com defeito
@@ -869,7 +882,209 @@ try:
             )
         else:
             st.warning("⚠️ Coluna 'Caixa FTTH' não encontrada no relatório.") 
-    
+
+    # ABA 6: CTOs por Porta/OLT
+    with tab6:
+        st.header("🔌 CTOs Cadastradas por Porta/OLT")
+        st.markdown("**Análise de distribuição de CTOs por Interface (Porta) e Transmissor (OLT)**")
+        
+        if df_ctos is not None:
+            # Verificar se as colunas necessárias existem
+            col_transmissor = None
+            col_interface = None
+            col_descricao = None
+            
+            # Buscar coluna Transmissor(OLT)
+            for col in df_ctos.columns:
+                col_lower = col.lower().replace('"', '').strip()
+                if "transmissor" in col_lower or "olt" in col_lower:
+                    col_transmissor = col
+                    break
+            
+            # Buscar coluna Interface
+            for col in df_ctos.columns:
+                col_lower = col.lower().replace('"', '').strip()
+                if "interface" in col_lower or "porta" in col_lower:
+                    col_interface = col
+                    break
+            
+            # Buscar coluna Descrição
+            for col in df_ctos.columns:
+                col_lower = col.lower().replace('"', '').strip()
+                if "descricao" in col_lower or "descrição" in col_lower or "cto" in col_lower or "nome" in col_lower:
+                    col_descricao = col
+                    break
+            
+            if col_transmissor and col_interface and col_descricao:
+                # Limpar dados
+                df_ctos_limpo = df_ctos[[col_transmissor, col_interface, col_descricao]].copy()
+                df_ctos_limpo = df_ctos_limpo.dropna()
+                
+                # Normalizar descrições (remover duplicatas)
+                df_ctos_limpo['descricao_norm'] = df_ctos_limpo[col_descricao].astype(str).str.strip().str.upper()
+                
+                # Contar CTOs únicas por OLT e Porta
+                resumo_ctos_porta = df_ctos_limpo.groupby([col_transmissor, col_interface])['descricao_norm'].nunique().reset_index()
+                resumo_ctos_porta.columns = ['Transmissor (OLT)', 'Interface (Porta)', 'CTOs Únicas']
+                resumo_ctos_porta = resumo_ctos_porta.sort_values(['Transmissor (OLT)', 'Interface (Porta)'])
+                
+                # Métricas gerais
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    total_olts = df_ctos_limpo[col_transmissor].nunique()
+                    st.metric("🏭 Total de OLTs", total_olts)
+                with col2:
+                    total_portas = len(resumo_ctos_porta)
+                    st.metric("🔌 Total de Portas", total_portas)
+                with col3:
+                    total_ctos_unicas = df_ctos_limpo['descricao_norm'].nunique()
+                    st.metric("📦 CTOs Únicas", total_ctos_unicas)
+                with col4:
+                    media_ctos = resumo_ctos_porta['CTOs Únicas'].mean()
+                    st.metric("📊 Média CTOs/Porta", f"{media_ctos:.1f}")
+                
+                st.markdown("---")
+                
+                # Filtros
+                st.subheader("🔍 Filtros")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    olts_disponiveis = ["Todos"] + sorted(df_ctos_limpo[col_transmissor].unique().tolist())
+                    filtro_olt = st.selectbox("Filtrar por OLT:", olts_disponiveis, key="filtro_olt_ctos")
+                
+                with col2:
+                    # Filtro por quantidade mínima de CTOs
+                    min_ctos = st.number_input(
+                        "Mínimo de CTOs por porta:", 
+                        min_value=0, 
+                        max_value=int(resumo_ctos_porta['CTOs Únicas'].max()),
+                        value=0,
+                        key="min_ctos_filter"
+                    )
+                
+                # Aplicar filtros
+                df_filtrado = resumo_ctos_porta.copy()
+                
+                if filtro_olt != "Todos":
+                    df_filtrado = df_filtrado[df_filtrado['Transmissor (OLT)'] == filtro_olt]
+                
+                if min_ctos > 0:
+                    df_filtrado = df_filtrado[df_filtrado['CTOs Únicas'] >= min_ctos]
+                
+                # Tabela principal
+                st.subheader(f"📋 CTOs por Porta ({len(df_filtrado)} registros)")
+                
+                # Adicionar coluna de status (alerta se muitas CTOs)
+                df_filtrado['Status'] = df_filtrado['CTOs Únicas'].apply(
+                    lambda x: '🔴 Saturada' if x >= 8 else ('🟡 Atenção' if x >= 6 else '🟢 Normal')
+                )
+                
+                st.dataframe(
+                    df_filtrado[['Transmissor (OLT)', 'Interface (Porta)', 'CTOs Únicas', 'Status']],
+                    width='stretch',
+                    height=400
+                )
+                
+                # Download
+                csv_ctos_porta = df_filtrado.to_csv(sep=';', index=False)
+                st.download_button(
+                    label="💾 Baixar Relatório CTOs por Porta",
+                    data=csv_ctos_porta,
+                    file_name="ctos_por_porta_olt.csv",
+                    mime="text/csv"
+                )
+                
+                st.markdown("---")
+                
+                # Análises adicionais
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.subheader("📊 Resumo por OLT")
+                    resumo_olt = resumo_ctos_porta.groupby('Transmissor (OLT)').agg({
+                        'Interface (Porta)': 'count',
+                        'CTOs Únicas': ['sum', 'mean', 'max']
+                    }).reset_index()
+                    resumo_olt.columns = ['OLT', 'Portas Ativas', 'Total CTOs', 'Média CTOs/Porta', 'Máx CTOs/Porta']
+                    resumo_olt['Média CTOs/Porta'] = resumo_olt['Média CTOs/Porta'].round(1)
+                    resumo_olt = resumo_olt.sort_values('Total CTOs', ascending=False)
+                    st.dataframe(resumo_olt, width='stretch')
+                
+                with col2:
+                    st.subheader("⚠️ Portas com Mais CTOs")
+                    top_portas = resumo_ctos_porta.nlargest(10, 'CTOs Únicas')
+                    st.dataframe(
+                        top_portas[['Transmissor (OLT)', 'Interface (Porta)', 'CTOs Únicas']], 
+                        width='stretch'
+                    )
+                
+                # Detalhamento por porta selecionada
+                st.markdown("---")
+                st.subheader("🔍 Detalhamento de CTOs por Porta")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    olt_selecionada = st.selectbox(
+                        "Selecione a OLT:",
+                        sorted(df_ctos_limpo[col_transmissor].unique().tolist()),
+                        key="olt_detail"
+                    )
+                
+                with col2:
+                    portas_olt = sorted(
+                        df_ctos_limpo[df_ctos_limpo[col_transmissor] == olt_selecionada][col_interface].unique().tolist()
+                    )
+                    porta_selecionada = st.selectbox(
+                        "Selecione a Porta:",
+                        portas_olt,
+                        key="porta_detail"
+                    )
+                
+                # Mostrar CTOs da porta selecionada
+                ctos_porta = df_ctos_limpo[
+                    (df_ctos_limpo[col_transmissor] == olt_selecionada) & 
+                    (df_ctos_limpo[col_interface] == porta_selecionada)
+                ][col_descricao].unique()
+                
+                st.info(f"📦 **{len(ctos_porta)} CTOs únicas** cadastradas nesta porta")
+                
+                # Listar CTOs
+                ctos_lista = pd.DataFrame({
+                    'Nº': range(1, len(ctos_porta) + 1),
+                    'Descrição da CTO': sorted(ctos_porta)
+                })
+                
+                st.dataframe(ctos_lista, width='stretch', height=300)
+                
+                # Download da lista específica
+                csv_ctos_lista = ctos_lista.to_csv(sep=';', index=False)
+                st.download_button(
+                    label=f"💾 Baixar CTOs de {olt_selecionada} - {porta_selecionada}",
+                    data=csv_ctos_lista,
+                    file_name=f"ctos_{olt_selecionada}_{porta_selecionada}.csv",
+                    mime="text/csv",
+                    key="download_ctos_detail"
+                )
+                
+            else:
+                st.error("❌ Colunas necessárias não encontradas no arquivo!")
+                st.info("""
+                **Colunas esperadas:**
+                - Transmissor(OLT) ou similar
+                - Interface ou Porta
+                - Descrição ou CTO ou Nome
+                """)
+                st.write("**Colunas encontradas:**", df_ctos.columns.tolist())
+        else:
+            st.warning("⚠️ Arquivo relatorio_CTOs.csv não foi carregado.")
+            st.info("""
+            **Para usar esta funcionalidade:**
+            1. Faça upload do arquivo 'Relatório de CTOs (CSV)' na barra lateral
+            2. O arquivo deve conter as colunas: Transmissor(OLT), Interface e Descrição
+            """)
+
+
 except Exception as e:
     st.error(f"❌ Erro ao processar os dados: {e}")
     logger.error(f"Erro no processamento: {e}")
