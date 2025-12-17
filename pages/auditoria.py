@@ -208,18 +208,22 @@ else:
     urgentes = [p for p in pending if p.get('urgente', False)]
     ftth = [p for p in pending if p['tipo_instalacao'] == 'FTTH' and not p.get('urgente', False)]
     predios = [p for p in pending if p['tipo_instalacao'] == 'Prédio' and not p.get('urgente', False)]
+    # Separar prédios em espera (agendamento / aguardando dados) para NÃO misturar com viabilidades ativas
+    waiting_statuses = ['agendado', 'pronto_auditoria', 'aguardando_dados']
+    predios_espera = [p for p in predios if p.get('status_predio') in waiting_statuses]
+    predios_auditar = [p for p in predios if p.get('status_predio') not in waiting_statuses]
     
     # ======================
     # SISTEMA DE ABAS
     # ======================
-    # Criar nomes das abas com contadores
+    # Criar nomes das abas com contadores (não incluir prédios em espera)
     tab_names = []
     if urgentes:
         tab_names.append(f"🔥 URGENTES ({len(urgentes)})")
     if ftth:
         tab_names.append(f"🏠 FTTH ({len(ftth)})")
-    if predios:
-        tab_names.append(f"🏢 PRÉDIOS ({len(predios)})")
+    if predios_auditar:
+        tab_names.append(f"🏢 PRÉDIOS ({len(predios_auditar)})")
     
     # Se não houver abas (nenhuma pendência), não mostrar nada
     if not tab_names:
@@ -254,15 +258,34 @@ else:
             
             tab_index += 1
         
-        # ABA PRÉDIOS
-        if predios:
+        # ABA PRÉDIOS (apenas prédios que precisam de auditoria ativa)
+        if predios_auditar:
             with tabs[tab_index]:
                 st.info("🏢 **Instalações em Edifícios**")
-                st.caption(f"📊 {len(predios)} solicitação(ões) de prédio")
+                st.caption(f"📊 {len(predios_auditar)} solicitação(ões) de prédio")
                 st.markdown("---")
                 
-                for row in predios:
+                for row in predios_auditar:
                     show_viability_form(row, urgente=False)
+
+    # ======================
+    # Prédios em Espera (Agendamento / Aguardando Dados) - separado para não atrapalhar fila
+    # ======================
+    if predios_espera:
+        st.markdown("---")
+        st.subheader("🏢 Prédios em Espera (Agendamento / Aguardando Dados)")
+        st.info("Estes prédios aguardam ação do usuário ou agendamento e foram separados da fila principal.")
+        for row in predios_espera:
+            status_text = row.get('status_predio', 'Em Espera')
+            titulo = f"🏢 {row.get('predio_ftta', 'Prédio')} — {row['plus_code_cliente']} — {status_text}"
+            with st.expander(titulo, expanded=False):
+                st.text(f"👤 Solicitante: {row.get('usuario', 'N/A')}")
+                st.text(f"📍 Plus Code: {row.get('plus_code_cliente')}")
+                st.text(f"📅 Solicitado: {format_time_br_supa(row.get('data_solicitacao'))}")
+                st.text(f"🔔 Status Prédio: {status_text}")
+                # Mostrar detalhes completos se necessário
+                if st.button("🔍 Ver detalhes e editar", key=f"open_espera_{row['id']}"):
+                    show_viability_form(row)
 
 
 # ======================
