@@ -249,8 +249,8 @@ else:
                 st.caption(f"📊 {len(urgentes)} solicitação(ões) urgente(s)")
                 st.markdown("---")
                 
-                        for row in urgentes:
-                            show_viability_form(row, urgente=True, context='urgente')
+                for row in urgentes:
+                    show_viability_form(row, urgente=True, context='urgente')
             
             tab_index += 1
         
