@@ -785,9 +785,11 @@ def devolver_viabilidade(viability_id: str) -> bool:
             .eq('id', viability_id)\
             .execute()
         
-        if response.data:
+        # Supabase Python client pode retornar vazio em response.data com status_code 204
+        if response.data or getattr(response, 'status_code', None) in (200, 204):
             logger.info(f"Viabilização {viability_id} devolvida")
             return True
+        logger.warning(f"Devolver viabilização retornou sem dados: {viability_id} - resp: {getattr(response, 'status_code', None)}")
         return False
     except Exception as e:
         logger.error(f"Erro ao devolver viabilização: {e}")

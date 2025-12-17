@@ -53,7 +53,7 @@ with col_header2:
 # ======================
 # Função de Formulário
 # ======================
-def show_viability_form(row: dict, urgente: bool = False):
+def show_viability_form(row: dict, urgente: bool = False, context: str = ''):
     """Exibe formulário de auditoria para uma viabilização"""
     
     # Estilo do card baseado na urgência
@@ -138,14 +138,14 @@ def show_viability_form(row: dict, urgente: bool = False):
             st.markdown("---")
             if st.button(
                 "🗑️ Excluir Solicitação",
-                key=f"delete_{row['id']}",
+                key=f"delete_{row['id']}_{context}",
                 type="secondary",
                 width='stretch',
                 help="Excluir esta solicitação permanentemente"
             ):
                 if delete_viability(row['id']):
                     st.success("✅ Solicitação excluída!")
-                    st.rerun()            
+                    st.rerun()
             if urgente:
                 st.error("🔥 **URGENTE - Cliente Presencial**")
 
@@ -154,14 +154,22 @@ def show_viability_form(row: dict, urgente: bool = False):
             with col_devolver:
                 if st.button(
                     "↩️ Devolver para Fila",
-                    key=f"devolver_{row['id']}",
+                    key=f"devolver_{row['id']}_{context}",
                     type="secondary",
                     width='stretch',
                     help="Devolve esta viabilização para outros auditores pegarem"
                 ):
-                    if devolver_viabilidade(row['id']):
+                    ok = False
+                    try:
+                        ok = devolver_viabilidade(row['id'])
+                    except Exception as e:
+                        logger.error(f"Erro ao chamar devolver_viabilidade UI: {e}")
+
+                    if ok:
                         st.success("✅ Viabilização devolvida!")
                         st.rerun()
+                    else:
+                        st.error("❌ Erro ao devolver viabilização. Tente novamente.")
         
         with col2:
             # Chamar formulário apropriado baseado no tipo
@@ -241,8 +249,8 @@ else:
                 st.caption(f"📊 {len(urgentes)} solicitação(ões) urgente(s)")
                 st.markdown("---")
                 
-                for row in urgentes:
-                    show_viability_form(row, urgente=True)
+                        for row in urgentes:
+                            show_viability_form(row, urgente=True, context='urgente')
             
             tab_index += 1
         
@@ -254,7 +262,7 @@ else:
                 st.markdown("---")
                 
                 for row in ftth:
-                    show_viability_form(row, urgente=False)
+                    show_viability_form(row, urgente=False, context='ftth')
             
             tab_index += 1
         
@@ -266,7 +274,7 @@ else:
                 st.markdown("---")
                 
                 for row in predios_auditar:
-                    show_viability_form(row, urgente=False)
+                    show_viability_form(row, urgente=False, context='predio')
 
     # ======================
     # Prédios em Espera (Agendamento / Aguardando Dados) - separado para não atrapalhar fila
@@ -285,7 +293,7 @@ else:
                 st.text(f"🔔 Status Prédio: {status_text}")
                 # Mostrar detalhes completos se necessário
                 if st.button("🔍 Ver detalhes e editar", key=f"open_espera_{row['id']}"):
-                    show_viability_form(row)
+                    show_viability_form(row, context='espera')
 
 
 # ======================
