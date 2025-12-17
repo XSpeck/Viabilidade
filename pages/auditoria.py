@@ -143,9 +143,17 @@ def show_viability_form(row: dict, urgente: bool = False, context: str = ''):
                 width='stretch',
                 help="Excluir esta solicitação permanentemente"
             ):
-                if delete_viability(row['id']):
+                ok = False
+                try:
+                    ok = delete_viability(row['id'])
+                except Exception as e:
+                    logger.error(f"Erro ao chamar delete_viability UI: {e}")
+
+                if ok:
                     st.success("✅ Solicitação excluída!")
                     st.rerun()
+                else:
+                    st.error("❌ Não foi possível excluir a solicitação. Verifique permissões/console e tente novamente.")
             if urgente:
                 st.error("🔥 **URGENTE - Cliente Presencial**")
 

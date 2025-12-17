@@ -355,10 +355,14 @@ def delete_viability(viability_id: str) -> bool:
     """Deleta uma viabilização (somente Leo)"""
     try:
         response = supabase.table('viabilizacoes').delete().eq('id', viability_id).execute()
-        
-        if response.data or response.status_code == 204:
-            logger.info(f"Viabilização {viability_id} deletada")
+
+        # Tratar tanto retorno com dados quanto status codes 200/204 como sucesso
+        status = getattr(response, 'status_code', None)
+        if response.data or status in (200, 204):
+            logger.info(f"Viabilização {viability_id} deletada (status={status})")
             return True
+
+        logger.warning(f"Tentativa de deletar viabilização retornou sem dados: id={viability_id}, status={status}")
         return False
     except Exception as e:
         logger.error(f"Erro ao deletar viabilização: {e}")
