@@ -320,9 +320,11 @@ with tab_ftth1:
             ).any(axis=1)
             df_aprovadas = df_aprovadas[mask]
         
-        # Selecionar colunas
-        colunas = ['data_auditoria', 'plus_code_cliente', 'nome_cliente', 'cto_numero', 
-                   'portas_disponiveis', 'menor_rx', 'distancia_cliente', 'auditado_por', 'status']
+        # Selecionar colunas (inclui 'usuario')
+        colunas = [
+            'data_auditoria', 'plus_code_cliente', 'nome_cliente', 'cto_numero',
+            'portas_disponiveis', 'menor_rx', 'distancia_cliente', 'usuario', 'auditado_por', 'status'
+        ]
         
         df_display = df_aprovadas[[col for col in colunas if col in df_aprovadas.columns]].copy()
         
@@ -335,6 +337,7 @@ with tab_ftth1:
             'portas_disponiveis': 'Portas',
             'menor_rx': 'RX (dBm)',
             'distancia_cliente': 'Distância',
+            'usuario': 'Usuário',
             'auditado_por': 'Auditor',
             'status': 'Status'
         }
@@ -386,15 +389,25 @@ with tab_ftth2:
             ).any(axis=1)
             df_rejeitadas = df_rejeitadas[mask]
         
-        # Selecionar colunas
-        colunas = ['data_auditoria', 'plus_code_cliente', 'nome_cliente', 
-                   'motivo_rejeicao', 'auditado_por']
-        
+        # Selecionar colunas (inclui 'usuario')
+        colunas = [
+            'data_auditoria', 'plus_code_cliente', 'nome_cliente',
+            'motivo_rejeicao', 'usuario', 'auditado_por'
+        ]
+
         df_display = df_rejeitadas[[col for col in colunas if col in df_rejeitadas.columns]].copy()
-        
-        # Renomear
-        df_display.columns = ['Data', 'Plus Code', 'Cliente', 'Motivo', 'Auditor'][:len(df_display.columns)]
-        
+
+        # Renomear com dicionário para manter ordem e nomes claros
+        rename_dict = {
+            'data_auditoria': 'Data',
+            'plus_code_cliente': 'Plus Code',
+            'nome_cliente': 'Cliente',
+            'motivo_rejeicao': 'Motivo',
+            'usuario': 'Usuário',
+            'auditado_por': 'Auditor'
+        }
+        df_display.rename(columns=rename_dict, inplace=True)
+
         # Formatar data
         if 'Data' in df_display.columns:
             df_display['Data'] = df_display['Data'].apply(
