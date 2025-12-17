@@ -698,8 +698,12 @@ try:
             df_historico = df_historico[mask]
         
         # Selecionar e renomear colunas importantes
-        colunas_exibir = ['data_solicitacao', 'tipo_instalacao', 'plus_code_cliente', 
-                         'nome_cliente', 'status', 'cto_numero', 'predio_ftta']
+        colunas_exibir = [
+            'data_solicitacao', 'tipo_instalacao', 'plus_code_cliente',
+            'nome_cliente', 'status', 'cto_numero', 'predio_ftta',
+            # Campos adicionais solicitados
+            'distancia_cliente', 'menor_rx', 'localizacao_caixa', 'portas_disponiveis'
+        ]
         
         # Verificar quais colunas existem
         colunas_disponiveis = [col for col in colunas_exibir if col in df_historico.columns]
@@ -714,7 +718,11 @@ try:
             'nome_cliente': 'Cliente',
             'status': 'Status',
             'cto_numero': 'CTO',
-            'predio_ftta': 'Prédio'
+            'predio_ftta': 'Prédio',
+            'distancia_cliente': 'Distância (m)',
+            'menor_rx': 'Menor RX',
+            'localizacao_caixa': 'Localização Caixa',
+            'portas_disponiveis': 'Portas Disponíveis'
         }
         df_display.rename(columns=rename_dict, inplace=True)
         
@@ -723,6 +731,22 @@ try:
             df_display['Data Solicitação'] = df_display['Data Solicitação'].apply(
                 lambda x: format_datetime_resultados(x) if x else '-'
             )
+
+        # Formatações adicionais simples
+        if 'Menor RX' in df_display.columns:
+            df_display['Menor RX'] = df_display['Menor RX'].apply(
+                lambda x: f"{x} dBm" if pd.notna(x) and str(x).strip() != '' else '-'
+            )
+
+        if 'Distância (m)' in df_display.columns:
+            df_display['Distância (m)'] = df_display['Distância (m)'].apply(
+                lambda x: f"{x}" if pd.notna(x) and str(x).strip() != '' else '-'
+            )
+
+        # Garantir que colunas de texto existam como string
+        for col in ['Localização Caixa', 'Portas Disponíveis']:
+            if col in df_display.columns:
+                df_display[col] = df_display[col].fillna('-').astype(str)
         
         # Exibir tabela
         st.dataframe(
