@@ -144,16 +144,22 @@ def show_viability_form(row: dict, urgente: bool = False, context: str = ''):
                 help="Excluir esta solicitação permanentemente"
             ):
                 ok = False
+                info = None
                 try:
-                    ok = delete_viability(row['id'])
+                    ok, info = delete_viability(row['id'])
                 except Exception as e:
-                    logger.error(f"Erro ao chamar delete_viability UI: {e}")
+                    logger.exception(f"Erro ao chamar delete_viability UI: {e}")
 
                 if ok:
                     st.success("✅ Solicitação excluída!")
                     st.rerun()
                 else:
                     st.error("❌ Não foi possível excluir a solicitação. Verifique permissões/console e tente novamente.")
+                    if info:
+                        if isinstance(info, dict):
+                            st.json(info)
+                        else:
+                            st.write(info)
             if urgente:
                 st.error("🔥 **URGENTE - Cliente Presencial**")
 
@@ -168,16 +174,22 @@ def show_viability_form(row: dict, urgente: bool = False, context: str = ''):
                     help="Devolve esta viabilização para outros auditores pegarem"
                 ):
                     ok = False
+                    info = None
                     try:
-                        ok = devolver_viabilidade(row['id'])
+                        ok, info = devolver_viabilidade(row['id'])
                     except Exception as e:
-                        logger.error(f"Erro ao chamar devolver_viabilidade UI: {e}")
+                        logger.exception(f"Erro ao chamar devolver_viabilidade UI: {e}")
 
                     if ok:
                         st.success("✅ Viabilização devolvida!")
                         st.rerun()
                     else:
                         st.error("❌ Erro ao devolver viabilização. Tente novamente.")
+                        if info:
+                            if isinstance(info, dict):
+                                st.json(info)
+                            else:
+                                st.write(info)
         
         with col2:
             # Chamar formulário apropriado baseado no tipo

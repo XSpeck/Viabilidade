@@ -351,23 +351,34 @@ def finalize_viability_approved(viability_id: str) -> bool:
         st.error(f"❌ Erro ao finalizar: {e}")
         return False
 
-def delete_viability(viability_id: str) -> bool:
-    """Deleta uma viabilização (somente Leo)"""
+def delete_viability(viability_id: str) -> tuple:
+    """Deleta uma viabilização (somente Leo).
+
+    Retorna um tuple (success: bool, info: dict) onde `info` contém detalhes
+    úteis para depuração (status_code, data, repr).
+    """
     try:
         response = supabase.table('viabilizacoes').delete().eq('id', viability_id).execute()
 
-        # Tratar tanto retorno com dados quanto status codes 200/204 como sucesso
         status = getattr(response, 'status_code', None)
-        if response.data or status in (200, 204):
+        data = getattr(response, 'data', None)
+
+        info = {
+            'status_code': status,
+            'data': data,
+            'response_repr': repr(response)
+        }
+
+        if data or status in (200, 204):
             logger.info(f"Viabilização {viability_id} deletada (status={status})")
-            return True
+            return True, info
 
         logger.warning(f"Tentativa de deletar viabilização retornou sem dados: id={viability_id}, status={status}")
-        return False
+        return False, info
     except Exception as e:
-        logger.error(f"Erro ao deletar viabilização: {e}")
-        st.error(f"❌ Erro ao deletar: {e}")
-        return False
+        logger.exception(f"Erro ao deletar viabilização: {e}")
+        info = {'error': str(e)}
+        return False, info
 
 def request_building_viability(viability_id: str, dados: Dict) -> bool:
     """
@@ -776,28 +787,38 @@ def get_auditor_viabilities(auditor_name: str) -> List[Dict]:
         logger.error(f"Erro ao buscar viabilizações do auditor: {e}")
         return []
 
-def devolver_viabilidade(viability_id: str) -> bool:
-    """Devolve viabilização para fila (remove auditor e volta para pendente)"""
+def devolver_viabilidade(viability_id: str) -> tuple:
+    """Devolve viabilização para fila (remove auditor e volta para pendente).
+
+    Retorna (success: bool, info: dict) com detalhes de resposta para depuração.
+    """
     try:
         update_data = {
             'status': 'pendente',
             'auditor_responsavel': None
         }
-        
+
         response = supabase.table('viabilizacoes')\
             .update(update_data)\
             .eq('id', viability_id)\
             .execute()
-        
-        # Supabase Python client pode retornar vazio em response.data com status_code 204
-        if response.data or getattr(response, 'status_code', None) in (200, 204):
-            logger.info(f"Viabilização {viability_id} devolvida")
-            return True
-        logger.warning(f"Devolver viabilização retornou sem dados: {viability_id} - resp: {getattr(response, 'status_code', None)}")
-        return False
+
+        status = getattr(response, 'status_code', None)
+        data = getattr(response, 'data', None)
+        info = {
+            'status_code': status,
+            'data': data,
+            'response_repr': repr(response)
+        }
+
+        if data or status in (200, 204):
+            logger.info(f"Viabilização {viability_id} devolvida (status={status})")
+            return True, info
+        logger.warning(f"Devolver viabilização retornou sem dados: {viability_id} - resp: {status}")
+        return False, info
     except Exception as e:
-        logger.error(f"Erro ao devolver viabilização: {e}")
-        return False
+        logger.exception(f"Erro ao devolver viabilização: {e}")
+        return False, {'error': str(e)}
         
 # ======================
 # Funções para Relatórios
