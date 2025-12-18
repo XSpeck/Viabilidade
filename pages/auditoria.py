@@ -299,6 +299,7 @@ else:
     # ======================
     # Prédios em Espera (Agendamento / Aguardando Dados) - separado para não atrapalhar fila
     # ======================
+    # Prédios em Espera (Agendamento / Aguardando Dados) - separado para não atrapalhar fila
     if predios_espera:
         st.markdown("---")
         st.subheader("🏢 Prédios em Espera (Agendamento / Aguardando Dados)")
@@ -309,15 +310,54 @@ else:
             titulo = f"🏢 {row.get('predio_ftta', 'Prédio')} — {row['plus_code_cliente']} — {status_text}"
             
             with st.expander(titulo, expanded=False):
-                col_info, col_actions = st.columns([3, 2])
+                # Informações principais
+                col1, col2, col3 = st.columns([2, 2, 1])
                 
-                with col_info:
+                with col1:
+                    st.markdown("#### 📋 Informações Básicas")
                     st.text(f"👤 Solicitante: {row.get('usuario', 'N/A')}")
-                    st.text(f"📍 Plus Code: {row.get('plus_code_cliente')}")
+                    if row.get('nome_cliente'):
+                        st.text(f"🙋 Cliente: {row['nome_cliente']}")
+                    st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
+                    st.text(f"🏨 Prédio: {row.get('predio_ftta', 'N/A')}")
+                    if row.get('andar_predio'):
+                        st.text(f"🗃️ Andar: {row['andar_predio']}")
+                    if row.get('bloco_predio'):
+                        st.text(f"🏢 Bloco: {row['bloco_predio']}")
                     st.text(f"📅 Solicitado: {format_time_br_supa(row.get('data_solicitacao'))}")
-                    st.text(f"📌 Status Prédio: {status_text}")
+                    st.text(f"📌 Status: {status_text}")
                 
-                with col_actions:
+                with col2:
+                    st.markdown("#### 📞 Dados de Contato")
+                    if row.get('nome_sindico'):
+                        st.text(f"👔 Síndico: {row['nome_sindico']}")
+                    if row.get('contato_sindico'):
+                        st.text(f"📱 Tel. Síndico: {row['contato_sindico']}")
+                    if row.get('nome_cliente_predio'):
+                        st.text(f"🙋 Cliente: {row['nome_cliente_predio']}")
+                    if row.get('contato_cliente_predio'):
+                        st.text(f"📱 Tel. Cliente: {row['contato_cliente_predio']}")
+                    if row.get('apartamento'):
+                        st.text(f"🚪 Apartamento: {row['apartamento']}")
+                    
+                    # Agendamento
+                    if row.get('data_visita'):
+                        st.markdown("---")
+                        st.markdown("#### 📅 Agendamento")
+                        st.text(f"📆 Data: {row['data_visita']}")
+                        st.text(f"🕐 Período: {row.get('periodo_visita', 'N/A')}")
+                        st.text(f"👷 Técnico: {row.get('tecnico_responsavel', 'N/A')}")
+                        st.text(f"🔧 Tecnologia: {row.get('tecnologia_predio', 'N/A')}")
+                        if row.get('data_agendamento'):
+                            st.text(f"📝 Agendado em: {format_time_br_supa(row['data_agendamento'])}")
+                    
+                    # Observações
+                    if row.get('obs_agendamento'):
+                        st.markdown("---")
+                        st.text(f"💬 Obs: {row['obs_agendamento']}")
+                
+                with col3:
+                    st.markdown("#### ⚙️ Ações")
                     # Botão Excluir
                     if st.button(
                         "🗑️ Excluir",
@@ -327,7 +367,7 @@ else:
                     ):
                         ok, info = delete_viability(row['id'])
                         if ok:
-                            st.success("✅ Solicitação excluída!")
+                            st.success("✅ Excluída!")
                             st.rerun()
                         else:
                             st.error("❌ Erro ao excluir")
@@ -346,7 +386,7 @@ else:
                             st.success("✅ Devolvido!")
                             st.rerun()
                         else:
-                            st.error("❌ Erro ao devolver")
+                            st.error("❌ Erro")
                             if info:
                                 st.json(info)
 
