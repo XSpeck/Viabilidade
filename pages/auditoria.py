@@ -303,17 +303,52 @@ else:
         st.markdown("---")
         st.subheader("🏢 Prédios em Espera (Agendamento / Aguardando Dados)")
         st.info("Estes prédios aguardam ação do usuário ou agendamento e foram separados da fila principal.")
+        
         for row in predios_espera:
             status_text = row.get('status_predio', 'Em Espera')
             titulo = f"🏢 {row.get('predio_ftta', 'Prédio')} — {row['plus_code_cliente']} — {status_text}"
+            
             with st.expander(titulo, expanded=False):
-                st.text(f"👤 Solicitante: {row.get('usuario', 'N/A')}")
-                st.text(f"📍 Plus Code: {row.get('plus_code_cliente')}")
-                st.text(f"📅 Solicitado: {format_time_br_supa(row.get('data_solicitacao'))}")
-                st.text(f"🔔 Status Prédio: {status_text}")
-                # Mostrar detalhes completos se necessário
-                if st.button("🔍 Ver detalhes e editar", key=f"open_espera_{row['id']}"):
-                    show_viability_form(row, context='espera')
+                col_info, col_actions = st.columns([3, 2])
+                
+                with col_info:
+                    st.text(f"👤 Solicitante: {row.get('usuario', 'N/A')}")
+                    st.text(f"📍 Plus Code: {row.get('plus_code_cliente')}")
+                    st.text(f"📅 Solicitado: {format_time_br_supa(row.get('data_solicitacao'))}")
+                    st.text(f"📌 Status Prédio: {status_text}")
+                
+                with col_actions:
+                    # Botão Excluir
+                    if st.button(
+                        "🗑️ Excluir",
+                        key=f"delete_espera_{row['id']}",
+                        type="secondary",
+                        use_container_width=True
+                    ):
+                        ok, info = delete_viability(row['id'])
+                        if ok:
+                            st.success("✅ Solicitação excluída!")
+                            st.rerun()
+                        else:
+                            st.error("❌ Erro ao excluir")
+                            if info:
+                                st.json(info)
+                    
+                    # Botão Devolver
+                    if st.button(
+                        "↩️ Devolver",
+                        key=f"devolver_espera_{row['id']}",
+                        type="secondary",
+                        use_container_width=True
+                    ):
+                        ok, info = devolver_viabilidade(row['id'])
+                        if ok:
+                            st.success("✅ Devolvido!")
+                            st.rerun()
+                        else:
+                            st.error("❌ Erro ao devolver")
+                            if info:
+                                st.json(info)
 
 
 # ======================
