@@ -53,7 +53,7 @@ with col_header2:
 # ======================
 # Função de Formulário
 # ======================
-def show_viability_form(row: dict, urgente: bool = False, context: str = ''):
+def show_viability_form(row: dict, urgente: bool = False):
     """Exibe formulário de auditoria para uma viabilização"""
     
     # Estilo do card baseado na urgência
@@ -138,28 +138,14 @@ def show_viability_form(row: dict, urgente: bool = False, context: str = ''):
             st.markdown("---")
             if st.button(
                 "🗑️ Excluir Solicitação",
-                key=f"delete_{row['id']}_{context}",
+                key=f"delete_{row['id']}",
                 type="secondary",
                 width='stretch',
                 help="Excluir esta solicitação permanentemente"
             ):
-                ok = False
-                info = None
-                try:
-                    ok, info = delete_viability(row['id'])
-                except Exception as e:
-                    logger.exception(f"Erro ao chamar delete_viability UI: {e}")
-
-                if ok:
+                if delete_viability(row['id']):
                     st.success("✅ Solicitação excluída!")
-                    st.rerun()
-                else:
-                    st.error("❌ Não foi possível excluir a solicitação. Verifique permissões/console e tente novamente.")
-                    if info:
-                        if isinstance(info, dict):
-                            st.json(info)
-                        else:
-                            st.write(info)
+                    st.rerun()            
             if urgente:
                 st.error("🔥 **URGENTE - Cliente Presencial**")
 
@@ -168,28 +154,14 @@ def show_viability_form(row: dict, urgente: bool = False, context: str = ''):
             with col_devolver:
                 if st.button(
                     "↩️ Devolver para Fila",
-                    key=f"devolver_{row['id']}_{context}",
+                    key=f"devolver_{row['id']}",
                     type="secondary",
                     width='stretch',
                     help="Devolve esta viabilização para outros auditores pegarem"
                 ):
-                    ok = False
-                    info = None
-                    try:
-                        ok, info = devolver_viabilidade(row['id'])
-                    except Exception as e:
-                        logger.exception(f"Erro ao chamar devolver_viabilidade UI: {e}")
-
-                    if ok:
+                    if devolver_viabilidade(row['id']):
                         st.success("✅ Viabilização devolvida!")
                         st.rerun()
-                    else:
-                        st.error("❌ Erro ao devolver viabilização. Tente novamente.")
-                        if info:
-                            if isinstance(info, dict):
-                                st.json(info)
-                            else:
-                                st.write(info)
         
         with col2:
             # Chamar formulário apropriado baseado no tipo
@@ -236,22 +208,18 @@ else:
     urgentes = [p for p in pending if p.get('urgente', False)]
     ftth = [p for p in pending if p['tipo_instalacao'] == 'FTTH' and not p.get('urgente', False)]
     predios = [p for p in pending if p['tipo_instalacao'] == 'Prédio' and not p.get('urgente', False)]
-    # Separar prédios em espera (agendamento / aguardando dados) para NÃO misturar com viabilidades ativas
-    waiting_statuses = ['agendado', 'pronto_auditoria', 'aguardando_dados']
-    predios_espera = [p for p in predios if p.get('status_predio') in waiting_statuses]
-    predios_auditar = [p for p in predios if p.get('status_predio') not in waiting_statuses]
     
     # ======================
     # SISTEMA DE ABAS
     # ======================
-    # Criar nomes das abas com contadores (não incluir prédios em espera)
+    # Criar nomes das abas com contadores
     tab_names = []
     if urgentes:
         tab_names.append(f"🔥 URGENTES ({len(urgentes)})")
     if ftth:
         tab_names.append(f"🏠 FTTH ({len(ftth)})")
-    if predios_auditar:
-        tab_names.append(f"🏢 PRÉDIOS ({len(predios_auditar)})")
+    if predios:
+        tab_names.append(f"🏢 PRÉDIOS ({len(predios)})")
     
     # Se não houver abas (nenhuma pendência), não mostrar nada
     if not tab_names:
@@ -270,7 +238,7 @@ else:
                 st.markdown("---")
                 
                 for row in urgentes:
-                    show_viability_form(row, urgente=True, context='urgente')
+                    show_viability_form(row, urgente=True)
             
             tab_index += 1
         
@@ -282,113 +250,19 @@ else:
                 st.markdown("---")
                 
                 for row in ftth:
-                    show_viability_form(row, urgente=False, context='ftth')
+                    show_viability_form(row, urgente=False)
             
             tab_index += 1
         
-        # ABA PRÉDIOS (apenas prédios que precisam de auditoria ativa)
-        if predios_auditar:
+        # ABA PRÉDIOS
+        if predios:
             with tabs[tab_index]:
                 st.info("🏢 **Instalações em Edifícios**")
-                st.caption(f"📊 {len(predios_auditar)} solicitação(ões) de prédio")
+                st.caption(f"📊 {len(predios)} solicitação(ões) de prédio")
                 st.markdown("---")
                 
-                for row in predios_auditar:
-                    show_viability_form(row, urgente=False, context='predio')
-
-    # ======================
-    # Prédios em Espera (Agendamento / Aguardando Dados) - separado para não atrapalhar fila
-    # ======================
-    # Prédios em Espera (Agendamento / Aguardando Dados) - separado para não atrapalhar fila
-    if predios_espera:
-        st.markdown("---")
-        st.subheader("🏢 Prédios em Espera (Agendamento / Aguardando Dados)")
-        st.info("Estes prédios aguardam ação do usuário ou agendamento e foram separados da fila principal.")
-        
-        for row in predios_espera:
-            status_text = row.get('status_predio', 'Em Espera')
-            titulo = f"🏢 {row.get('predio_ftta', 'Prédio')} — {row['plus_code_cliente']} — {status_text}"
-            
-            with st.expander(titulo, expanded=False):
-                # Informações principais
-                col1, col2, col3 = st.columns([2, 2, 1])
-                
-                with col1:
-                    st.markdown("#### 📋 Informações Básicas")
-                    st.text(f"👤 Solicitante: {row.get('usuario', 'N/A')}")
-                    if row.get('nome_cliente'):
-                        st.text(f"🙋 Cliente: {row['nome_cliente']}")
-                    st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
-                    st.text(f"🏨 Prédio: {row.get('predio_ftta', 'N/A')}")
-                    if row.get('andar_predio'):
-                        st.text(f"🗃️ Andar: {row['andar_predio']}")
-                    if row.get('bloco_predio'):
-                        st.text(f"🏢 Bloco: {row['bloco_predio']}")
-                    st.text(f"📅 Solicitado: {format_time_br_supa(row.get('data_solicitacao'))}")
-                    st.text(f"📌 Status: {status_text}")
-                
-                with col2:
-                    st.markdown("#### 📞 Dados de Contato")
-                    if row.get('nome_sindico'):
-                        st.text(f"👔 Síndico: {row['nome_sindico']}")
-                    if row.get('contato_sindico'):
-                        st.text(f"📱 Tel. Síndico: {row['contato_sindico']}")
-                    if row.get('nome_cliente_predio'):
-                        st.text(f"🙋 Cliente: {row['nome_cliente_predio']}")
-                    if row.get('contato_cliente_predio'):
-                        st.text(f"📱 Tel. Cliente: {row['contato_cliente_predio']}")
-                    if row.get('apartamento'):
-                        st.text(f"🚪 Apartamento: {row['apartamento']}")
-                    
-                    # Agendamento
-                    if row.get('data_visita'):
-                        st.markdown("---")
-                        st.markdown("#### 📅 Agendamento")
-                        st.text(f"📆 Data: {row['data_visita']}")
-                        st.text(f"🕐 Período: {row.get('periodo_visita', 'N/A')}")
-                        st.text(f"👷 Técnico: {row.get('tecnico_responsavel', 'N/A')}")
-                        st.text(f"🔧 Tecnologia: {row.get('tecnologia_predio', 'N/A')}")
-                        if row.get('data_agendamento'):
-                            st.text(f"📝 Agendado em: {format_time_br_supa(row['data_agendamento'])}")
-                    
-                    # Observações
-                    if row.get('obs_agendamento'):
-                        st.markdown("---")
-                        st.text(f"💬 Obs: {row['obs_agendamento']}")
-                
-                with col3:
-                    st.markdown("#### ⚙️ Ações")
-                    # Botão Excluir
-                    if st.button(
-                        "🗑️ Excluir",
-                        key=f"delete_espera_{row['id']}",
-                        type="secondary",
-                        use_container_width=True
-                    ):
-                        ok, info = delete_viability(row['id'])
-                        if ok:
-                            st.success("✅ Excluída!")
-                            st.rerun()
-                        else:
-                            st.error("❌ Erro ao excluir")
-                            if info:
-                                st.json(info)
-                    
-                    # Botão Devolver
-                    if st.button(
-                        "↩️ Devolver",
-                        key=f"devolver_espera_{row['id']}",
-                        type="secondary",
-                        use_container_width=True
-                    ):
-                        ok, info = devolver_viabilidade(row['id'])
-                        if ok:
-                            st.success("✅ Devolvido!")
-                            st.rerun()
-                        else:
-                            st.error("❌ Erro")
-                            if info:
-                                st.json(info)
+                for row in predios:
+                    show_viability_form(row, urgente=False)
 
 
 # ======================
