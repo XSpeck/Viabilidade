@@ -207,19 +207,59 @@ else:
     # ======================
     urgentes = [p for p in pending if p.get('urgente', False)]
     ftth = [p for p in pending if p['tipo_instalacao'] == 'FTTH' and not p.get('urgente', False)]
-    predios = [p for p in pending if p['tipo_instalacao'] == 'Prédio' and not p.get('urgente', False)]
+    
+    # Separar prédios por status
+    predios_novos = [
+        p for p in pending 
+        if p['tipo_instalacao'] == 'Prédio' 
+        and not p.get('urgente', False)
+        and p.get('status_predio') is None
+    ]
+    
+    predios_aguardando_dados = [
+        p for p in pending 
+        if p['tipo_instalacao'] == 'Prédio' 
+        and not p.get('urgente', False)
+        and p.get('status_predio') == 'aguardando_dados'
+    ]
+    
+    predios_prontos_agendar = [
+        p for p in pending 
+        if p['tipo_instalacao'] == 'Prédio' 
+        and not p.get('urgente', False)
+        and p.get('status_predio') == 'pronto_auditoria'
+    ]
+    
+    predios_agendados = [
+        p for p in pending 
+        if p['tipo_instalacao'] == 'Prédio' 
+        and not p.get('urgente', False)
+        and p.get('status_predio') == 'agendado'
+    ]
     
     # ======================
     # SISTEMA DE ABAS
     # ======================
     # Criar nomes das abas com contadores
     tab_names = []
+
     if urgentes:
         tab_names.append(f"🔥 URGENTES ({len(urgentes)})")
+    
     if ftth:
         tab_names.append(f"🏠 FTTH ({len(ftth)})")
-    if predios:
-        tab_names.append(f"🏢 PRÉDIOS ({len(predios)})")
+    
+    if predios_novos:
+        tab_names.append(f"🏢 PRÉDIOS NOVOS ({len(predios_novos)})")
+    
+    if predios_aguardando_dados:
+        tab_names.append(f"⏳ AGUARDANDO DADOS ({len(predios_aguardando_dados)})")
+    
+    if predios_prontos_agendar:
+        tab_names.append(f"📅 PRONTOS P/ AGENDAR ({len(predios_prontos_agendar)})")
+    
+    if predios_agendados:
+        tab_names.append(f"✅ AGENDADOS ({len(predios_agendados)})")
     
     # Se não houver abas (nenhuma pendência), não mostrar nada
     if not tab_names:
@@ -255,14 +295,80 @@ else:
             tab_index += 1
         
         # ABA PRÉDIOS
-        if predios:
+        if predios_novos:
             with tabs[tab_index]:
-                st.info("🏢 **Instalações em Edifícios**")
-                st.caption(f"📊 {len(predios)} solicitação(ões) de prédio")
+                st.info("🏢 **Prédios Aguardando Análise Inicial**")
+                st.caption(f"📊 {len(predios_novos)} prédio(s) para auditar")
                 st.markdown("---")
                 
-                for row in predios:
+                for row in predios_novos:
                     show_viability_form(row, urgente=False)
+            
+            tab_index += 1
+        
+        # ABA AGUARDANDO DADOS DO USUÁRIO
+        if predios_aguardando_dados:
+            with tabs[tab_index]:
+                st.warning("⏳ **Aguardando Usuário Preencher Dados**")
+                st.caption(f"📊 {len(predios_aguardando_dados)} prédio(s) esperando formulário")
+                st.info("💡 Estes prédios estão aguardando o usuário preencher os dados do síndico e cliente")
+                st.markdown("---")
+                
+                for row in predios_aguardando_dados:
+                    show_viability_form(row, urgente=False)
+            
+            tab_index += 1
+        
+        # ABA PRONTOS PARA AGENDAR
+        if predios_prontos_agendar:
+            with tabs[tab_index]:
+                st.success("📅 **Prontos para Agendamento**")
+                st.caption(f"📊 {len(predios_prontos_agendar)} prédio(s) com dados completos")
+                st.info("🎯 Ação necessária: Agendar visita técnica")
+                st.markdown("---")
+                
+                for row in predios_prontos_agendar:
+                    show_viability_form(row, urgente=False)
+            
+            tab_index += 1
+        
+        # ABA AGENDADOS (INFORMATIVO)
+        if predios_agendados:
+            with tabs[tab_index]:
+                st.info("✅ **Visitas Técnicas Agendadas**")
+                st.caption(f"📊 {len(predios_agendados)} prédio(s) agendado(s)")
+                st.success("🗓️ Estes agendamentos estão na página 'Agenda FTTA/UTP'")
+                st.markdown("---")
+                
+                for row in predios_agendados:
+                    # Card resumido, só para visualização
+                    col1, col2, col3, col4 = st.columns(4)
+                    
+                    with col1:
+                        st.markdown("**🏢 Prédio**")
+                        st.text(row.get('predio_ftta', 'N/A'))
+                    
+                    with col2:
+                        st.markdown("**📅 Data Visita**")
+                        data_visita = row.get('data_visita', 'N/A')
+                        if data_visita and data_visita != 'N/A':
+                            try:
+                                from datetime import datetime
+                                data_obj = datetime.strptime(data_visita, '%Y-%m-%d')
+                                data_visita = data_obj.strftime('%d/%m/%Y')
+                            except:
+                                pass
+                        st.text(data_visita)
+                    
+                    with col3:
+                        st.markdown("**👷 Técnico**")
+                        st.text(row.get('tecnico_responsavel', 'N/A'))
+                    
+                    with col4:
+                        st.markdown("**🔧 Tecnologia**")
+                        st.text(row.get('tecnologia_predio', 'N/A'))
+                    
+                    st.markdown("---")
 
 
 # ======================
