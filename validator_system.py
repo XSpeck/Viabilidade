@@ -25,7 +25,7 @@ from viability_functions import (
     validate_plus_code,
     update_viability_ftth
 )
-from login_system import require_authentication
+# from login_system import require_authentication # Removido, pois não é usado neste arquivo e causa erro de importação
 
 # ======================
 # Configurações
