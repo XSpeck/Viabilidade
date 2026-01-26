@@ -611,26 +611,25 @@ if building_pending:
                                 st.rerun()
                             else:
                                 st.error("❌ Erro ao enviar dados. Tente novamente.")  
-
 # ======================
-# ADICIONE AQUI A TABELA DE HISTÓRICO
+# TABELA DE HISTÓRICO COMPLETO
 # ======================
 st.markdown("---")
 st.subheader("📋 Histórico Completo de Viabilizações")
 
-# Filtro de data para o histórico
-col_hist_filtro1, col_hist_filtro2 = st.columns(2)
+# ========== LINHA 1: FILTROS DE DATA ==========
+col_data1, col_data2 = st.columns(2)
 
-with col_hist_filtro1:
+with col_data1:
     data_inicio_hist = st.date_input(
         "📅 Data Início",
         value=datetime.now().date() - timedelta(days=30),
         key="data_inicio_historico",
         format="DD/MM/YYYY",
-        help="Padrão: últimos 30 dias"
+        help="Padrão: Últimos 30 dias"
     )
 
-with col_hist_filtro2:
+with col_data2:
     data_fim_hist = st.date_input(
         "📅 Data Fim",
         value=datetime.now().date(),
@@ -639,10 +638,57 @@ with col_hist_filtro2:
         help="Padrão: hoje"
     )
 
+# ========== LINHA 2: FILTROS AVANÇADOS ==========
+col_filtro1, col_filtro2, col_filtro3 = st.columns(3)
+
+with col_filtro1:
+    filtro_tipo_hist = st.selectbox(
+        "🏷️ Tipo de Instalação",
+        options=["Todos", "FTTH", "Prédio"],
+        key="filtro_tipo_hist"
+    )
+
+with col_filtro2:
+    filtro_status_hist = st.selectbox(
+        "📊 Status",
+        options=[
+            "Todos",
+            "Pendente",
+            "Em Auditoria", 
+            "Aprovado",
+            "Rejeitado",
+            "Finalizado",
+            "UTP"
+        ],
+        key="filtro_status_hist"
+    )
+
+with col_filtro3:
+    ordenar_por = st.selectbox(
+        "🔄 Ordenar por",
+        options=[
+            "Data (Mais recente)",
+            "Data (Mais antiga)",
+            "Status (A-Z)",
+            "Tipo (A-Z)"
+        ],
+        key="ordenar_hist"
+    )
+
+# ========== LINHA 3: BUSCA ==========
+busca_historico = st.text_input(
+    "🔍 Buscar no Histórico",
+    placeholder="Cliente, Plus Code, CTO, Prédio, Auditor...",
+    key="busca_historico"
+)
+
 # Mostrar período selecionado
 if data_inicio_hist and data_fim_hist:
     st.caption(f"📊 Exibindo de {data_inicio_hist.strftime('%d/%m/%Y')} até {data_fim_hist.strftime('%d/%m/%Y')}")
-# Buscar TODAS as viabilizações do usuário (incluindo finalizadas)
+
+st.markdown("---")
+
+# ========== BUSCAR E PROCESSAR DADOS ==========
 try:
     response_historico = supabase.table('viabilizacoes')\
         .select('*')\
@@ -653,28 +699,18 @@ try:
     historico_completo = response_historico.data if response_historico.data else []
     
     if historico_completo:
-        # Campo de busca para o histórico
-        busca_historico = st.text_input(
-            "🔍 Buscar no Histórico",
-            placeholder="Cliente, Plus Code, CTO, Prédio...",
-            key="busca_historico"
-        )
-        
         # Converter para DataFrame
         df_historico = pd.DataFrame(historico_completo)
         
-        # Aplicar filtro de data
-        # Criar coluna auxiliar com data_auditoria (ou data_solicitacao se não tiver)
+        # ========== APLICAR FILTRO DE DATA ==========
         df_historico['data_filtro'] = df_historico.apply(
             lambda row: row.get('data_auditoria') if row.get('data_auditoria') 
             else row.get('data_solicitacao'), 
             axis=1
         )
         
-        # Converter para datetime
         df_historico['data_filtro'] = pd.to_datetime(df_historico['data_filtro'], errors='coerce')
         
-        # Aplicar filtro (se datas foram fornecidas)
         if data_inicio_hist:
             df_historico = df_historico[
                 df_historico['data_filtro'].dt.date >= data_inicio_hist
@@ -685,11 +721,25 @@ try:
                 df_historico['data_filtro'].dt.date <= data_fim_hist
             ]
         
-        # Remover coluna auxiliar
-        if 'data_filtro' in df_historico.columns:
-            df_historico = df_historico.drop(columns=['data_filtro'])
+        # ========== APLICAR FILTRO DE TIPO ==========
+        if filtro_tipo_hist != "Todos":
+            df_historico = df_historico[df_historico['tipo_instalacao'] == filtro_tipo_hist]
         
-        # Filtrar se houver busca
+        # ========== APLICAR FILTRO DE STATUS ==========
+        if filtro_status_hist != "Todos":
+            status_map = {
+                "Pendente": "pendente",
+                "Em Auditoria": "em_auditoria",
+                "Aprovado": "aprovado",
+                "Rejeitado": "rejeitado",
+                "Finalizado": "finalizado",
+                "UTP": "utp"
+            }
+            status_filtro = status_map.get(filtro_status_hist)
+            if status_filtro:
+                df_historico = df_historico[df_historico['status'] == status_filtro]
+        
+        # ========== APLICAR BUSCA POR TEXTO ==========
         if busca_historico:
             termo_busca = re.escape(busca_historico.lower().replace("+", "").strip())
             mask = df_historico.astype(str).apply(
@@ -697,17 +747,29 @@ try:
             ).any(axis=1)
             df_historico = df_historico[mask]
         
-        # Selecionar e renomear colunas importantes
+        # ========== APLICAR ORDENAÇÃO ==========
+        if ordenar_por == "Data (Mais recente)":
+            df_historico = df_historico.sort_values('data_filtro', ascending=False)
+        elif ordenar_por == "Data (Mais antiga)":
+            df_historico = df_historico.sort_values('data_filtro', ascending=True)
+        elif ordenar_por == "Status (A-Z)":
+            df_historico = df_historico.sort_values('status', ascending=True)
+        elif ordenar_por == "Tipo (A-Z)":
+            df_historico = df_historico.sort_values('tipo_instalacao', ascending=True)
+        
+        # Remover coluna auxiliar
+        if 'data_filtro' in df_historico.columns:
+            df_historico = df_historico.drop(columns=['data_filtro'])
+        
+        # ========== PREPARAR TABELA PARA EXIBIÇÃO ==========
         colunas_exibir = [
             'data_solicitacao', 'tipo_instalacao', 'plus_code_cliente',
             'nome_cliente', 'status', 'cto_numero', 'predio_ftta',
-            # Campos adicionais solicitados
-            'distancia_cliente', 'menor_rx', 'localizacao_caixa', 'portas_disponiveis'
+            'distancia_cliente', 'menor_rx', 'localizacao_caixa', 'portas_disponiveis',
+            'auditado_por'
         ]
         
-        # Verificar quais colunas existem
         colunas_disponiveis = [col for col in colunas_exibir if col in df_historico.columns]
-        
         df_display = df_historico[colunas_disponiveis].copy()
         
         # Renomear colunas
@@ -719,43 +781,90 @@ try:
             'status': 'Status',
             'cto_numero': 'CTO',
             'predio_ftta': 'Prédio',
-            'distancia_cliente': 'Distância (m)',
+            'distancia_cliente': 'Distância',
             'menor_rx': 'Menor RX',
             'localizacao_caixa': 'Localização Caixa',
-            'portas_disponiveis': 'Portas Disponíveis'
+            'portas_disponiveis': 'Portas',
+            'auditado_por': 'Auditor'
         }
         df_display.rename(columns=rename_dict, inplace=True)
         
+        # ========== FORMATAR DADOS ==========
         # Formatar data
         if 'Data Solicitação' in df_display.columns:
             df_display['Data Solicitação'] = df_display['Data Solicitação'].apply(
                 lambda x: format_datetime_resultados(x) if x else '-'
             )
-
-        # Formatações adicionais simples
+        
+        # Formatar Status (com ícones)
+        if 'Status' in df_display.columns:
+            status_icons = {
+                'pendente': '⏳ Pendente',
+                'em_auditoria': '🔍 Em Auditoria',
+                'aprovado': '✅ Aprovado',
+                'rejeitado': '❌ Rejeitado',
+                'finalizado': '📦 Finalizado',
+                'utp': '📡 UTP'
+            }
+            df_display['Status'] = df_display['Status'].map(status_icons).fillna(df_display['Status'])
+        
+        # Formatar Tipo (com ícones)
+        if 'Tipo' in df_display.columns:
+            tipo_icons = {
+                'FTTH': '🏠 FTTH',
+                'Prédio': '🏢 Prédio'
+            }
+            df_display['Tipo'] = df_display['Tipo'].map(tipo_icons).fillna(df_display['Tipo'])
+        
+        # Formatar RX
         if 'Menor RX' in df_display.columns:
             df_display['Menor RX'] = df_display['Menor RX'].apply(
                 lambda x: f"{x} dBm" if pd.notna(x) and str(x).strip() != '' else '-'
             )
-
-        if 'Distância (m)' in df_display.columns:
-            df_display['Distância (m)'] = df_display['Distância (m)'].apply(
-                lambda x: f"{x}" if pd.notna(x) and str(x).strip() != '' else '-'
-            )
-
-        # Garantir que colunas de texto existam como string
-        for col in ['Localização Caixa', 'Portas Disponíveis']:
+        
+        # Garantir que outras colunas sejam strings
+        for col in ['Localização Caixa', 'Portas', 'Distância', 'CTO', 'Prédio', 'Auditor']:
             if col in df_display.columns:
                 df_display[col] = df_display[col].fillna('-').astype(str)
         
-        # Exibir tabela
+        # ========== MÉTRICAS RÁPIDAS ==========
+        col_metric1, col_metric2, col_metric3, col_metric4 = st.columns(4)
+        
+        with col_metric1:
+            st.metric("📊 Total Filtrado", len(df_display))
+        
+        with col_metric2:
+            aprovados = len(df_display[df_display['Status'].str.contains('Aprovado|Finalizado', na=False)])
+            st.metric("✅ Aprovados", aprovados)
+        
+        with col_metric3:
+            rejeitados = len(df_display[df_display['Status'].str.contains('Rejeitado', na=False)])
+            st.metric("❌ Rejeitados", rejeitados)
+        
+        with col_metric4:
+            pendentes = len(df_display[df_display['Status'].str.contains('Pendente|Auditoria', na=False)])
+            st.metric("⏳ Em Andamento", pendentes)
+        
+        st.markdown("---")
+        
+        # ========== EXIBIR TABELA ==========
         st.dataframe(
             df_display,
-            width='stretch',
+            use_container_width=True,
             height=400
         )
         
         st.caption(f"📊 Mostrando {len(df_display)} de {len(historico_completo)} registros totais")
+        
+        # ========== BOTÃO DE DOWNLOAD ==========
+        csv_export = df_display.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Baixar Histórico (CSV)",
+            data=csv_export,
+            file_name=f"historico_viabilizacoes_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
         
     else:
         st.info("📭 Nenhuma viabilização no histórico")
@@ -763,6 +872,7 @@ try:
 except Exception as e:
     st.error(f"❌ Erro ao carregar histórico: {e}")
     logger.error(f"Erro histórico: {e}")
+
     
 # ======================
 # Footer
