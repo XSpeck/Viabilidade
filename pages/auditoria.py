@@ -97,8 +97,8 @@ def show_viability_form(row: dict, urgente: bool = False):
     # Criar subtítulo (informações extras)
     subtitulo = f"👤 Solicitado por: {row['usuario']} | 📅 {format_time_br_supa(row['data_solicitacao'])}"
     
-    # EXPANDER (COLAPSADO POR PADRÃO)
-    with st.expander(titulo_expander, expanded=False):
+    # EXPANDER (expandido se urgente)
+    with st.expander(titulo_expander, expanded=urgente):
         st.caption(subtitulo)
         st.markdown("---")        
                 
@@ -134,17 +134,32 @@ def show_viability_form(row: dict, urgente: bool = False):
                 
             st.text(f"📅 Solicitado em: {format_time_br_supa(row['data_solicitacao'])}")
             
-            # ===== BOTÃO EXCLUIR =====
+            # ===== BOTÃO EXCLUIR COM CONFIRMAÇÃO =====
             st.markdown("---")
-            if st.button(
-                "🗑️ Excluir Solicitação",
-                key=f"delete_{row['id']}",
-                type="secondary",
-                width='stretch',
-                help="Excluir esta solicitação permanentemente"
-            ):
-                if delete_viability(row['id']):
-                    st.success("✅ Solicitação excluída!")
+            delete_key = f"confirm_delete_{row['id']}"
+
+            if st.session_state.get(delete_key, False):
+                st.warning("⚠️ **Tem certeza que deseja excluir?**")
+                col_confirm, col_cancel = st.columns(2)
+                with col_confirm:
+                    if st.button("✅ Sim, Excluir", key=f"yes_delete_{row['id']}", type="primary"):
+                        if delete_viability(row['id']):
+                            st.session_state[delete_key] = False
+                            st.success("✅ Solicitação excluída!")
+                            st.rerun()
+                with col_cancel:
+                    if st.button("❌ Cancelar", key=f"no_delete_{row['id']}"):
+                        st.session_state[delete_key] = False
+                        st.rerun()
+            else:
+                if st.button(
+                    "🗑️ Excluir Solicitação",
+                    key=f"delete_{row['id']}",
+                    type="secondary",
+                    width='stretch',
+                    help="Excluir esta solicitação permanentemente"
+                ):
+                    st.session_state[delete_key] = True
                     st.rerun()            
             if urgente:
                 st.error("🔥 **URGENTE - Cliente Presencial**")
@@ -197,8 +212,7 @@ if len(pending) > st.session_state.pendentes_anteriores:
 st.session_state.pendentes_anteriores = len(pending)
 
 if not pending:
-    st.info("✅ Não há solicitações pendentes de auditoria no momento.")
-    st.success("👏 Parabéns! Todas as solicitações foram processadas.")
+    st.success("✅ Nenhuma solicitação pendente. Todas foram processadas!")
 else:
     st.subheader(f"📋 {len(pending)} Solicitações Pendentes")
     st.markdown("---")
@@ -356,7 +370,7 @@ else:
                                 from datetime import datetime
                                 data_obj = datetime.strptime(data_visita, '%Y-%m-%d')
                                 data_visita = data_obj.strftime('%d/%m/%Y')
-                            except:
+                            except (ValueError, TypeError):
                                 pass
                         st.text(data_visita)
                     
