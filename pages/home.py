@@ -7,6 +7,7 @@ import streamlit as st
 from login_system import require_authentication
 from openlocationcode import openlocationcode as olc
 import re
+import pandas as pd
 from viability_functions import create_viability_request, validate_plus_code
 import logging
 
@@ -55,7 +56,7 @@ def validate_coordinates(coord_string: str) -> tuple:
             return (True, lat, lon)
         else:
             return (False, None, None)
-    except:
+    except (ValueError, AttributeError, TypeError):
         return (False, None, None)
 
 def coords_to_pluscode(lat: float, lon: float) -> str:
@@ -101,6 +102,8 @@ def buscar_predios_cadastrados():
         # Adicionar atendidos
         if atendidos.data:
             for p in atendidos.data:
+                if not p.get('condominio'):
+                    continue
                 nome_lower = p['condominio'].lower().strip()
                 predios_dict[nome_lower] = {
                     'nome': p['condominio'],
@@ -112,6 +115,8 @@ def buscar_predios_cadastrados():
         # Adicionar sem viabilidade
         if sem_viab.data:
             for p in sem_viab.data:
+                if not p.get('condominio'):
+                    continue
                 nome_lower = p['condominio'].lower().strip()
                 # Só adicionar se não estiver nos atendidos
                 if nome_lower not in predios_dict:
@@ -200,7 +205,7 @@ if input_method == "Plus Code":
             
             # Converter para coordenadas para exibir
             lat, lon = pluscode_to_coords(location_input)
-            if lat and lon:
+            if lat is not None and lon is not None:
                 st.caption(f"📍 Coordenadas: {lat:.6f}, {lon:.6f}")
                 
                 # Salvar na sessão
@@ -249,14 +254,17 @@ if st.session_state.get('validated_pluscode'):
         if st.button("🎯 Viabilizar Esta Localização", type="primary", width='stretch'):
             st.session_state.show_viability_modal = True
 
-    # ===== MENSAGEM DE SUCESSO APÓS CONFIRMAR ===== ← ADICIONAR AQUI
+    # ===== MENSAGEM DE SUCESSO APÓS CONFIRMAR =====
     if st.session_state.get('show_success_message', False):
         tipo = st.session_state.get('success_message_type', '')
         st.success(f"✅ Solicitação de {tipo} enviada com sucesso!")
         st.info("📋 **Acompanhe o andamento em 'Meus Resultados' no menu lateral**")
-        
-        # Limpar mensagem após exibir
-        st.session_state.show_success_message = False
+        st.balloons()
+
+        # Botão para limpar mensagem e fazer nova solicitação
+        if st.button("🔄 Nova Solicitação", key="clear_success"):
+            st.session_state.show_success_message = False
+            st.rerun()
 
     # ======================
     # Modal de Seleção
@@ -490,7 +498,6 @@ with tab1:
         )
         
         # Converter para DataFrame
-        import pandas as pd
         df_atendidos = pd.DataFrame(predios_atendidos)
         
         # Filtrar
@@ -527,7 +534,6 @@ with tab2:
         )
         
         # Converter para DataFrame
-        import pandas as pd
         df_sem_viab = pd.DataFrame(predios_sem_viab)
         
         # Filtrar
