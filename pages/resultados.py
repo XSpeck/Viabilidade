@@ -692,7 +692,7 @@ st.markdown("---")
 try:
     response_historico = supabase.table('viabilizacoes')\
         .select('*')\
-        .eq('usuario', st.session_state.user_name)\
+        .ilike('usuario', st.session_state.user_name)\
         .order('data_solicitacao', desc=True)\
         .execute()
     
