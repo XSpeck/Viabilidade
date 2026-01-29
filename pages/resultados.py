@@ -134,17 +134,9 @@ if len(results) > st.session_state.resultados_anteriores:
 st.session_state.resultados_anteriores = len(results)
 
 if not results:
-    st.info("📭 Você não possui resultados no momento.")
-    st.markdown("""
-    ### Como funciona?
-    1. Faça uma busca na **página principal**
-    2. Clique em **"Viabilizar"**
-    3. Aguarde a **auditoria técnica**
-    4. Seus resultados aparecerão aqui!
-    """)
-    st.stop()
+    st.info("📭 Você não possui solicitações ativas no momento.")
 
-# Separar aprovados e rejeitados
+# Separar aprovados e rejeitados (só se houver resultados)
 approved = [r for r in results_filtrados if r['status'] == 'aprovado']
 rejected = [r for r in results_filtrados if r['status'] == 'rejeitado']
 utp = [r for r in results_filtrados if r['status'] == 'utp']
