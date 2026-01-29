@@ -259,7 +259,6 @@ if st.session_state.get('validated_pluscode'):
         tipo = st.session_state.get('success_message_type', '')
         st.success(f"✅ Solicitação de {tipo} enviada com sucesso!")
         st.info("📋 **Acompanhe o andamento em 'Meus Resultados' no menu lateral**")
-        st.balloons()
 
         # Botão para limpar mensagem e fazer nova solicitação
         if st.button("🔄 Nova Solicitação", key="clear_success"):

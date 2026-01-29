@@ -22,8 +22,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Auto-refresh a cada 15 segundos
-st_autorefresh(interval=15000, key="viabilidades_refresh")
+# Auto-refresh a cada 30 segundos
+st_autorefresh(interval=30000, key="viabilidades_refresh")
 
 # Verificar autenticação
 if not require_authentication():
@@ -194,8 +194,7 @@ st.session_state.pendentes_viabilidades = len(pending)
 # Exibir Lista
 # ======================
 if not pending:
-    st.info("✅ Não há viabilizações disponíveis no momento.")
-    st.success("🎉 Todas as solicitações foram distribuídas aos auditores!")
+    st.success("✅ Nenhuma viabilização pendente. Todas foram distribuídas!")
 else:
     st.subheader(f"📊 {len(pending)} Solicitação(ões) Disponível(is)")
     
