@@ -149,9 +149,10 @@ with col_kpi2:
     )
 
 with col_kpi3:
+    taxa_aprovacao = stats.get('taxa_aprovacao_ftth', 0)
     st.metric(
         label="📈 Taxa de Aprovação",
-        value=f"{stats['taxa_aprovacao_ftth']:.1f}%"
+        value=f"{taxa_aprovacao:.1f}%"
     )
 
 with col_kpi4:
@@ -251,8 +252,8 @@ if ftth_rejeitadas:
     # Adicionar marcadores
     for idx, row in enumerate(ftth_rejeitadas):
         lat, lon = pluscode_to_coords(row['plus_code_cliente'])
-        
-        if lat and lon:
+
+        if lat is not None and lon is not None:
             popup_html = f"""
             <div style='width: 250px'>
                 <h4>❌ Sem Viabilidade</h4>
@@ -367,7 +368,7 @@ with tab_ftth1:
             mime="text/csv"
         )
     else:
-        st.info("Nenhuma FTTH aprovada no período selecionado.")
+        st.info("📭 Nenhuma FTTH aprovada no período selecionado.")
 
 # TAB 2: Rejeitadas
 with tab_ftth2:
@@ -426,7 +427,7 @@ with tab_ftth2:
             mime="text/csv"
         )
     else:
-        st.success("✅ Não há FTTH rejeitadas no período selecionado!")
+        st.info("📭 Nenhuma FTTH rejeitada no período selecionado.")
 
 st.markdown("---")
 
@@ -596,9 +597,16 @@ with tab_pred2:
                    'localizacao', 'estruturado_por']
         
         df_display = df_estruturados[[col for col in colunas if col in df_estruturados.columns]].copy()
-        
-        # Renomear
-        df_display.columns = ['Data', 'Condomínio', 'Tecnologia', 'Localização', 'Técnico'][:len(df_display.columns)]
+
+        # Renomear usando dicionário (mais seguro)
+        rename_dict = {
+            'data_estruturacao': 'Data',
+            'condominio': 'Condomínio',
+            'tecnologia': 'Tecnologia',
+            'localizacao': 'Localização',
+            'estruturado_por': 'Técnico'
+        }
+        df_display.rename(columns=rename_dict, inplace=True)
         
         # Formatar data
         if 'Data' in df_display.columns:
@@ -617,7 +625,7 @@ with tab_pred2:
             mime="text/csv"
         )
     else:
-        st.info("Nenhum prédio estruturado ainda.")
+        st.info("📭 Nenhum prédio estruturado ainda.")
 
 # TAB 2: Sem Viabilidade
 with tab_pred3:
@@ -629,9 +637,16 @@ with tab_pred3:
                    'observacao', 'registrado_por']
         
         df_display = df_sem_viab[[col for col in colunas if col in df_sem_viab.columns]].copy()
-        
-        # Renomear
-        df_display.columns = ['Data', 'Condomínio', 'Localização', 'Motivo', 'Registrado Por'][:len(df_display.columns)]
+
+        # Renomear usando dicionário (mais seguro)
+        rename_dict = {
+            'data_registro': 'Data',
+            'condominio': 'Condomínio',
+            'localizacao': 'Localização',
+            'observacao': 'Motivo',
+            'registrado_por': 'Registrado Por'
+        }
+        df_display.rename(columns=rename_dict, inplace=True)
         
         # Formatar data
         if 'Data' in df_display.columns:
