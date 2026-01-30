@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 # ======================
 # Configurações
 # ======================
-LOCATIONIQ_KEY = "pk.66f355328aaad40fe69b57c293f66815"
 reference_lat = -28.6775
 reference_lon = -49.3696
 
@@ -87,7 +86,7 @@ def pluscode_to_coords(pluscode: str) -> Tuple[float, float]:
         logger.error(f"Erro ao converter Plus Code: {e}")
         return None, None
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=1800)  # Cache de 30 minutos
 def download_file(file_id: str, output: str) -> str:
     """Download de arquivo do Google Drive"""
     try:
@@ -99,7 +98,7 @@ def download_file(file_id: str, output: str) -> str:
         logger.error(f"Erro ao baixar {output}: {e}")
         raise Exception(f"Falha no download do arquivo {output}: {str(e)}")
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=1800)  # Cache de 30 minutos
 def load_lines_from_kml(path: str) -> List[List[Tuple[float, float]]]:
     """Carrega linhas de projeto de um arquivo KML"""
     try:
@@ -130,7 +129,7 @@ def load_lines_from_kml(path: str) -> List[List[Tuple[float, float]]]:
         logger.error(f"Erro ao carregar linhas KML: {e}")
         return []
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=1800)  # Cache de 30 minutos
 def load_ctos_from_kml(path: str) -> List[dict]:
     """Carrega CTOs de um arquivo KML"""
     try:
@@ -182,39 +181,48 @@ def show_project_map(pluscode: str, client_name: str = "Cliente", unique_key: st
         # Converter Plus Code para coordenadas
         lat, lon = pluscode_to_coords(pluscode)
         
-        if not lat or not lon:
+        if lat is None or lon is None:
             st.error("❌ Erro ao converter Plus Code para coordenadas")
             return False
-        
-        with st.spinner("🗺️ Carregando mapa..."):
-            # Carregar linhas de projeto
-            all_lines = {}
-            for company, config in KML_CONFIGS.items():
-                try:
-                    download_file(config["file_id"], config["path"])
-                    lines = load_lines_from_kml(config["path"])
-                    all_lines[company] = {
-                        "lines": lines,
-                        "color": config["color"]
-                    }
-                    logger.info(f"Carregadas {len(lines)} linhas para {company}")
-                except Exception as e:
-                    logger.error(f"Erro ao carregar {company}: {e}")
-                    all_lines[company] = {"lines": [], "color": config["color"]}
-            
-            # Carregar CTOs se solicitado
-            ctos = []
-            if show_ctos:
-                try:
-                    file_id_ctos = "1EcKNk2yqHDEMMXJZ17fT0flPV19HDhKJ"
-                    ctos_path = "ctos.kml"
-                    download_file(file_id_ctos, ctos_path)
-                    ctos = load_ctos_from_kml(ctos_path)
-                    # Filtrar CDOIs
-                    ctos = [c for c in ctos if not c["name"].upper().startswith("CDOI")]
-                except Exception as e:
-                    logger.error(f"Erro ao carregar CTOs: {e}")
-        
+
+        # Carregar linhas de projeto com progresso
+        all_lines = {}
+        progress_bar = st.progress(0, text="🗺️ Carregando projetos de rede...")
+        total_companies = len(KML_CONFIGS)
+
+        for idx, (company, config) in enumerate(KML_CONFIGS.items()):
+            try:
+                progress_bar.progress(
+                    (idx + 1) / total_companies,
+                    text=f"🗺️ Carregando {company}... ({idx + 1}/{total_companies})"
+                )
+                download_file(config["file_id"], config["path"])
+                lines = load_lines_from_kml(config["path"])
+                all_lines[company] = {
+                    "lines": lines,
+                    "color": config["color"]
+                }
+                logger.info(f"Carregadas {len(lines)} linhas para {company}")
+            except Exception as e:
+                logger.error(f"Erro ao carregar {company}: {e}")
+                all_lines[company] = {"lines": [], "color": config["color"]}
+
+        progress_bar.empty()  # Remove a barra de progresso
+
+        # Carregar CTOs se solicitado
+        ctos = []
+        if show_ctos:
+            try:
+                st.caption("🔍 Carregando CTOs...")
+                file_id_ctos = "1EcKNk2yqHDEMMXJZ17fT0flPV19HDhKJ"
+                ctos_path = "ctos.kml"
+                download_file(file_id_ctos, ctos_path)
+                ctos = load_ctos_from_kml(ctos_path)
+                # Filtrar CDOIs
+                ctos = [c for c in ctos if not c["name"].upper().startswith("CDOI")]
+            except Exception as e:
+                logger.error(f"Erro ao carregar CTOs: {e}")
+
         st.markdown("### 🗺️ Visualização no Mapa")
         
         # Criar mapa centrado no cliente
