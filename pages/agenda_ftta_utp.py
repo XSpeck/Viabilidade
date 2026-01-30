@@ -93,7 +93,7 @@ if agendamentos:  # Só mostra filtros se houver agendamentos
                     dt = datetime.strptime(str(d), '%Y-%m-%d')
                     data_br = dt.strftime('%d/%m/%Y')
                     datas_dict[data_br] = d
-                except:
+                except (ValueError, TypeError):
                     datas_dict[d] = d
         
         filtro_data = st.selectbox(
@@ -122,8 +122,7 @@ if agendamentos:  # Só mostra filtros se houver agendamentos
     st.markdown("---")
     
 if not agendamentos:
-    st.info("📭 Não há visitas técnicas agendadas no momento.")
-    st.success("✅ Agenda vazia!")
+    st.success("✅ Nenhuma visita técnica agendada no momento.")
 else:
     st.subheader(f"📋 {len(agendamentos)} Visita(s) Agendada(s)")
     
@@ -165,7 +164,7 @@ else:
                         from datetime import datetime
                         data_obj = datetime.strptime(data_visita, '%Y-%m-%d')
                         data_visita = data_obj.strftime('%d/%m/%Y')
-                    except:
+                    except (ValueError, TypeError):
                         pass
                 st.text(f"Data: {data_visita}")
                 st.text(f"Período: {row.get('periodo_visita', 'N/A')}")
@@ -253,7 +252,7 @@ else:
                         )
                     
                     if confirmar_estrut:
-                        if not observacao_estrut or observacao_estrut.strip() == "":
+                        if not observacao_estrut or not observacao_estrut.strip():
                             st.error("❌ Adicione observações sobre a estruturação!")
                         else:
                             if finalize_building_structured(
@@ -265,7 +264,6 @@ else:
                                 row.get('tecnico_responsavel', 'Técnico')
                             ):
                                 st.success("✅ Prédio registrado como estruturado!")
-                                st.balloons()
                                 st.info("📝 Registro salvo em UTPs/FTTAs Atendidos")
                                 del st.session_state[f'show_estruturado_form_{row["id"]}']
                                 st.rerun()
@@ -291,7 +289,7 @@ else:
                                 from datetime import datetime
                                 data_obj = datetime.strptime(data_atual, '%Y-%m-%d')
                                 data_atual = data_obj.strftime('%d/%m/%Y')
-                            except:
+                            except (ValueError, TypeError):
                                 pass
                         st.text_input("Data Atual", value=data_atual, disabled=True)
                     with col_atual2:
@@ -349,7 +347,7 @@ else:
                         )
                     
                     if confirmar_reagend:
-                        if not nova_data or not novo_tecnico or novo_tecnico.strip() == "":
+                        if not nova_data or not novo_tecnico or not novo_tecnico.strip():
                             st.error("❌ Preencha todos os campos obrigatórios!")
                         else:
                             if reschedule_building_visit(
@@ -406,7 +404,7 @@ else:
                         )
                     
                     if confirmar_rej:
-                        if not motivo_rej or motivo_rej.strip() == "":
+                        if not motivo_rej or not motivo_rej.strip():
                             st.error("❌ Descreva o motivo da não viabilidade!")
                         else:
                             if reject_scheduled_building(
