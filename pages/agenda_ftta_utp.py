@@ -229,7 +229,8 @@ else:
                         st.text_input("📍 Localização", value=row['plus_code_cliente'], disabled=True)
                     with col_est2:
                         st.text_input("🔧 Tecnologia", value=row.get('tecnologia_predio', ''), disabled=True)
-                        giga_checkbox = st.checkbox("⚡ Prédio Giga?", key=f"giga_{row['id']}")
+                        # Usa o valor salvo no agendamento como padrão
+                        giga_checkbox = st.checkbox("⚡ Prédio Giga?", value=row.get('giga', False), key=f"giga_{row['id']}")
 
                     observacao_estrut = st.text_area(
                         "📝 Observações da Estruturação *",

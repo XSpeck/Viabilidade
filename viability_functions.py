@@ -521,16 +521,17 @@ def submit_building_data(viability_id: str, dados: Dict) -> bool:
         st.error(f"❌ Erro ao submeter: {e}")
         return False
 
-def schedule_building_visit(viability_id: str, data_visita: str, periodo: str, tecnico: str, tecnologia: str) -> bool:
+def schedule_building_visit(viability_id: str, data_visita: str, periodo: str, tecnico: str, tecnologia: str, giga: bool = False) -> bool:
     """
     Agenda visita técnica para prédio
-    
+
     Args:
         viability_id: ID da viabilização
         data_visita: Data da visita (formato: YYYY-MM-DD)
         periodo: "Manhã" ou "Tarde"
         tecnico: Nome do técnico responsável
         tecnologia: "FTTA" ou "UTP"
+        giga: Se o prédio é Giga ou não
     """
     try:
         update_data = {
@@ -540,7 +541,8 @@ def schedule_building_visit(viability_id: str, data_visita: str, periodo: str, t
             'periodo_visita': periodo,
             'tecnico_responsavel': tecnico,
             'tecnologia_predio': tecnologia,
-            'data_agendamento': get_current_time()
+            'data_agendamento': get_current_time(),
+            'giga': giga
         }
         
         response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
