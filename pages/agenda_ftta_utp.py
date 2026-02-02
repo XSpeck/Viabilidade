@@ -222,14 +222,15 @@ else:
                 
                 with st.form(key=f"form_estruturado_{row['id']}"):
                     st.markdown("**Os seguintes dados serão registrados:**")
-                    
+
                     col_est1, col_est2 = st.columns(2)
                     with col_est1:
                         st.text_input("🏢 Condomínio", value=row.get('predio_ftta', ''), disabled=True)
                         st.text_input("📍 Localização", value=row['plus_code_cliente'], disabled=True)
                     with col_est2:
-                        st.text_input("🔧 Tecnologia", value=row.get('tecnologia_predio', ''), disabled=True)                       
-                    
+                        st.text_input("🔧 Tecnologia", value=row.get('tecnologia_predio', ''), disabled=True)
+                        giga_checkbox = st.checkbox("⚡ Prédio Giga?", key=f"giga_{row['id']}")
+
                     observacao_estrut = st.text_area(
                         "📝 Observações da Estruturação *",
                         placeholder="Detalhes sobre a instalação, materiais utilizados, etc.",
@@ -261,7 +262,8 @@ else:
                                 row.get('tecnologia_predio', 'N/A'),
                                 row['plus_code_cliente'],
                                 observacao_estrut.strip(),
-                                row.get('tecnico_responsavel', 'Técnico')
+                                row.get('tecnico_responsavel', 'Técnico'),
+                                giga_checkbox
                             ):
                                 st.success("✅ Prédio registrado como estruturado!")
                                 st.info("📝 Registro salvo em UTPs/FTTAs Atendidos")

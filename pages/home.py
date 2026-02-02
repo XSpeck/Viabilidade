@@ -603,10 +603,18 @@ with tab1:
             df_atendidos = df_atendidos[mask]
         
         # Selecionar e renomear colunas
-        df_display = df_atendidos[['condominio', 'tecnologia', 'localizacao', 'observacao']].copy()
-        df_display.columns = ['Condomínio', 'Tecnologia', 'Localização', 'Observação']
-        
-        st.dataframe(df_display, width='stretch', height=400)
+        colunas_disponiveis = ['condominio', 'tecnologia', 'localizacao', 'observacao']
+
+        # Adicionar coluna Giga se existir no banco
+        if 'giga' in df_atendidos.columns:
+            df_atendidos['giga_display'] = df_atendidos['giga'].apply(lambda x: 'Sim' if x else 'Não')
+        else:
+            df_atendidos['giga_display'] = 'Não'
+
+        df_display = df_atendidos[['condominio', 'tecnologia', 'giga_display', 'localizacao', 'observacao']].copy()
+        df_display.columns = ['Condomínio', 'Tecnologia', 'Giga', 'Localização', 'Observação']
+
+        st.dataframe(df_display, use_container_width=True, height=400)
         st.caption(f"Mostrando {len(df_display)} de {len(predios_atendidos)} registros")
 
 # ===== TAB 2: Prédios Sem Viabilidade =====
