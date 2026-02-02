@@ -390,17 +390,24 @@ if rejected:
                 st.error("### 🏢 Edifício Sem Viabilidade")
                 st.markdown(f"**Edifício:** {row.get('predio_ftta', 'N/A')}")
                 st.markdown(f"**Localização:** {row['plus_code_cliente']}")
-                
+
                 if row.get('motivo_rejeicao'):
                     st.markdown("**Motivo:**")
                     st.warning(row['motivo_rejeicao'].replace('Edifício sem viabilidade: ', ''))
             else:
-                # Mensagem padrão
-                st.error("### 📝 Não temos projeto neste ponto")
-            
-                # Motivo
+                # FTTH sem viabilidade
+                st.error("### 🏠 Sem Viabilidade Neste Ponto")
+
+                if row.get('nome_cliente'):
+                    st.markdown(f"**Cliente:** {row['nome_cliente']}")
+                st.markdown(f"**Localização:** {row['plus_code_cliente']}")
+
+                # Justificativa do auditor
                 if row.get('motivo_rejeicao'):
-                    st.markdown(f"**Motivo:** {row['motivo_rejeicao']}")
+                    st.markdown("**Justificativa:**")
+                    st.warning(row['motivo_rejeicao'])
+                else:
+                    st.info("Não temos projeto neste ponto.")
             
             # Informações adicionais
             st.text(f"Tipo: {row['tipo_instalacao']}")

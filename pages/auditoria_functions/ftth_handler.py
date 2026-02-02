@@ -377,7 +377,57 @@ def show_ftth_form(row: dict):
                     st.rerun()
         
         if rejeitado:
-            dados = {'motivo_rejeicao': 'Não temos projeto neste ponto'}
-            if update_viability_ftth(row['id'], 'rejeitado', dados):
-                st.success("❌ Solicitação rejeitada")
+            st.session_state[f'show_reject_ftth_form_{row["id"]}'] = True
+
+    # ========================================
+    # FORMULÁRIO DE REJEIÇÃO FTTH
+    # ========================================
+    if st.session_state.get(f'show_reject_ftth_form_{row["id"]}', False):
+        st.markdown("---")
+        st.error("### ❌ Registrar Sem Viabilidade")
+
+        with st.form(key=f"form_reject_ftth_{row['id']}"):
+            st.markdown("**Informe o motivo para o usuário:**")
+
+            col_info1, col_info2 = st.columns(2)
+            with col_info1:
+                st.text_input("📍 Plus Code", value=row['plus_code_cliente'], disabled=True)
+            with col_info2:
+                if row.get('nome_cliente'):
+                    st.text_input("👤 Cliente", value=row['nome_cliente'], disabled=True)
+
+            motivo_rejeicao_ftth = st.text_area(
+                "📝 Justificativa para o usuário *",
+                placeholder="Ex: Não temos projeto nesta rua, distância muito grande da rede, área não coberta, etc.",
+                height=100,
+                key=f"motivo_rej_ftth_{row['id']}"
+            )
+
+            col_btn_rej1, col_btn_rej2 = st.columns(2)
+
+            with col_btn_rej1:
+                confirmar_rej_ftth = st.form_submit_button(
+                    "✅ Confirmar Rejeição",
+                    type="primary",
+                    width='stretch'
+                )
+
+            with col_btn_rej2:
+                cancelar_rej_ftth = st.form_submit_button(
+                    "🔙 Cancelar",
+                    width='stretch'
+                )
+
+            if confirmar_rej_ftth:
+                if not motivo_rejeicao_ftth or motivo_rejeicao_ftth.strip() == "":
+                    st.error("❌ Informe o motivo da não viabilidade!")
+                else:
+                    dados = {'motivo_rejeicao': motivo_rejeicao_ftth.strip()}
+                    if update_viability_ftth(row['id'], 'rejeitado', dados):
+                        st.success("❌ Solicitação rejeitada!")
+                        del st.session_state[f'show_reject_ftth_form_{row["id"]}']
+                        st.rerun()
+
+            if cancelar_rej_ftth:
+                del st.session_state[f'show_reject_ftth_form_{row["id"]}']
                 st.rerun()
