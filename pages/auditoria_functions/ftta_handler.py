@@ -259,7 +259,7 @@ def show_ftta_form(row: dict):
             
         # Segunda linha com Técnico e Tecnologia
         col_ag3, col_ag4 = st.columns(2)
-        
+
         with col_ag3:
             tecnico = st.text_input(
                 "👷 Técnico Responsável",
@@ -273,7 +273,10 @@ def show_ftta_form(row: dict):
                 key=f"tecnologia_{row['id']}",
                 help="Tipo de tecnologia a ser instalada"
             )
-        
+
+        # Checkbox Giga
+        giga_agendamento = st.checkbox("⚡ Prédio Giga?", key=f"giga_agendamento_{row['id']}")
+
         st.markdown("---")
         
         # Botões de ação
@@ -294,7 +297,8 @@ def show_ftta_form(row: dict):
                         data_visita,
                         periodo,
                         tecnico,
-                        tecnologia
+                        tecnologia,
+                        giga_agendamento
                     ):
                         st.success("✅ Visita agendada com sucesso!")
                         st.info("📅 Agendamento registrado na Agenda FTTA/UTP")

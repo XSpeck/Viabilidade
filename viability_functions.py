@@ -521,16 +521,17 @@ def submit_building_data(viability_id: str, dados: Dict) -> bool:
         st.error(f"❌ Erro ao submeter: {e}")
         return False
 
-def schedule_building_visit(viability_id: str, data_visita: str, periodo: str, tecnico: str, tecnologia: str) -> bool:
+def schedule_building_visit(viability_id: str, data_visita: str, periodo: str, tecnico: str, tecnologia: str, giga: bool = False) -> bool:
     """
     Agenda visita técnica para prédio
-    
+
     Args:
         viability_id: ID da viabilização
         data_visita: Data da visita (formato: YYYY-MM-DD)
         periodo: "Manhã" ou "Tarde"
         tecnico: Nome do técnico responsável
         tecnologia: "FTTA" ou "UTP"
+        giga: Se o prédio é Giga ou não
     """
     try:
         update_data = {
@@ -540,7 +541,8 @@ def schedule_building_visit(viability_id: str, data_visita: str, periodo: str, t
             'periodo_visita': periodo,
             'tecnico_responsavel': tecnico,
             'tecnologia_predio': tecnologia,
-            'data_agendamento': get_current_time()
+            'data_agendamento': get_current_time(),
+            'giga': giga
         }
         
         response = supabase.table('viabilizacoes').update(update_data).eq('id', viability_id).execute()
@@ -618,10 +620,10 @@ def get_scheduled_visits() -> List[Dict]:
         logger.error(f"Erro ao buscar agendamentos: {e}")
         return []
 
-def finalize_building_structured(viability_id: str, condominio: str, tecnologia: str, localizacao: str, observacao: str, tecnico: str) -> bool:    
+def finalize_building_structured(viability_id: str, condominio: str, tecnologia: str, localizacao: str, observacao: str, tecnico: str, giga: bool = False) -> bool:
     """
     Finaliza agendamento como estruturado e registra na tabela de atendidos
-    
+
     Args:
         viability_id: ID da viabilização
         condominio: Nome do prédio
@@ -629,6 +631,7 @@ def finalize_building_structured(viability_id: str, condominio: str, tecnologia:
         localizacao: Plus Code
         observacao: Observações sobre a estruturação
         tecnico: Nome do técnico que estruturou
+        giga: Se o prédio é Giga ou não
     """
     try:
         # 1. Registrar na tabela de atendidos
@@ -638,7 +641,8 @@ def finalize_building_structured(viability_id: str, condominio: str, tecnologia:
             'localizacao': localizacao,
             'observacao': observacao,
             'estruturado_por': tecnico,
-            'viabilizacao_id': viability_id
+            'viabilizacao_id': viability_id,
+            'giga': giga
         }
         
         response_insert = supabase.table('utps_fttas_atendidos').insert(new_record).execute()
