@@ -78,81 +78,166 @@ def pluscode_to_coords(pluscode: str) -> tuple:
         return (None, None)
 
 # ======================
-# Funções de Busca de Prédios
+# Funcoes de Busca de Predios (Inteligente)
 # ======================
+import unicodedata
+from difflib import SequenceMatcher
+
+def normalizar_nome(nome: str) -> str:
+    """
+    Normaliza nome do predio removendo acentos e prefixos comuns
+    'Ed. São José' -> 'sao jose'
+    'Residencial Flores' -> 'flores'
+    """
+    if not nome:
+        return ""
+
+    # Converter para minusculas
+    nome = nome.lower().strip()
+
+    # Remover acentos
+    nome = unicodedata.normalize('NFKD', nome)
+    nome = ''.join(c for c in nome if not unicodedata.combining(c))
+
+    # Prefixos comuns para remover
+    prefixos = [
+        'edificio ', 'edifício ', 'ed. ', 'ed ',
+        'residencial ', 'res. ', 'res ',
+        'condominio ', 'condomínio ', 'cond. ', 'cond ',
+        'conjunto ', 'conj. ', 'conj ',
+        'bloco ', 'bl. ', 'bl ',
+        'torre ', 'tr. ', 'tr ',
+        'predio ', 'prédio '
+    ]
+
+    for prefixo in prefixos:
+        if nome.startswith(prefixo):
+            nome = nome[len(prefixo):]
+            break
+
+    return nome.strip()
+
+def calcular_similaridade(nome1: str, nome2: str) -> float:
+    """Calcula similaridade entre dois nomes (0.0 a 1.0)"""
+    return SequenceMatcher(None, nome1, nome2).ratio()
+
 @st.cache_data(ttl=300)  # Cache de 5 minutos
 def buscar_predios_cadastrados():
-    """Busca todos os prédios cadastrados nas tabelas"""
+    """Busca todos os predios cadastrados nas tabelas"""
     try:
         from supabase_config import supabase
-        
-        # Buscar prédios atendidos
+
+        # Buscar predios atendidos
         atendidos = supabase.table('utps_fttas_atendidos')\
             .select('condominio, tecnologia, observacao')\
             .execute()
-        
-        # Buscar prédios sem viabilidade
+
+        # Buscar predios sem viabilidade
         sem_viab = supabase.table('predios_sem_viabilidade')\
             .select('condominio, observacao')\
             .execute()
-        
+
         # Organizar dados
-        predios_dict = {}
-        
+        predios_list = []
+        nomes_adicionados = set()
+
         # Adicionar atendidos
         if atendidos.data:
             for p in atendidos.data:
                 if not p.get('condominio'):
                     continue
-                nome_lower = p['condominio'].lower().strip()
-                predios_dict[nome_lower] = {
-                    'nome': p['condominio'],
-                    'status': 'atendido',
-                    'tecnologia': p.get('tecnologia', 'N/A'),
-                    'observacao': p.get('observacao', '')
-                }
-        
+                nome = p['condominio'].strip()
+                nome_normalizado = normalizar_nome(nome)
+
+                if nome_normalizado not in nomes_adicionados:
+                    predios_list.append({
+                        'nome': nome,
+                        'nome_normalizado': nome_normalizado,
+                        'status': 'atendido',
+                        'tecnologia': p.get('tecnologia', 'N/A'),
+                        'observacao': p.get('observacao', '')
+                    })
+                    nomes_adicionados.add(nome_normalizado)
+
         # Adicionar sem viabilidade
         if sem_viab.data:
             for p in sem_viab.data:
                 if not p.get('condominio'):
                     continue
-                nome_lower = p['condominio'].lower().strip()
-                # Só adicionar se não estiver nos atendidos
-                if nome_lower not in predios_dict:
-                    predios_dict[nome_lower] = {
-                        'nome': p['condominio'],
+                nome = p['condominio'].strip()
+                nome_normalizado = normalizar_nome(nome)
+
+                # So adicionar se nao estiver nos atendidos
+                if nome_normalizado not in nomes_adicionados:
+                    predios_list.append({
+                        'nome': nome,
+                        'nome_normalizado': nome_normalizado,
                         'status': 'sem_viabilidade',
                         'tecnologia': None,
                         'observacao': p.get('observacao', '')
-                    }
-        
-        return predios_dict
-    except Exception as e:
-        logger.error(f"Erro ao buscar prédios cadastrados: {e}")
-        return {}
+                    })
+                    nomes_adicionados.add(nome_normalizado)
 
-def verificar_predio_existente(nome_digitado: str, predios_dict: dict):
+        return predios_list
+    except Exception as e:
+        logger.error(f"Erro ao buscar predios cadastrados: {e}")
+        return []
+
+def buscar_predios_similares(nome_digitado: str, predios_list: list, limite: int = 5) -> list:
     """
-    Verifica se o prédio digitado já existe nos cadastros
-    Retorna: (encontrado: bool, dados: dict)
+    Busca predios similares ao nome digitado
+    Retorna lista de predios ordenados por relevancia
     """
-    if not nome_digitado or len(nome_digitado) < 3:
-        return False, None
-    
-    nome_lower = nome_digitado.lower().strip()
-    
-    # Busca exata
-    if nome_lower in predios_dict:
-        return True, predios_dict[nome_lower]
-    
-    # Busca parcial (se digitou pelo menos 5 caracteres)
-    if len(nome_digitado) >= 5:
-        for predio_key, predio_data in predios_dict.items():
-            if nome_lower in predio_key or predio_key in nome_lower:
-                return True, predio_data
-    
-    return False, None
+    if not nome_digitado or len(nome_digitado) < 2:
+        return []
+
+    nome_normalizado = normalizar_nome(nome_digitado)
+
+    if len(nome_normalizado) < 2:
+        return []
+
+    resultados = []
+
+    for predio in predios_list:
+        predio_norm = predio['nome_normalizado']
+
+        # Calcular pontuacao de relevancia
+        pontuacao = 0.0
+
+        # 1. Match exato (normalizado)
+        if nome_normalizado == predio_norm:
+            pontuacao = 1.0
+
+        # 2. Nome digitado contem o predio ou vice-versa
+        elif nome_normalizado in predio_norm:
+            pontuacao = 0.9
+        elif predio_norm in nome_normalizado:
+            pontuacao = 0.85
+
+        # 3. Comeca com o texto digitado
+        elif predio_norm.startswith(nome_normalizado):
+            pontuacao = 0.8
+
+        # 4. Alguma palavra do predio comeca com o texto
+        elif any(palavra.startswith(nome_normalizado) for palavra in predio_norm.split()):
+            pontuacao = 0.7
+
+        # 5. Similaridade fuzzy (para erros de digitacao)
+        else:
+            similaridade = calcular_similaridade(nome_normalizado, predio_norm)
+            if similaridade >= 0.5:  # Minimo 50% de similaridade
+                pontuacao = similaridade * 0.6  # Maximo 0.6 para fuzzy
+
+        if pontuacao > 0:
+            resultados.append({
+                **predio,
+                'pontuacao': pontuacao
+            })
+
+    # Ordenar por pontuacao (maior primeiro)
+    resultados.sort(key=lambda x: x['pontuacao'], reverse=True)
+
+    return resultados[:limite]
 
 # ======================
 # Header
@@ -369,57 +454,66 @@ if st.session_state.get('validated_pluscode'):
                     help="Deixe vazio se não houver blocos"
                 )
                 
-            # Verificação em tempo real
-            if nome_predio and len(nome_predio) >= 3:               
-                with st.spinner("🔍 Verificando cadastro..."):
-                    predios_cadastrados = buscar_predios_cadastrados()
-                    encontrado, dados_predio = verificar_predio_existente(nome_predio, predios_cadastrados)            
-                    
-                    if encontrado:
+            # Verificacao em tempo real (busca inteligente)
+            if nome_predio and len(nome_predio) >= 3:
+                predios_cadastrados = buscar_predios_cadastrados()
+                resultados = buscar_predios_similares(nome_predio, predios_cadastrados, limite=5)
+
+                if resultados:
+                    # Verificar se tem match muito forte (>= 0.85)
+                    melhor_match = resultados[0]
+
+                    if melhor_match['pontuacao'] >= 0.85:
+                        # Match forte - mostrar direto
+                        dados_predio = melhor_match
                         status = dados_predio['status']
-                        
-                        # ===== PRÉDIO ATENDIDO =====
+
                         if status == 'atendido':
                             tecnologia = dados_predio['tecnologia']
-                            
-                            if tecnologia == 'FTTA':
-                                st.caption(f"🏢 **{dados_predio['nome']}**")
-                                st.info("⚡ **Atendemos FTTA neste prédio!**")
-                                                                
-                                if dados_predio.get('observacao'):
-                                    with st.expander("📋 Detalhes"):
-                                        st.text(dados_predio['observacao'])                                
-                            
-                            elif tecnologia == 'UTP':
-                                st.caption(f"🏢 **{dados_predio['nome']}**")
-                                st.info("📡 **Atendemos UTP neste prédio**")                                
-                                
-                                if dados_predio.get('observacao'):
-                                    with st.expander("📋 Detalhes"):
-                                        st.text(dados_predio['observacao'])                                
-                            
-                            else:
-                                st.caption(f"🏢 **{dados_predio['nome']}**")
-                                st.info(f"✅ **Prédio estruturado ({tecnologia})**")
 
-                                if dados_predio.get('observacao'):
-                                    with st.expander("📋 Detalhes"):
-                                        st.text(dados_predio['observacao'])
-                                
-                        
-                        # ===== PRÉDIO SEM VIABILIDADE =====
-                        else:
-                            st.caption(f"🏢 **{dados_predio['nome']}**")
-                            st.error("❌ **Prédio Sem Viabilidade**")                            
-                            
+                            if tecnologia == 'FTTA':
+                                st.success(f"✅ **{dados_predio['nome']}** - Atendemos FTTA!")
+                            elif tecnologia == 'UTP':
+                                st.info(f"📡 **{dados_predio['nome']}** - Atendemos UTP")
+                            else:
+                                st.success(f"✅ **{dados_predio['nome']}** - Estruturado ({tecnologia})")
+
                             if dados_predio.get('observacao'):
-                                with st.expander("📝 Motivo da Não Viabilidade"):
-                                    st.warning(dados_predio['observacao'])                            
-                            
+                                with st.expander("📋 Detalhes"):
+                                    st.text(dados_predio['observacao'])
+                        else:
+                            # Sem viabilidade
+                            st.error(f"❌ **{dados_predio['nome']}** - Sem Viabilidade")
+
+                            if dados_predio.get('observacao'):
+                                with st.expander("📝 Motivo"):
+                                    st.warning(dados_predio['observacao'])
+
                     else:
-                        # Nenhum registro encontrado
-                        if len(nome_predio) >= 5:
-                            st.success("🆕 **Prédio novo** - Prossiga com a solicitação")
+                        # Match parcial - mostrar sugestoes
+                        st.markdown("**🔍 Predios encontrados:**")
+
+                        for i, predio in enumerate(resultados):
+                            status = predio['status']
+                            nome = predio['nome']
+
+                            if status == 'atendido':
+                                tec = predio.get('tecnologia', 'N/A')
+                                if tec == 'FTTA':
+                                    st.markdown(f"- ✅ **{nome}** _(FTTA)_")
+                                elif tec == 'UTP':
+                                    st.markdown(f"- 📡 **{nome}** _(UTP)_")
+                                else:
+                                    st.markdown(f"- ✅ **{nome}** _({tec})_")
+                            else:
+                                st.markdown(f"- ❌ **{nome}** _(Sem viabilidade)_")
+
+                        st.caption("💡 Se nenhum corresponde, continue com a solicitacao")
+
+                else:
+                    # Nenhum resultado encontrado
+                    if len(nome_predio) >= 4:
+                        st.success("🆕 **Predio novo** - Nao encontramos no cadastro")
             
             # ========================================
             # FIM DA VERIFICAÇÃO
