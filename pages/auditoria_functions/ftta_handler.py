@@ -269,7 +269,7 @@ def show_ftta_form(row: dict):
         with col_ag4:
             tecnologia = st.selectbox(
                 "🔧 Tecnologia",
-                options=["FTTA", "UTP"],
+                options=["FTTA", "UTP", "FTTH"],
                 key=f"tecnologia_{row['id']}",
                 help="Tipo de tecnologia a ser instalada"
             )
