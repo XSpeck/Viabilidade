@@ -15,6 +15,7 @@ import logging
 # Imports dos manipuladores
 from pages.auditoria_functions.ftth_handler import show_ftth_form
 from pages.auditoria_functions.ftta_handler import show_ftta_form
+from pages.auditoria_functions.condominio_handler import show_condominio_form
 
 logger = logging.getLogger(__name__)
 
@@ -193,6 +194,8 @@ def show_viability_form(row: dict, urgente: bool = False):
             # Chamar formulário apropriado baseado no tipo
             if row['tipo_instalacao'] == 'FTTH':
                 show_ftth_form(row)
+            elif row['tipo_instalacao'] == 'Condomínio':
+                show_condominio_form(row)
             else:  # Prédio
                 show_ftta_form(row)
                             
