@@ -432,9 +432,9 @@ with tab_ftth2:
 st.markdown("---")
 
 # ======================
-# 5. SEÇÃO PRÉDIOS
+# 5. SEÇÃO PRÉDIOS/CONDOMÍNIOS
 # ======================
-st.subheader("🏢 Prédios (FTTA/UTP)")
+st.subheader("🏢 Prédios/Condomínios (FTTA/UTP/FTTH)")
 
 # KPIs Prédios
 predios_estruturados = get_structured_buildings()
@@ -443,35 +443,39 @@ predios_sem_viab = get_buildings_without_viability()
 # Separar por tecnologia
 ftta_count = len([p for p in predios_estruturados if p.get('tecnologia') == 'FTTA'])
 utp_count = len([p for p in predios_estruturados if p.get('tecnologia') == 'UTP'])
+ftth_count = len([p for p in predios_estruturados if p.get('tecnologia') == 'FTTH'])
 
-col_pred1, col_pred2, col_pred3, col_pred4 = st.columns(4)
+col_pred1, col_pred2, col_pred3, col_pred4, col_pred5 = st.columns(5)
 
 with col_pred1:
     st.metric("🏗️ Total Estruturados", len(predios_estruturados))
 
 with col_pred2:
-    st.metric("⚡ FTTA Estruturados", ftta_count)
+    st.metric("⚡ FTTA", ftta_count)
 
 with col_pred3:
-    st.metric("📡 UTP Estruturados", utp_count)
+    st.metric("📡 UTP", utp_count)
 
 with col_pred4:
+    st.metric("🟠 FTTH (Cond.)", ftth_count)
+
+with col_pred5:
     st.metric("❌ Sem Viabilidade", len(predios_sem_viab))
 
 st.markdown("---")
 
-# 🆕 BUSCAR VIABILIDADES DE PRÉDIOS (aprovadas/em análise)
+# 🆕 BUSCAR VIABILIDADES DE PRÉDIOS/CONDOMÍNIOS (aprovadas/em análise)
 try:
     response_viab_predios = supabase.table('viabilizacoes')\
         .select('*')\
-        .eq('tipo_instalacao', 'Prédio')\
+        .in_('tipo_instalacao', ['Prédio', 'Predio', 'Condomínio'])\
         .in_('status', ['aprovado', 'pendente', 'em_auditoria'])\
         .order('data_auditoria', desc=True)\
         .execute()
-    
+
     viabilidades_predios = response_viab_predios.data if response_viab_predios.data else []
 except Exception as e:
-    logger.error(f"Erro ao buscar viabilidades de prédios: {e}")
+    logger.error(f"Erro ao buscar viabilidades de prédios/condomínios: {e}")
     viabilidades_predios = []
 
 # Tabelas Prédios
@@ -501,7 +505,7 @@ with tab_pred1:
             df_viab_pred = df_viab_pred[mask]
         
         # Selecionar colunas
-        colunas = ['data_auditoria', 'predio_ftta', 'andar_predio', 'bloco_predio', 'status',
+        colunas = ['data_auditoria', 'predio_ftta', 'tipo_instalacao', 'andar_predio', 'bloco_predio', 'status',
                    'plus_code_cliente',  'nome_cliente', 'cdoi',
                    'portas_disponiveis', 'media_rx', 'usuario', 'auditado_por']
         #'data_solicitacao'
@@ -512,10 +516,11 @@ with tab_pred1:
         
         # Renomear
         rename_dict = {
-           # 'data_solicitacao': 'Data Solicitação',            
-            'predio_ftta': 'Prédio',
-            'andar_predio': 'Andar',
+           # 'data_solicitacao': 'Data Solicitação',
+            'predio_ftta': 'Prédio/Cond.',
+            'andar_predio': 'Casa/Apto',
             'bloco_predio': 'Bloco',
+            'tipo_instalacao': 'Tipo',
             'status': 'Status',
             'plus_code_cliente': 'Plus Code',
             'usuario': 'Solicitante',
@@ -547,7 +552,16 @@ with tab_pred1:
                 'aprovado': '✅ Aprovado'
             }
             df_display['Status'] = df_display['Status'].map(status_map).fillna(df_display['Status'])
-        
+
+        # Formatar tipo
+        if 'Tipo' in df_display.columns:
+            tipo_map = {
+                'Prédio': '🏢 Prédio',
+                'Predio': '🏢 Prédio',
+                'Condomínio': '🏘️ Condomínio'
+            }
+            df_display['Tipo'] = df_display['Tipo'].map(tipo_map).fillna(df_display['Tipo'])
+
         # Exibir tabela
         st.dataframe(df_display, width='stretch', height=400)
         st.caption(f"📊 Mostrando {len(df_display)} de {len(viabilidades_predios)} registros")
