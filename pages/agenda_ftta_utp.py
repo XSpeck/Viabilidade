@@ -140,8 +140,16 @@ else:
             
             # Título com badge de status
             tecnologia = row.get('tecnologia_predio', 'N/A')
-            cor_tech = "🔵" if tecnologia == "FTTA" else "🟢"
-            st.markdown(f"### 🏢 {row.get('predio_ftta', 'Prédio')} {cor_tech} {tecnologia}")
+            tipo_instalacao = row.get('tipo_instalacao', 'Prédio')
+            if tecnologia == "FTTA":
+                cor_tech = "🔵"
+            elif tecnologia == "FTTH":
+                cor_tech = "🟠"
+            else:  # UTP
+                cor_tech = "🟢"
+
+            icon_tipo = "🏘️" if tipo_instalacao == "Condomínio" else "🏢"
+            st.markdown(f"### {icon_tipo} {row.get('predio_ftta', 'Prédio')} {cor_tech} {tecnologia}")
             
             # Mostrar se foi reagendado
             if row.get('historico_reagendamento'):

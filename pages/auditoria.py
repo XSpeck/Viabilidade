@@ -68,12 +68,18 @@ def show_viability_form(row: dict, urgente: bool = False):
     if row['tipo_instalacao'] == 'FTTH':
         tipo_exibir = 'FTTH (Casa)'
         tipo_icon = "🏠"
-    elif row['tipo_instalacao'] == 'Prédio':
+    elif row['tipo_instalacao'] in ['Prédio', 'Predio']:
         if row.get('tecnologia_predio'):
             tipo_exibir = f"{row['tecnologia_predio']} (Prédio)"
         else:
             tipo_exibir = 'Prédio'
         tipo_icon = "🏢"
+    elif row['tipo_instalacao'] == 'Condomínio':
+        if row.get('tecnologia_predio'):
+            tipo_exibir = f"{row['tecnologia_predio']} (Condomínio)"
+        else:
+            tipo_exibir = 'Condomínio'
+        tipo_icon = "🏘️"
     else:
         tipo_exibir = row['tipo_instalacao']
         tipo_icon = "📋"
@@ -85,7 +91,7 @@ def show_viability_form(row: dict, urgente: bool = False):
         titulo_expander += f" | 🏢 {row['predio_ftta']}"
         detalhes_apt = []
         if row.get('andar_predio'):
-            detalhes_apt.append(f"Andar {row['andar_predio']}")
+            detalhes_apt.append(row['andar_predio'])
         if row.get('bloco_predio'):
             detalhes_apt.append(f"Bloco {row['bloco_predio']}")
         
@@ -115,11 +121,16 @@ def show_viability_form(row: dict, urgente: bool = False):
             # Determinar tipo real
             if row['tipo_instalacao'] == 'FTTH':
                 tipo_exibir = 'FTTH (Casa)'
-            elif row['tipo_instalacao'] == 'Prédio':
+            elif row['tipo_instalacao'] in ['Prédio', 'Predio']:
                 if row.get('tecnologia_predio'):
                     tipo_exibir = f"{row['tecnologia_predio']} (Prédio)"
                 else:
                     tipo_exibir = 'Prédio (a definir)'
+            elif row['tipo_instalacao'] == 'Condomínio':
+                if row.get('tecnologia_predio'):
+                    tipo_exibir = f"{row['tecnologia_predio']} (Condomínio)"
+                else:
+                    tipo_exibir = 'Condomínio (a definir)'
             else:
                 tipo_exibir = row['tipo_instalacao']
             
@@ -128,7 +139,7 @@ def show_viability_form(row: dict, urgente: bool = False):
             if row.get('predio_ftta'):
                 st.text(f"🏨 Nome: {row['predio_ftta']}")
                 if row.get('andar_predio'):
-                    st.text(f"🏗️ Andar: {row['andar_predio']}")
+                    st.text(f"🏠 Casa/Apto: {row['andar_predio']}")
                 if row.get('bloco_predio'):
                     st.text(f"🏢 Bloco: {row['bloco_predio']}")
                 
@@ -222,31 +233,31 @@ else:
     urgentes = [p for p in pending if p.get('urgente', False)]
     ftth = [p for p in pending if p['tipo_instalacao'] == 'FTTH' and not p.get('urgente', False)]
     
-    # Separar prédios por status
+    # Separar prédios/condomínios por status
     predios_novos = [
-        p for p in pending 
-        if p['tipo_instalacao'] == 'Prédio' 
+        p for p in pending
+        if p['tipo_instalacao'] in ['Prédio', 'Predio', 'Condomínio']
         and not p.get('urgente', False)
         and p.get('status_predio') is None
     ]
-    
+
     predios_aguardando_dados = [
-        p for p in pending 
-        if p['tipo_instalacao'] == 'Prédio' 
+        p for p in pending
+        if p['tipo_instalacao'] in ['Prédio', 'Predio', 'Condomínio']
         and not p.get('urgente', False)
         and p.get('status_predio') == 'aguardando_dados'
     ]
-    
+
     predios_prontos_agendar = [
-        p for p in pending 
-        if p['tipo_instalacao'] == 'Prédio' 
+        p for p in pending
+        if p['tipo_instalacao'] in ['Prédio', 'Predio', 'Condomínio']
         and not p.get('urgente', False)
         and p.get('status_predio') == 'pronto_auditoria'
     ]
-    
+
     predios_agendados = [
-        p for p in pending 
-        if p['tipo_instalacao'] == 'Prédio' 
+        p for p in pending
+        if p['tipo_instalacao'] in ['Prédio', 'Predio', 'Condomínio']
         and not p.get('urgente', False)
         and p.get('status_predio') == 'agendado'
     ]
@@ -264,7 +275,7 @@ else:
         tab_names.append(f"🏠 FTTH ({len(ftth)})")
     
     if predios_novos:
-        tab_names.append(f"🏢 PRÉDIOS NOVOS ({len(predios_novos)})")
+        tab_names.append(f"🏢 PRÉDIOS/COND. NOVOS ({len(predios_novos)})")
     
     if predios_aguardando_dados:
         tab_names.append(f"⏳ AGUARDANDO DADOS ({len(predios_aguardando_dados)})")
@@ -308,11 +319,11 @@ else:
             
             tab_index += 1
         
-        # ABA PRÉDIOS
+        # ABA PRÉDIOS/CONDOMÍNIOS
         if predios_novos:
             with tabs[tab_index]:
-                st.info("🏢 **Prédios Aguardando Análise Inicial**")
-                st.caption(f"📊 {len(predios_novos)} prédio(s) para auditar")
+                st.info("🏢 **Prédios/Condomínios Aguardando Análise Inicial**")
+                st.caption(f"📊 {len(predios_novos)} prédio(s)/condomínio(s) para auditar")
                 st.markdown("---")
                 
                 for row in predios_novos:
@@ -324,8 +335,8 @@ else:
         if predios_aguardando_dados:
             with tabs[tab_index]:
                 st.warning("⏳ **Aguardando Usuário Preencher Dados**")
-                st.caption(f"📊 {len(predios_aguardando_dados)} prédio(s) esperando formulário")
-                st.info("💡 Estes prédios estão aguardando o usuário preencher os dados do síndico e cliente")
+                st.caption(f"📊 {len(predios_aguardando_dados)} prédio(s)/condomínio(s) esperando formulário")
+                st.info("💡 Aguardando o usuário preencher os dados do síndico/portaria e cliente")
                 st.markdown("---")
                 
                 for row in predios_aguardando_dados:
@@ -337,7 +348,7 @@ else:
         if predios_prontos_agendar:
             with tabs[tab_index]:
                 st.success("📅 **Prontos para Agendamento**")
-                st.caption(f"📊 {len(predios_prontos_agendar)} prédio(s) com dados completos")
+                st.caption(f"📊 {len(predios_prontos_agendar)} prédio(s)/condomínio(s) com dados completos")
                 st.info("🎯 Ação necessária: Agendar visita técnica")
                 st.markdown("---")
                 
@@ -350,7 +361,7 @@ else:
         if predios_agendados:
             with tabs[tab_index]:
                 st.info("✅ **Visitas Técnicas Agendadas**")
-                st.caption(f"📊 {len(predios_agendados)} prédio(s) agendado(s)")
+                st.caption(f"📊 {len(predios_agendados)} prédio(s)/condomínio(s) agendado(s)")
                 st.success("🗓️ Estes agendamentos estão na página 'Agenda FTTA/UTP'")
                 st.markdown("---")
                 

@@ -356,16 +356,16 @@ if st.session_state.get('validated_pluscode'):
     if st.session_state.get('show_viability_modal', False):
         
         st.markdown("""
-        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     padding: 20px; border-radius: 10px; margin: 20px 0;'>
             <h3 style='color: white; text-align: center; margin: 0;'>
                 🏠 Qual o tipo de instalação?
             </h3>
         </div>
         """, unsafe_allow_html=True)
-        
-        col_modal1, col_modal2 = st.columns(2)
-        
+
+        col_modal1, col_modal2, col_modal3 = st.columns(3)
+
         # ===== FTTH (Casa) =====
         with col_modal1:
             st.markdown("""
@@ -437,13 +437,13 @@ if st.session_state.get('validated_pluscode'):
             )
 
             col_apt1, col_apt2 = st.columns(2)
-    
+
             with col_apt1:
                 andar_predio = st.text_input(
-                    "🏗️ Andar *",
-                    placeholder="Ex: 3º, Térreo",
+                    "🏠 Casa/Apto *",
+                    placeholder="Ex: Apto 301, Casa 15",
                     key="andar_predio_input",
-                    help="Em qual andar o cliente mora"
+                    help="Apartamento ou casa do cliente"
                 )
             
             with col_apt2:
@@ -528,7 +528,7 @@ if st.session_state.get('validated_pluscode'):
                 elif not nome_predio or not nome_predio.strip():
                     st.error("❌ Por favor, informe o nome do prédio!")
                 elif not andar_predio or not andar_predio.strip():
-                    st.error("❌ Por favor, informe o andar!")
+                    st.error("❌ Por favor, informe a casa/apto!")
                 else:
                     dados_predio_completo = {
                         'nome_predio': nome_predio.strip(),
@@ -554,7 +554,121 @@ if st.session_state.get('validated_pluscode'):
                         st.rerun()
                     else:
                         st.error("❌ Erro ao criar solicitação. Tente novamente.")
-        
+
+        # ===== Condomínio de Casas =====
+        with col_modal3:
+            st.markdown("""
+            <div style='text-align: center; padding: 20px; background: white;
+                        border-radius: 10px; border: 2px solid #FF9800;'>
+                <h2 style='margin: 0;'>🏘️</h2>
+                <p style='color: #666; margin: 0;'>Condomínio de Casas</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Campo Nome do Cliente (Condomínio)
+            nome_cliente_cond = st.text_input(
+                "👤 Nome do Cliente *",
+                placeholder="Nome do cliente",
+                key="nome_cliente_cond_input",
+                help="Nome de quem solicitou a viabilização"
+            )
+
+            nome_condominio = st.text_input(
+                "🏘️ Nome do Condomínio *",
+                placeholder="Ex: Cond. Village das Flores",
+                key="nome_condominio_input",
+                help="Digite o nome do condomínio - verificaremos se já atendemos"
+            )
+
+            col_cond1, col_cond2 = st.columns(2)
+
+            with col_cond1:
+                casa_cond = st.text_input(
+                    "🏠 Casa/Lote *",
+                    placeholder="Ex: Casa 15, Lote 7",
+                    key="casa_cond_input",
+                    help="Casa ou lote do cliente"
+                )
+
+            with col_cond2:
+                bloco_cond = st.text_input(
+                    "🏘️ Quadra (se houver)",
+                    placeholder="Ex: Quadra A, Setor 2",
+                    key="bloco_cond_input",
+                    help="Deixe vazio se não houver quadras"
+                )
+
+            # Verificacao em tempo real (busca inteligente) - Condomínio
+            if nome_condominio and len(nome_condominio) >= 3:
+                predios_cadastrados_cond = buscar_predios_cadastrados()
+                resultados_cond = buscar_predios_similares(nome_condominio, predios_cadastrados_cond, limite=5)
+
+                if resultados_cond:
+                    melhor_match_cond = resultados_cond[0]
+
+                    if melhor_match_cond['pontuacao'] >= 0.85:
+                        dados_cond = melhor_match_cond
+                        status_cond = dados_cond['status']
+
+                        if status_cond == 'atendido':
+                            tecnologia_cond = dados_cond['tecnologia']
+                            if tecnologia_cond == 'FTTH':
+                                st.success(f"✅ **{dados_cond['nome']}** - Atendemos FTTH!")
+                            else:
+                                st.success(f"✅ **{dados_cond['nome']}** - Estruturado ({tecnologia_cond})")
+
+                            if dados_cond.get('observacao'):
+                                with st.expander("📋 Detalhes"):
+                                    st.text(dados_cond['observacao'])
+                        else:
+                            st.error(f"❌ **{dados_cond['nome']}** - Sem Viabilidade")
+
+                            if dados_cond.get('observacao'):
+                                with st.expander("📝 Motivo"):
+                                    st.warning(dados_cond['observacao'])
+                    else:
+                        st.markdown("**🔍 Condomínios encontrados:**")
+                        for predio_cond in resultados_cond:
+                            status_c = predio_cond['status']
+                            nome_c = predio_cond['nome']
+                            if status_c == 'atendido':
+                                tec_c = predio_cond.get('tecnologia', 'N/A')
+                                st.markdown(f"- ✅ **{nome_c}** _({tec_c})_")
+                            else:
+                                st.markdown(f"- ❌ **{nome_c}** _(Sem viabilidade)_")
+                        st.caption("💡 Se nenhum corresponde, continue com a solicitação")
+                else:
+                    if len(nome_condominio) >= 4:
+                        st.success("🆕 **Condomínio novo** - Não encontramos no cadastro")
+
+            urgente_cond = st.checkbox("🔥 Cliente Presencial (Urgente)", key="urgente_cond")
+
+            if st.button("Confirmar - Condomínio", type="primary", width='stretch', key="confirm_cond"):
+                if not nome_cliente_cond or not nome_cliente_cond.strip():
+                    st.error("❌ Por favor, informe o nome do cliente!")
+                elif not nome_condominio or not nome_condominio.strip():
+                    st.error("❌ Por favor, informe o nome do condomínio!")
+                elif not casa_cond or not casa_cond.strip():
+                    st.error("❌ Por favor, informe a casa/lote!")
+                else:
+                    if create_viability_request(
+                        st.session_state.user_name,
+                        st.session_state.validated_pluscode,
+                        'Condomínio',
+                        urgente_cond,
+                        nome_predio=nome_condominio.strip(),
+                        nome_cliente=nome_cliente_cond.strip(),
+                        andar=casa_cond.strip(),
+                        bloco=bloco_cond.strip() if bloco_cond else None
+                    ):
+                        st.session_state.show_viability_modal = False
+                        st.session_state.show_success_message = True
+                        st.session_state.success_message_type = 'Condomínio'
+                        st.session_state.validated_pluscode = None
+                        st.rerun()
+                    else:
+                        st.error("❌ Erro ao criar solicitação. Tente novamente.")
+
         # ===== Botão Cancelar =====
         col_cancel = st.columns([2, 1, 2])[1]
         with col_cancel:
@@ -571,11 +685,11 @@ else:
 st.markdown("---")
 st.markdown("## 📊 Consulta de Prédios")
 
-tab1, tab2 = st.tabs(["✅ Prédios Atendidos", "❌ Prédios Sem Viabilidade"])
+tab1, tab2 = st.tabs(["✅ Prédios/Condomínios Atendidos", "❌ Prédios/Condomínios Sem Viabilidade"])
 
-# ===== TAB 1: Prédios Atendidos =====
+# ===== TAB 1: Prédios/Condomínios Atendidos =====
 with tab1:
-    st.markdown("### 🏢 Prédios com Estrutura Instalada")
+    st.markdown("### 🏢 Prédios/Condomínios com Estrutura Instalada")
     
     from viability_functions import get_structured_buildings
     predios_atendidos = get_structured_buildings()

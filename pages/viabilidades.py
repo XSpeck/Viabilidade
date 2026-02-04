@@ -81,14 +81,17 @@ def pegar_viabilidade(viability_id: str, auditor: str) -> bool:
 
 def mostrar_card_viabilidade(row: dict, urgente: bool = False):
     """Exibe card resumido de uma viabilização"""
-    
+
     # Determinar tipo e ícone
     if row['tipo_instalacao'] == 'FTTH':
         tipo_icon = "🏠"
         tipo_nome = "Casa (FTTH)"
-    elif row['tipo_instalacao'] == 'Prédio':
+    elif row['tipo_instalacao'] in ['Prédio', 'Predio']:
         tipo_icon = "🏢"
         tipo_nome = "Prédio"
+    elif row['tipo_instalacao'] == 'Condomínio':
+        tipo_icon = "🏘️"
+        tipo_nome = "Condomínio"
     else:
         tipo_icon = "📋"
         tipo_nome = row['tipo_instalacao']
@@ -150,7 +153,7 @@ def mostrar_card_viabilidade(row: dict, urgente: bool = False):
             texto_predio = f"**🏢 Edifício:** {row['predio_ftta']}"
             detalhes_apt = []
             if row.get('andar_predio'):
-                detalhes_apt.append(f"Andar: {row['andar_predio']}")
+                detalhes_apt.append(f"Casa/Apto: {row['andar_predio']}")
             if row.get('bloco_predio'):
                 detalhes_apt.append(f"Bloco: {row['bloco_predio']}")
             

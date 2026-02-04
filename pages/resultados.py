@@ -111,7 +111,7 @@ tab_analise, tab_aprovadas, tab_rejeitadas, tab_utp, tab_predio = st.tabs([
     f"✅ Aprovadas ({count_aprovadas})",
     f"❌ Sem Viabilidade ({count_rejeitadas})",
     f"📡 UTP ({count_utp})",
-    f"🏢 Predio ({count_predio})"
+    f"🏢 Prédio/Cond. ({count_predio})"
 ])
 
 # ======================
@@ -128,16 +128,23 @@ with tab_analise:
         for row in em_auditoria:
             auditor = row.get('auditor_responsavel', 'Auditor')
 
-            tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
-
             if row['tipo_instalacao'] == 'FTTH':
+                tipo_icon = "🏠"
                 tipo_nome = "Casa (FTTH)"
-            elif row['tipo_instalacao'] == 'Predio':
+            elif row['tipo_instalacao'] in ['Prédio', 'Predio']:
+                tipo_icon = "🏢"
                 if row.get('tecnologia_predio'):
-                    tipo_nome = f"Predio ({row['tecnologia_predio']})"
+                    tipo_nome = f"Prédio ({row['tecnologia_predio']})"
                 else:
-                    tipo_nome = "Predio"
+                    tipo_nome = "Prédio"
+            elif row['tipo_instalacao'] == 'Condomínio':
+                tipo_icon = "🏘️"
+                if row.get('tecnologia_predio'):
+                    tipo_nome = f"Condomínio ({row['tecnologia_predio']})"
+                else:
+                    tipo_nome = "Condomínio"
             else:
+                tipo_icon = "📋"
                 tipo_nome = row['tipo_instalacao']
 
             urgente_badge = " 🔥 **URGENTE**" if row.get('urgente', False) else ""
@@ -173,16 +180,23 @@ with tab_analise:
         st.info(f"📬 {len(na_fila)} solicitacao(oes) na fila aguardando verificacao")
 
         for row in na_fila:
-            tipo_icon = "🏠" if row['tipo_instalacao'] == 'FTTH' else "🏢"
-
             if row['tipo_instalacao'] == 'FTTH':
+                tipo_icon = "🏠"
                 tipo_nome = "Casa (FTTH)"
-            elif row['tipo_instalacao'] == 'Predio':
+            elif row['tipo_instalacao'] in ['Prédio', 'Predio']:
+                tipo_icon = "🏢"
                 if row.get('tecnologia_predio'):
-                    tipo_nome = f"Predio ({row['tecnologia_predio']})"
+                    tipo_nome = f"Prédio ({row['tecnologia_predio']})"
                 else:
-                    tipo_nome = "Predio"
+                    tipo_nome = "Prédio"
+            elif row['tipo_instalacao'] == 'Condomínio':
+                tipo_icon = "🏘️"
+                if row.get('tecnologia_predio'):
+                    tipo_nome = f"Condomínio ({row['tecnologia_predio']})"
+                else:
+                    tipo_nome = "Condomínio"
             else:
+                tipo_icon = "📋"
                 tipo_nome = row['tipo_instalacao']
 
             urgente_badge = " 🔥 **URGENTE**" if row.get('urgente', False) else ""
@@ -244,7 +258,7 @@ with tab_analise:
     with col_filtro1:
         filtro_tipo_hist = st.selectbox(
             "🏷️ Tipo de Instalacao",
-            options=["Todos", "FTTH", "Predio"],
+            options=["Todos", "FTTH", "Prédio", "Condomínio"],
             key="filtro_tipo_hist"
         )
 
@@ -323,7 +337,10 @@ with tab_analise:
 
             # ========== APLICAR FILTRO DE TIPO ==========
             if filtro_tipo_hist != "Todos":
-                df_historico = df_historico[df_historico['tipo_instalacao'] == filtro_tipo_hist]
+                if filtro_tipo_hist == "Prédio":
+                    df_historico = df_historico[df_historico['tipo_instalacao'].isin(['Prédio', 'Predio'])]
+                else:
+                    df_historico = df_historico[df_historico['tipo_instalacao'] == filtro_tipo_hist]
 
             # ========== APLICAR FILTRO DE STATUS ==========
             if filtro_status_hist != "Todos":
@@ -412,7 +429,9 @@ with tab_analise:
             if 'Tipo' in df_display.columns:
                 tipo_icons = {
                     'FTTH': '🏠 FTTH',
-                    'Predio': '🏢 Predio'
+                    'Predio': '🏢 Prédio',
+                    'Prédio': '🏢 Prédio',
+                    'Condomínio': '🏘️ Condomínio'
                 }
                 df_display['Tipo'] = df_display['Tipo'].map(tipo_icons).fillna(df_display['Tipo'])
 
@@ -554,7 +573,7 @@ Media RX: {row['media_rx']} dBm"""
                     st.markdown("#### 📋 Informacoes")
                     st.text(f"🏢 Edificio: {row.get('predio_ftta', 'N/A')}")
                     if row.get('andar_predio'):
-                        st.text(f"🏗️ Andar: {row['andar_predio']}")
+                        st.text(f"🏠 Casa/Apto: {row['andar_predio']}")
                     if row.get('bloco_predio'):
                         st.text(f"🏢 Bloco: {row['bloco_predio']}")
                     st.text(f"📍 Localizacao: {row['plus_code_cliente']}")
@@ -676,10 +695,10 @@ with tab_utp:
 # ======================
 with tab_predio:
     if not building_pending:
-        st.info("📭 Voce nao possui viabilizacoes de predio pendentes.")
+        st.info("📭 Voce nao possui viabilizacoes de prédio/condomínio pendentes.")
     else:
-        st.subheader("🏢 Viabilizacao de Predio")
-        st.warning("⚠️ Temos projeto na rua, mas precisamos viabilizar a estrutura no predio.")
+        st.subheader("🏢 Viabilizacao de Prédio/Condomínio")
+        st.warning("⚠️ Temos projeto na rua, mas precisamos viabilizar a estrutura no prédio/condomínio.")
 
         for row in building_pending:
             status_atual = row.get('status_predio')
@@ -734,7 +753,7 @@ with tab_predio:
                     with col_enviado1:
                         st.text(f"🏢 Edificio: {row.get('predio_ftta', 'N/A')}")
                         if row.get('andar_predio'):
-                            st.text(f"🏗️ Andar: {row['andar_predio']}")
+                            st.text(f"🏠 Casa/Apto: {row['andar_predio']}")
                         if row.get('bloco_predio'):
                             st.text(f"🏢 Bloco: {row['bloco_predio']}")
                         st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
