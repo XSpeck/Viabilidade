@@ -8,6 +8,7 @@ from login_system import require_authentication
 from viability_functions import (
     get_ftth_approved,
     get_ftth_rejected,
+    get_all_approved,
     get_structured_buildings,
     get_buildings_without_viability,
     get_report_statistics,
@@ -285,6 +286,126 @@ if ftth_rejeitadas:
     st.caption(f"📊 Total de {len(ftth_rejeitadas)} pontos sem viabilidade mapeados")
 else:
     st.success("✅ Não há pontos FTTH sem viabilidade no período selecionado!")
+
+st.markdown("---")
+
+# ======================
+# 3.1 MAPA - Viabilidades Aprovadas
+# ======================
+st.subheader("🗺️ Mapa de Viabilidades Aprovadas")
+st.info("📍 Visualize onde há mais demanda e onde estamos atendendo com sucesso")
+
+ftth_aprovadas_mapa = get_all_approved(data_inicio_iso, data_fim_iso)
+
+if ftth_aprovadas_mapa:
+    # Criar mapa centrado
+    mapa_aprovadas = folium.Map(
+        location=[-28.6775, -49.3696],
+        zoom_start=12,
+        tiles="OpenStreetMap"
+    )
+
+    # Criar cluster de marcadores
+    marker_cluster_aprovadas = MarkerCluster(
+        name="Viabilidades Aprovadas",
+        overlay=True,
+        control=True,
+        icon_create_function=None
+    ).add_to(mapa_aprovadas)
+
+    # Contadores por tipo
+    count_ftth = 0
+    count_predio = 0
+    count_condominio = 0
+
+    # Adicionar marcadores
+    for idx, row in enumerate(ftth_aprovadas_mapa):
+        lat, lon = pluscode_to_coords(row['plus_code_cliente'])
+
+        if lat is not None and lon is not None:
+            tipo = row.get('tipo_instalacao', 'FTTH')
+
+            # Definir cor e ícone baseado no tipo
+            if tipo == 'FTTH':
+                cor = 'green'
+                icone = 'home'
+                tipo_label = '🏠 FTTH'
+                count_ftth += 1
+            elif tipo == 'Condomínio':
+                cor = 'orange'
+                icone = 'building'
+                tipo_label = '🏘️ Condomínio'
+                count_condominio += 1
+            else:
+                cor = 'blue'
+                icone = 'building'
+                tipo_label = '🏢 Prédio'
+                count_predio += 1
+
+            # Construir popup com informações relevantes
+            popup_html = f"""
+            <div style='width: 280px'>
+                <h4>✅ {tipo_label}</h4>
+                <p><b>📍 Plus Code:</b> {row['plus_code_cliente']}</p>
+                <p><b>👤 Cliente:</b> {row.get('nome_cliente', 'N/A')}</p>
+                <p><b>👥 Solicitante:</b> {row['usuario']}</p>
+                <p><b>📅 Data:</b> {format_time_br_supa(row.get('data_auditoria', ''))}</p>
+            """
+
+            # Adicionar campos específicos por tipo
+            if tipo == 'FTTH' or tipo == 'Condomínio':
+                popup_html += f"""
+                <hr style='margin: 5px 0'>
+                <p><b>📦 CTO:</b> {row.get('cto_numero', 'N/A')}</p>
+                <p><b>📏 Distância:</b> {row.get('distancia_cliente', 'N/A')}</p>
+                <p><b>🔌 Portas:</b> {row.get('portas_disponiveis', 'N/A')}</p>
+                <p><b>📶 Menor RX:</b> {row.get('menor_rx', 'N/A')} dBm</p>
+                """
+            else:  # Prédio
+                popup_html += f"""
+                <hr style='margin: 5px 0'>
+                <p><b>🏢 Prédio:</b> {row.get('predio_ftta', 'N/A')}</p>
+                <p><b>📡 CDOI:</b> {row.get('cdoi', 'N/A')}</p>
+                <p><b>🔌 Portas:</b> {row.get('portas_disponiveis', 'N/A')}</p>
+                <p><b>📶 Média RX:</b> {row.get('media_rx', 'N/A')} dBm</p>
+                """
+
+            popup_html += f"""
+                <hr style='margin: 5px 0'>
+                <p><b>🔍 Auditor:</b> {row.get('auditado_por', 'N/A')}</p>
+            </div>
+            """
+
+            folium.Marker(
+                location=[lat, lon],
+                popup=folium.Popup(popup_html, max_width=320),
+                tooltip=f"✅ {row['plus_code_cliente']} - {row.get('nome_cliente', 'Cliente')}",
+                icon=folium.Icon(color=cor, icon=icone, prefix='fa')
+            ).add_to(marker_cluster_aprovadas)
+
+    # Renderizar mapa
+    st_folium(
+        mapa_aprovadas,
+        width=None,
+        height=500,
+        returned_objects=[],
+        key="mapa_aprovadas"
+    )
+
+    # Métricas abaixo do mapa
+    col_map1, col_map2, col_map3, col_map4 = st.columns(4)
+    with col_map1:
+        st.metric("📊 Total Aprovadas", len(ftth_aprovadas_mapa))
+    with col_map2:
+        st.metric("🏠 FTTH (Casa)", count_ftth)
+    with col_map3:
+        st.metric("🏘️ Condomínios", count_condominio)
+    with col_map4:
+        st.metric("🏢 Prédios", count_predio)
+
+    st.caption("💡 **Legenda:** 🟢 FTTH (Casa) | 🟠 Condomínio | 🔵 Prédio")
+else:
+    st.info("📭 Não há viabilidades aprovadas no período selecionado")
 
 st.markdown("---")
 
