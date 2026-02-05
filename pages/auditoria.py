@@ -79,7 +79,7 @@ def show_viability_form(row: dict, urgente: bool = False):
         if row.get('tecnologia_predio'):
             tipo_exibir = f"{row['tecnologia_predio']} (Condomínio)"
         else:
-            tipo_exibir = 'Condomínio'
+            tipo_exibir = 'FTTH (Condomínio)'
         tipo_icon = "🏘️"
     else:
         tipo_exibir = row['tipo_instalacao']
@@ -131,7 +131,7 @@ def show_viability_form(row: dict, urgente: bool = False):
                 if row.get('tecnologia_predio'):
                     tipo_exibir = f"{row['tecnologia_predio']} (Condomínio)"
                 else:
-                    tipo_exibir = 'Condomínio (a definir)'
+                    tipo_exibir = 'FTTH (Condomínio)'
             else:
                 tipo_exibir = row['tipo_instalacao']
             

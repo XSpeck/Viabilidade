@@ -124,14 +124,14 @@ def create_viability_request(user_name: str, plus_code: str, tipo: str, urgente:
             'status': 'pendente'
         }
 
-        # Adicionar nome do prédio se for FTTA
-        if tipo == 'Prédio' and nome_predio:
+        # Adicionar nome do prédio/condomínio se for Prédio ou Condomínio
+        if tipo in ['Prédio', 'Predio', 'Condomínio'] and nome_predio:
             new_request['predio_ftta'] = nome_predio
         # Adicionar nome do cliente se fornecido
         if nome_cliente:
             new_request['nome_cliente'] = nome_cliente
-            
-        if tipo == 'Prédio':
+
+        if tipo in ['Prédio', 'Predio', 'Condomínio']:
             if andar:
                 new_request['andar_predio'] = andar
             if bloco:
