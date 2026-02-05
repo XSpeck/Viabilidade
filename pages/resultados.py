@@ -716,23 +716,35 @@ with tab_predio:
 
         for row in building_pending:
             status_atual = row.get('status_predio')
+            is_condominio = row.get('tipo_instalacao') == 'Condomínio'
 
-            # Nome do prédio/condomínio (tratar None)
-            nome_local = row.get('predio_ftta') or ('Condomínio' if row.get('tipo_instalacao') == 'Condomínio' else 'Prédio')
+            # Nome e ícone baseado no tipo
+            if is_condominio:
+                nome_local = row.get('predio_ftta') or 'Condomínio'
+                icon_local = "🏘️"
+                label_local = "Condomínio"
+                label_responsavel = "Responsável"
+                label_unidade = "Casa"
+            else:
+                nome_local = row.get('predio_ftta') or 'Prédio'
+                icon_local = "🏢"
+                label_local = "Edifício"
+                label_responsavel = "Síndico"
+                label_unidade = "Apartamento"
 
             # Titulo diferente baseado no status
             if status_atual == 'agendado':
-                titulo = f"📅 {nome_local} - Viabilidade Agendada"
+                titulo = f"📅 {icon_local} {nome_local} - Viabilidade Agendada"
                 expandido = False
             elif status_atual == 'pronto_auditoria':
-                titulo = f"⏳ {nome_local} - Aguardando Agendamento"
-                expandido = False  # Nao expandir automaticamente
+                titulo = f"⏳ {icon_local} {nome_local} - Aguardando Agendamento"
+                expandido = False
             else:
-                titulo = f"🏗️ {nome_local} - {row['plus_code_cliente']}"
-                expandido = True  # Expandir para preencher
+                titulo = f"🏗️ {icon_local} {nome_local} - {row['plus_code_cliente']}"
+                expandido = True
 
             with st.expander(titulo, expanded=expandido):
-                # Se esta agendado, mostrar informacoes e botao para consultar agenda
+                # Se esta agendado, mostrar informacoes
                 if status_atual == 'agendado':
                     st.success("✅ **Visita Tecnica Agendada!**")
 
@@ -740,7 +752,7 @@ with tab_predio:
 
                     with col_agend1:
                         st.markdown("### 📅 Dados do Agendamento")
-                        st.text(f"🏢 Edificio: {nome_local}")
+                        st.text(f"{icon_local} {label_local}: {nome_local}")
                         st.text(f"📍 Localizacao: {row['plus_code_cliente']}")
                         data_visita = row.get('data_visita', 'N/A')
                         if data_visita and data_visita != 'N/A':
@@ -768,19 +780,19 @@ with tab_predio:
 
                     col_enviado1, col_enviado2 = st.columns(2)
                     with col_enviado1:
-                        st.text(f"🏢 Edificio: {nome_local}")
+                        st.text(f"{icon_local} {label_local}: {nome_local}")
                         if row.get('andar_predio'):
-                            st.text(f"🏠 Casa/Apto: {row['andar_predio']}")
+                            st.text(f"🏠 {label_unidade}: {row['andar_predio']}")
                         if row.get('bloco_predio'):
                             st.text(f"🏢 Bloco: {row['bloco_predio']}")
                         st.text(f"📍 Plus Code: {row['plus_code_cliente']}")
-                        st.text(f"👤 Sindico: {row.get('nome_sindico', 'N/A')}")
+                        st.text(f"👤 {label_responsavel}: {row.get('nome_sindico', 'N/A')}")
                         st.text(f"📞 Contato: {row.get('contato_sindico', 'N/A')}")
 
                     with col_enviado2:
                         st.text(f"🏠 Cliente: {row.get('nome_cliente_predio', 'N/A')}")
                         st.text(f"📞 Contato: {row.get('contato_cliente_predio', 'N/A')}")
-                        st.text(f"🚪 Apartamento: {row.get('apartamento', 'N/A')}")
+                        st.text(f"🚪 {label_unidade}: {row.get('apartamento', 'N/A')}")
 
                     if row.get('obs_agendamento'):
                         st.markdown("**📝 Horarios sugeridos:**")
@@ -789,11 +801,11 @@ with tab_predio:
                     st.caption("💡 Voce sera notificado quando a visita for agendada")
 
                 else:
-                    # Formulario para preencher (codigo que ja existe)
+                    # Formulario para preencher
                     st.markdown("### 📋 Informacoes da Solicitacao Original")
                     col_info1, col_info2 = st.columns(2)
                     with col_info1:
-                        st.text(f"Nome do Edificio: {nome_local}")
+                        st.text(f"Nome do {label_local}: {nome_local}")
                         st.text(f"Plus Code: {row['plus_code_cliente']}")
                     with col_info2:
                         st.text(f"Tipo: {row['tipo_instalacao']}")
@@ -804,17 +816,24 @@ with tab_predio:
 
                     with st.form(key=f"form_building_{row['id']}"):
 
+                        # Campo para nome do local (Condomínio ou Prédio)
+                        nome_local_input = st.text_input(
+                            f"Nome do {label_local} *",
+                            placeholder=f"Nome do {label_local.lower()}",
+                            key=f"nome_local_{row['id']}"
+                        )
+
                         col_form1, col_form2 = st.columns(2)
 
                         with col_form1:
-                            st.markdown("#### 👤 Dados do Sindico")
+                            st.markdown(f"#### 👤 Dados do {label_responsavel}")
                             nome_sindico = st.text_input(
-                                "Nome do Sindico *",
+                                f"Nome do {label_responsavel} *",
                                 placeholder="Nome completo",
                                 key=f"sindico_nome_{row['id']}"
                             )
                             contato_sindico = st.text_input(
-                                "Contato do Sindico *",
+                                f"Contato do {label_responsavel} *",
                                 placeholder="(48) 99999-9999",
                                 key=f"sindico_contato_{row['id']}"
                             )
@@ -831,9 +850,9 @@ with tab_predio:
                                 placeholder="(48) 99999-9999",
                                 key=f"cliente_contato_{row['id']}"
                             )
-                            apartamento = st.text_input(
-                                "Apartamento *",
-                                placeholder="Ex: 301, Bloco A",
+                            unidade = st.text_input(
+                                f"{label_unidade} *",
+                                placeholder=f"Ex: {'101' if is_condominio else '301, Bloco A'}",
                                 key=f"apartamento_{row['id']}"
                             )
 
@@ -855,17 +874,18 @@ with tab_predio:
 
                         if submit_building:
                             # Validar campos obrigatorios
-                            if not all([nome_sindico, contato_sindico, nome_cliente, contato_cliente, apartamento]):
+                            if not all([nome_local_input, nome_sindico, contato_sindico, nome_cliente, contato_cliente, unidade]):
                                 st.error("❌ Preencha todos os campos obrigatorios (*)")
                             else:
                                 from viability_functions import submit_building_data
 
                                 dados = {
+                                    'predio_ftta': nome_local_input.strip(),
                                     'nome_sindico': nome_sindico.strip(),
                                     'contato_sindico': contato_sindico.strip(),
                                     'nome_cliente_predio': nome_cliente.strip(),
                                     'contato_cliente_predio': contato_cliente.strip(),
-                                    'apartamento': apartamento.strip(),
+                                    'apartamento': unidade.strip(),
                                     'obs_agendamento': obs_agendamento.strip()
                                 }
 
