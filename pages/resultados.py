@@ -717,15 +717,18 @@ with tab_predio:
         for row in building_pending:
             status_atual = row.get('status_predio')
 
+            # Nome do prédio/condomínio (tratar None)
+            nome_local = row.get('predio_ftta') or ('Condomínio' if row.get('tipo_instalacao') == 'Condomínio' else 'Prédio')
+
             # Titulo diferente baseado no status
             if status_atual == 'agendado':
-                titulo = f"📅 {row.get('predio_ftta', 'Predio')} - Viabilidade Agendada"
+                titulo = f"📅 {nome_local} - Viabilidade Agendada"
                 expandido = False
             elif status_atual == 'pronto_auditoria':
-                titulo = f"⏳ {row.get('predio_ftta', 'Predio')} - Aguardando Agendamento"
+                titulo = f"⏳ {nome_local} - Aguardando Agendamento"
                 expandido = False  # Nao expandir automaticamente
             else:
-                titulo = f"🏗️ {row.get('predio_ftta', 'Predio')} - {row['plus_code_cliente']}"
+                titulo = f"🏗️ {nome_local} - {row['plus_code_cliente']}"
                 expandido = True  # Expandir para preencher
 
             with st.expander(titulo, expanded=expandido):
@@ -737,7 +740,7 @@ with tab_predio:
 
                     with col_agend1:
                         st.markdown("### 📅 Dados do Agendamento")
-                        st.text(f"🏢 Edificio: {row.get('predio_ftta', 'N/A')}")
+                        st.text(f"🏢 Edificio: {nome_local}")
                         st.text(f"📍 Localizacao: {row['plus_code_cliente']}")
                         data_visita = row.get('data_visita', 'N/A')
                         if data_visita and data_visita != 'N/A':
@@ -765,7 +768,7 @@ with tab_predio:
 
                     col_enviado1, col_enviado2 = st.columns(2)
                     with col_enviado1:
-                        st.text(f"🏢 Edificio: {row.get('predio_ftta', 'N/A')}")
+                        st.text(f"🏢 Edificio: {nome_local}")
                         if row.get('andar_predio'):
                             st.text(f"🏠 Casa/Apto: {row['andar_predio']}")
                         if row.get('bloco_predio'):
@@ -790,7 +793,7 @@ with tab_predio:
                     st.markdown("### 📋 Informacoes da Solicitacao Original")
                     col_info1, col_info2 = st.columns(2)
                     with col_info1:
-                        st.text(f"Nome do Edificio: {row.get('predio_ftta', 'N/A')}")
+                        st.text(f"Nome do Edificio: {nome_local}")
                         st.text(f"Plus Code: {row['plus_code_cliente']}")
                     with col_info2:
                         st.text(f"Tipo: {row['tipo_instalacao']}")
