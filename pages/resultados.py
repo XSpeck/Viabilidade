@@ -524,14 +524,28 @@ Localizacao da Caixa: {row['localizacao_caixa']}"""
                     if row.get('observacoes'):
                         dados_completos += f"\nObs: {row['observacoes']}"
 
-                else:  # FTTA
+                elif row['tipo_instalacao'] == 'Condomínio':
+                    st.markdown("### 🏘️ FTTH (Condomínio)")
+                    if row.get('nome_cliente'):
+                        st.info(f"🙋 **Cliente:** {row['nome_cliente']}")
+
+                    # Dados para copiar (padrão FTTH)
+                    dados_completos = f"""N Caixa: {row.get('cto_numero', 'N/A')}
+Portas disponiveis: {row['portas_disponiveis']}
+Menor RX: {row.get('menor_rx', 'N/A')} dBm
+Distancia ate cliente: {row.get('distancia_cliente', 'N/A')}
+Localizacao da Caixa: {row.get('localizacao_caixa', 'N/A')}"""
+
+                    if row.get('observacoes'):
+                        dados_completos += f"\nObs: {row['observacoes']}"
+
+                else:  # Prédio FTTA
                     st.markdown("### 🏢 FTTA (Edificio)")
                     if row.get('nome_cliente'):
                         st.info(f"🙋 **Cliente:** {row['nome_cliente']}")
 
                     # Dados para copiar
-                    dados_completos = f"""
-Predio FTTA: {row['predio_ftta']}
+                    dados_completos = f"""Predio FTTA: {row['predio_ftta']}
 CDOI: {row['cdoi']}
 Portas disponiveis: {row['portas_disponiveis']}
 Media RX: {row['media_rx']} dBm"""
