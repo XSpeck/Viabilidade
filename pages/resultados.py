@@ -816,9 +816,11 @@ with tab_predio:
 
                     with st.form(key=f"form_building_{row['id']}"):
 
-                        # Campo para nome do local (Condomínio ou Prédio)
+                        # Campo para nome do local (Condomínio ou Prédio) - pré-preenchido se existir
+                        valor_nome_local = row.get('predio_ftta') or ''
                         nome_local_input = st.text_input(
                             f"Nome do {label_local} *",
+                            value=valor_nome_local,
                             placeholder=f"Nome do {label_local.lower()}",
                             key=f"nome_local_{row['id']}"
                         )
@@ -850,8 +852,11 @@ with tab_predio:
                                 placeholder="(48) 99999-9999",
                                 key=f"cliente_contato_{row['id']}"
                             )
+                            # Pré-preencher com valor existente (andar_predio)
+                            valor_unidade = row.get('andar_predio') or ''
                             unidade = st.text_input(
                                 f"{label_unidade} *",
+                                value=valor_unidade,
                                 placeholder=f"Ex: {'101' if is_condominio else '301, Bloco A'}",
                                 key=f"apartamento_{row['id']}"
                             )
