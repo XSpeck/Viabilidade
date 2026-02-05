@@ -135,7 +135,7 @@ def show_ftta_form(row: dict):
                 
                 col_rej1, col_rej2 = st.columns(2)
                 with col_rej1:
-                    st.text_input("🏢 Condomínio", value=row.get('predio_ftta', ''), disabled=True)
+                    st.text_input("🏢 Edifício", value=row.get('predio_ftta', ''), disabled=True)
                 with col_rej2:
                     st.text_input("📍 Localização", value=row['plus_code_cliente'], disabled=True)
                 
@@ -325,7 +325,7 @@ def show_ftta_form(row: dict):
                 
                 col_rej1, col_rej2 = st.columns(2)
                 with col_rej1:
-                    st.text_input("🏢 Condomínio", value=row.get('predio_ftta', ''), disabled=True)
+                    st.text_input("🏢 Edifício", value=row.get('predio_ftta', ''), disabled=True)
                 with col_rej2:
                     st.text_input("📍 Localização", value=row['plus_code_cliente'], disabled=True)
                 
