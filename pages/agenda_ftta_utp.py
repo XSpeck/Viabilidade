@@ -155,15 +155,21 @@ else:
             if row.get('historico_reagendamento'):
                 st.warning(f"🔄 **Reagendado:** {row['historico_reagendamento']}")
             
+            # Labels dinâmicos baseados no tipo
+            is_condominio = tipo_instalacao == "Condomínio"
+            label_local = "Condomínio" if is_condominio else "Edifício"
+            label_unidade = "Casa" if is_condominio else "Apartamento"
+            label_responsavel = "Responsável" if is_condominio else "Síndico"
+
             # Informações em colunas
             col1, col2, col3 = st.columns(3)
-            
+
             with col1:
                 st.markdown("#### 📍 Localização")
                 st.text(f"Plus Code: {row['plus_code_cliente']}")
-                st.text(f"Edifício: {row.get('predio_ftta', 'N/A')}")
-                st.text(f"Apartamento: {row.get('apartamento', 'N/A')}")
-            
+                st.text(f"{label_local}: {row.get('predio_ftta', 'N/A')}")
+                st.text(f"{label_unidade}: {row.get('apartamento', 'N/A')}")
+
             with col2:
                 st.markdown("#### 📅 Agendamento")
                 data_visita = row.get('data_visita', 'N/A')
@@ -178,10 +184,10 @@ else:
                 st.text(f"Período: {row.get('periodo_visita', 'N/A')}")
                 st.text(f"Técnico: {row.get('tecnico_responsavel', 'N/A')}")
                 st.text(f"Tecnologia: {row.get('tecnologia_predio', 'N/A')}")
-            
+
             with col3:
                 st.markdown("#### 👥 Contatos")
-                st.text(f"Síndico: {row.get('nome_sindico', 'N/A')}")
+                st.text(f"{label_responsavel}: {row.get('nome_sindico', 'N/A')}")
                 st.text(f"Tel: {row.get('contato_sindico', 'N/A')}")
                 st.text(f"Cliente: {row.get('nome_cliente_predio', 'N/A')}")
                 st.text(f"Tel: {row.get('contato_cliente_predio', 'N/A')}")
@@ -227,18 +233,19 @@ else:
             if st.session_state.get(f'show_estruturado_form_{row["id"]}', False):
                 st.markdown("---")
                 st.success("### ✅ Registrar como Estruturado")
-                
+
                 with st.form(key=f"form_estruturado_{row['id']}"):
                     st.markdown("**Os seguintes dados serão registrados:**")
 
                     col_est1, col_est2 = st.columns(2)
                     with col_est1:
-                        st.text_input("🏢 Condomínio", value=row.get('predio_ftta', ''), disabled=True)
+                        st.text_input(f"{icon_tipo} {label_local}", value=row.get('predio_ftta', ''), disabled=True)
                         st.text_input("📍 Localização", value=row['plus_code_cliente'], disabled=True)
                     with col_est2:
                         st.text_input("🔧 Tecnologia", value=row.get('tecnologia_predio', ''), disabled=True)
                         # Usa o valor salvo no agendamento como padrão
-                        giga_checkbox = st.checkbox("⚡ Prédio Giga?", value=row.get('giga', False), key=f"giga_{row['id']}")
+                        giga_label = "⚡ Condomínio Giga?" if is_condominio else "⚡ Prédio Giga?"
+                        giga_checkbox = st.checkbox(giga_label, value=row.get('giga', False), key=f"giga_{row['id']}")
 
                     observacao_estrut = st.text_area(
                         "📝 Observações da Estruturação *",
@@ -274,7 +281,8 @@ else:
                                 row.get('tecnico_responsavel', 'Técnico'),
                                 giga_checkbox
                             ):
-                                st.success("✅ Prédio registrado como estruturado!")
+                                msg_sucesso = "✅ Condomínio registrado como estruturado!" if is_condominio else "✅ Prédio registrado como estruturado!"
+                                st.success(msg_sucesso)
                                 st.info("📝 Registro salvo em UTPs/FTTAs Atendidos")
                                 del st.session_state[f'show_estruturado_form_{row["id"]}']
                                 st.rerun()
@@ -383,19 +391,20 @@ else:
             if st.session_state.get(f'show_reject_agenda_form_{row["id"]}', False):
                 st.markdown("---")
                 st.error("### ❌ Registrar Sem Viabilidade")
-                
+
                 with st.form(key=f"form_reject_agenda_{row['id']}"):
                     st.markdown("**Os seguintes dados serão registrados:**")
-                    
+
                     col_rej1, col_rej2 = st.columns(2)
                     with col_rej1:
-                        st.text_input("🏢 Condomínio", value=row.get('predio_ftta', ''), disabled=True)
+                        st.text_input(f"{icon_tipo} {label_local}", value=row.get('predio_ftta', ''), disabled=True)
                     with col_rej2:
                         st.text_input("📍 Localização", value=row['plus_code_cliente'], disabled=True)
-                    
+
+                    placeholder_motivo = "Ex: Estrutura inadequada, recusa do responsável, inviabilidade técnica..." if is_condominio else "Ex: Estrutura inadequada, recusa do síndico, inviabilidade técnica..."
                     motivo_rej = st.text_area(
                         "📝 Motivo da Não Viabilidade *",
-                        placeholder="Ex: Estrutura inadequada, recusa do síndico, inviabilidade técnica...",
+                        placeholder=placeholder_motivo,
                         height=100
                     )
                     
@@ -418,9 +427,10 @@ else:
                         if not motivo_rej or not motivo_rej.strip():
                             st.error("❌ Descreva o motivo da não viabilidade!")
                         else:
+                            fallback_nome = 'Condomínio' if is_condominio else 'Prédio'
                             if reject_scheduled_building(
                                 row['id'],
-                                row.get('predio_ftta', 'Prédio'),
+                                row.get('predio_ftta', fallback_nome),
                                 row['plus_code_cliente'],
                                 motivo_rej.strip()
                             ):
