@@ -383,11 +383,23 @@ with tab_analise:
                 'data_solicitacao', 'tipo_instalacao', 'plus_code_cliente',
                 'nome_cliente', 'status', 'cto_numero', 'predio_ftta',
                 'distancia_cliente', 'menor_rx', 'localizacao_caixa', 'portas_disponiveis',
-                'auditado_por'
+                'auditado_por', 'auditor_responsavel'
             ]
 
             colunas_disponiveis = [col for col in colunas_exibir if col in df_historico.columns]
             df_display = df_historico[colunas_disponiveis].copy()
+
+            # Combinar auditado_por e auditor_responsavel em uma coluna "Auditor"
+            if 'auditado_por' in df_display.columns or 'auditor_responsavel' in df_display.columns:
+                df_display['auditor_final'] = df_display.apply(
+                    lambda row: row.get('auditado_por') or row.get('auditor_responsavel') or '',
+                    axis=1
+                )
+                # Remover colunas originais
+                if 'auditado_por' in df_display.columns:
+                    df_display = df_display.drop(columns=['auditado_por'])
+                if 'auditor_responsavel' in df_display.columns:
+                    df_display = df_display.drop(columns=['auditor_responsavel'])
 
             # Renomear colunas
             rename_dict = {
@@ -402,7 +414,7 @@ with tab_analise:
                 'menor_rx': 'Menor RX',
                 'localizacao_caixa': 'Localizacao Caixa',
                 'portas_disponiveis': 'Portas',
-                'auditado_por': 'Auditor'
+                'auditor_final': 'Auditor'
             }
             df_display.rename(columns=rename_dict, inplace=True)
 
