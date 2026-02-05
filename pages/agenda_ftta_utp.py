@@ -155,15 +155,21 @@ else:
             if row.get('historico_reagendamento'):
                 st.warning(f"🔄 **Reagendado:** {row['historico_reagendamento']}")
             
+            # Labels dinâmicos baseados no tipo
+            is_condominio = tipo_instalacao == "Condomínio"
+            label_local = "Condomínio" if is_condominio else "Edifício"
+            label_unidade = "Casa" if is_condominio else "Apartamento"
+            label_responsavel = "Responsável" if is_condominio else "Síndico"
+
             # Informações em colunas
             col1, col2, col3 = st.columns(3)
-            
+
             with col1:
                 st.markdown("#### 📍 Localização")
                 st.text(f"Plus Code: {row['plus_code_cliente']}")
-                st.text(f"Edifício: {row.get('predio_ftta', 'N/A')}")
-                st.text(f"Apartamento: {row.get('apartamento', 'N/A')}")
-            
+                st.text(f"{label_local}: {row.get('predio_ftta', 'N/A')}")
+                st.text(f"{label_unidade}: {row.get('apartamento', 'N/A')}")
+
             with col2:
                 st.markdown("#### 📅 Agendamento")
                 data_visita = row.get('data_visita', 'N/A')
@@ -178,10 +184,10 @@ else:
                 st.text(f"Período: {row.get('periodo_visita', 'N/A')}")
                 st.text(f"Técnico: {row.get('tecnico_responsavel', 'N/A')}")
                 st.text(f"Tecnologia: {row.get('tecnologia_predio', 'N/A')}")
-            
+
             with col3:
                 st.markdown("#### 👥 Contatos")
-                st.text(f"Síndico: {row.get('nome_sindico', 'N/A')}")
+                st.text(f"{label_responsavel}: {row.get('nome_sindico', 'N/A')}")
                 st.text(f"Tel: {row.get('contato_sindico', 'N/A')}")
                 st.text(f"Cliente: {row.get('nome_cliente_predio', 'N/A')}")
                 st.text(f"Tel: {row.get('contato_cliente_predio', 'N/A')}")
