@@ -848,6 +848,25 @@ def get_ftth_approved(data_inicio: str = None, data_fim: str = None) -> List[Dic
         logger.error(f"Erro ao buscar FTTH aprovadas: {e}")
         return []
 
+def get_all_approved(data_inicio: str = None, data_fim: str = None) -> List[Dict]:
+    """Busca todas as viabilizações aprovadas (FTTH, Prédio, Condomínio)"""
+    try:
+        query = supabase.table('viabilizacoes')\
+            .select('*')\
+            .in_('status', ['aprovado', 'finalizado'])
+
+        # Filtro por data (se fornecido)
+        if data_inicio:
+            query = query.gte('data_auditoria', data_inicio)
+        if data_fim:
+            query = query.lte('data_auditoria', data_fim)
+
+        response = query.order('data_auditoria', desc=True).execute()
+        return response.data if response.data else []
+    except Exception as e:
+        logger.error(f"Erro ao buscar todas aprovadas: {e}")
+        return []
+
 def get_ftth_rejected(data_inicio: str = None, data_fim: str = None) -> List[Dict]:
     """Busca todas as viabilizações FTTH rejeitadas"""
     try:
