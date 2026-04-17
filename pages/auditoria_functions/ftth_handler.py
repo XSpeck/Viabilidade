@@ -41,7 +41,7 @@ def coords_to_pluscode(lat, lon):
 def download_ctos_file(file_id: str, output: str) -> str:
     try:
         url = f"https://drive.google.com/uc?id={file_id}"
-        gdown.download(url, output, quiet=True, fuzzy=True)
+        gdown.download(url, output, quiet=True)
         return output
     except Exception as e:
         logger.error(f"Erro ao baixar CTOs: {e}")
