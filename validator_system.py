@@ -130,7 +130,7 @@ def on_refresh():
 def download_file(file_id: str, output: str) -> str:
     try:
         url = f"https://drive.google.com/uc?id={file_id}"
-        gdown.download(url, output, quiet=True, fuzzy=True)
+        gdown.download(url, output, quiet=True)
         logger.info(f"Arquivo {output} baixado com sucesso")
         return output
     except Exception as e:
