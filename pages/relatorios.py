@@ -468,7 +468,7 @@ with tab_ftth1:
         # Formatar data
         if 'Data' in df_display.columns:
             df_display['Data'] = df_display['Data'].apply(
-                lambda x: format_datetime_resultados(x) if x else '-'
+                lambda x: format_datetime_resultados(x) if pd.notna(x) and x != '' else '-'
             )
         
         # Formatar status
@@ -533,7 +533,7 @@ with tab_ftth2:
         # Formatar data
         if 'Data' in df_display.columns:
             df_display['Data'] = df_display['Data'].apply(
-                lambda x: format_datetime_resultados(x) if x else '-'
+                lambda x: format_datetime_resultados(x) if pd.notna(x) and x != '' else '-'
             )
         
         st.dataframe(df_display, width='stretch', height=400)
@@ -662,7 +662,7 @@ with tab_pred1:
         
         if 'Data Auditoria' in df_display.columns:
             df_display['Data Auditoria'] = df_display['Data Auditoria'].apply(
-                lambda x: format_datetime_resultados(x) if x else '-'
+                lambda x: format_datetime_resultados(x) if pd.notna(x) and x != '' else '-'
             )
         
         # Formatar status
@@ -746,7 +746,7 @@ with tab_pred2:
         # Formatar data
         if 'Data' in df_display.columns:
             df_display['Data'] = df_display['Data'].apply(
-                lambda x: format_datetime_resultados(x) if x else '-'
+                lambda x: format_datetime_resultados(x) if pd.notna(x) and x != '' else '-'
             )
         
         st.dataframe(df_display, width='stretch', height=400)
@@ -786,7 +786,7 @@ with tab_pred3:
         # Formatar data
         if 'Data' in df_display.columns:
             df_display['Data'] = df_display['Data'].apply(
-                lambda x: format_datetime_resultados(x) if x else '-'
+                lambda x: format_datetime_resultados(x) if pd.notna(x) and x != '' else '-'
             )
         
         st.dataframe(df_display, width='stretch', height=400)
