@@ -422,7 +422,7 @@ with tab_analise:
             # Formatar data
             if 'Data Solicitacao' in df_display.columns:
                 df_display['Data Solicitacao'] = df_display['Data Solicitacao'].apply(
-                    lambda x: format_datetime_resultados(x) if x else '-'
+                    lambda x: format_datetime_resultados(x) if pd.notna(x) and x != '' else '-'
                 )
 
             # Formatar Status (com icones)
