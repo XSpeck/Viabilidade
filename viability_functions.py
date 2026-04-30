@@ -11,6 +11,7 @@ from supabase_config import supabase
 from notifier import notify_new_viability, notify_new_agenda_data
 import pytz
 import re
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
