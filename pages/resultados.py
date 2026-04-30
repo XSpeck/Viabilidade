@@ -481,7 +481,7 @@ with tab_analise:
             # ========== EXIBIR TABELA ==========
             st.dataframe(
                 df_display,
-                use_container_width=True,
+                width='stretch',
                 height=400
             )
 
@@ -494,7 +494,7 @@ with tab_analise:
                 data=csv_export,
                 file_name=f"historico_viabilizacoes_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
                 mime="text/csv",
-                use_container_width=True
+                width='stretch'
             )
 
         else:
